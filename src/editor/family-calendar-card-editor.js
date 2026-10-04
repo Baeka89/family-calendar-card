@@ -1,3 +1,4 @@
+import { escapeHtmlAttribute } from '../utils/string-utils.js';
 import {
   COMBINE_BACKGROUND_MODE_OPTIONS,
   COMBINE_STYLE_OPTIONS,
@@ -268,9 +269,7 @@ export class FamilyCalendarCardEditor extends HTMLElement {
   }
 
   escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return escapeHtmlAttribute(text);
   }
 
   normalizeDefaultViewForEditor(value) {

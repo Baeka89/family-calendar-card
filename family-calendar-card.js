@@ -31,6 +31,24 @@ const COMMON_NAMED_COLORS = {
   pink: '#FFC0CB'
 };
 
+function normalizeEventTextValue(value) {
+  return String(value || '')
+    .normalize('NFKC')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function escapeHtmlAttribute(text) {
+  const replacements = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  };
+  return String(text ?? '').replace(/[&<>"']/g, (char) => replacements[char]);
+}
+
 const DEFAULT_LANGUAGE = 'en';
 
 const DEFAULT_VIEW = 'month';
@@ -1713,24 +1731,6 @@ const detectStaleFamilyCalendarResource = (documentLike = globalThis.document) =
   };
 };
 
-function normalizeEventTextValue(value) {
-  return String(value || '')
-    .normalize('NFKC')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function escapeHtmlAttribute(text) {
-  const replacements = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  };
-  return String(text ?? '').replace(/[&<>"']/g, (char) => replacements[char]);
-}
-
 const DEFAULT_COLOR_PICKER_PRESETS = ['#ffffff', '#ff0000', '#ffff00', '#00ff00', '#000000', '#00ffff', '#0000ff', '#ff00ff'];
 
 function normalizePickerHexColor(value, fallback = null) {
@@ -2210,9 +2210,7 @@ class FamilyCalendarCardEditor extends HTMLElement {
   }
 
   escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return escapeHtmlAttribute(text);
   }
 
   normalizeDefaultViewForEditor(value) {
