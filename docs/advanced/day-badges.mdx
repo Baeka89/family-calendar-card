@@ -1,0 +1,274 @@
+---
+title: "Day Badges: Add Custom Indicators to Calendar Days"
+sidebarTitle: "Day Badges"
+description: "Configure day_badges rules to display text labels, icons, or icon-and-text chips on calendar days matched by event title, calendar source, or day conditions."
+---
+
+Day badges are small labeled chips or icon indicators that appear on individual calendar day cells when a set of conditions is met. A badge can show text, an icon, or an icon followed by text in the same chip. You define a list of badge objects under `day_badges`, and the card evaluates every badge against the day and its events — showing the badge on any day that satisfies the badge's match block. Multiple badges can appear on the same day simultaneously, which makes them well-suited for layered annotations like recurring schedule reminders, birthday markers, or availability flags.
+
+## Badge Fields
+
+Each entry in `day_badges` supports the following fields:
+
+<ParamField path="match" type="object">
+  Advanced match block using the [shared match schema](/advanced/event-styles#advanced-match-schema). Use this to combine event and day conditions, e.g. `match: { event: { title_contains: 'Soccer' }, day: { weekend: true } }`, or to use logical operators (`any`, `all`, `not`). `when` is accepted as an alias.
+</ParamField>
+
+<ParamField path="conditions" type="object">
+  Legacy shorthand for event-scoped matches. Equivalent to `match: { event: { ... } }`. At least one event on the day must satisfy **all** specified conditions for the badge to appear. Either `match` or `conditions` is required.
+</ParamField>
+
+<ParamField path="priority" default="0" type="integer">
+  Optional ordering hint used by tooling. Badges are evaluated independently and all matching badges are shown, so priority does not suppress other badges.
+</ParamField>
+
+<ParamField path="id" type="string">
+  Optional string identifier. Auto-generated (`day-badge-1`, `day-badge-2`, …) if omitted.
+</ParamField>
+
+<ParamField path="text" type="string">
+  The text label displayed inside the badge chip. You can use `text` by itself or combine it with `icon` to show an icon followed by the label in the same badge.
+</ParamField>
+
+<ParamField path="icon" type="string">
+  An MDI icon name (e.g. `mdi:cake-variant`) displayed inside the badge. When `text` is also provided, the icon appears first, followed by the text, inside one badge.
+</ParamField>
+
+<ParamField path="background_color" type="string">
+  A hex color string for the badge's background. Defaults to the card's accent color if not specified.
+</ParamField>
+
+<ParamField path="color" type="string">
+  A hex color string for the badge's foreground (text and icon color). Controls the contrast against `background_color`. If omitted, the card picks a readable color automatically.
+</ParamField>
+
+<ParamField path="size" type="string | number">
+  Overrides the overall size of the badge chip. Accepts a number (interpreted as pixels) or a CSS length string such as `'32px'`.
+</ParamField>
+
+<ParamField path="font_size" type="string | number">
+  Overrides the font size of the badge label text. Accepts a number (interpreted as pixels) or a CSS length string such as `'11px'`.
+</ParamField>
+
+## Condition Keys
+
+The `conditions` object matches against events on each day. All specified keys must match at least one event on that day for the badge to appear. The following fields are supported:
+
+<ParamField path="conditions.calendar" type="string | object">
+  A Home Assistant calendar entity ID (or virtual calendar ID). The badge appears on days where at least one event belongs to that calendar.
+</ParamField>
+
+<ParamField path="conditions.title" type="string | object">
+  A substring to match against event titles on a given day. The badge appears on days that have at least one event whose title contains this string. Prefix with `exact:` for an exact match or `regex:` for a regular expression.
+</ParamField>
+
+<ParamField path="conditions.summary" type="string | object">
+  Alias for `conditions.title`. Both names match the event summary field.
+</ParamField>
+
+<ParamField path="conditions.description" type="string | object">
+  A substring to match against the event description field. Supports the same `exact:` and `regex:` prefixes as `title`.
+</ParamField>
+
+<ParamField path="conditions.location" type="string | object">
+  A substring to match against the event location field. Supports the same `exact:` and `regex:` prefixes as `title`.
+</ParamField>
+
+<ParamField path="conditions.all_day" type="boolean">
+  When `true`, the badge appears only on days that have at least one all-day event. When `false`, only days with at least one timed event match.
+</ParamField>
+
+<ParamField path="conditions.past" type="boolean">
+  When `true`, the badge appears on days where at least one event is in the past. When `false`, only days with non-past events match.
+</ParamField>
+
+Text conditions accept a plain string or a matcher object, but operators such as `contains` accept one string, not an array. In `day_badges`, bare event conditions are supported under `match.any`, so use a separate condition for each value. See [Text matching](/advanced/event-styles#text-matching) for the shared text operators; other rule types may require explicit event scoping.
+
+### Day-scoped badges
+
+Badges can also fire purely from day-level state (no event required) by using `match.day`. For example, mark every weekend with a chip:
+
+```yaml
+day_badges:
+  - match:
+      day:
+        weekend: true
+    text: Weekend
+    background_color: '#FF9800'
+```
+
+Or mark days that have **no** events from a given calendar:
+
+```yaml
+day_badges:
+  - match:
+      day:
+        no_event:
+          calendar: calendar.work
+    icon: mdi:beach
+    background_color: '#4CAF50'
+```
+
+See [Day match fields](/advanced/day-styles#day-match-fields) for the full list of day conditions.
+
+### Legacy condition aliases
+
+For backward compatibility, the card silently accepts several alternative spellings of the condition keys above. New configurations should use the canonical names (`title`, `summary`, `location`, `calendar`, `all_day`), but the following aliases continue to work:
+
+| Alias | Equivalent to |
+| --- | --- |
+| `title_contains: foo` | `title: 'contains:foo'` |
+| `summary_contains: foo` | `summary: 'contains:foo'` (same as `title`) |
+| `location_contains: foo` | `location: 'contains:foo'` |
+| `calendar_entity` | `calendar` |
+| `entity_id` | `calendar` |
+| `entity` | `calendar` |
+| `all_day_event` | `all_day` (bidirectional) |
+
+## Examples
+
+### Show a cake icon on days with birthday events
+
+This badge watches `calendar.birthdays` and renders a pink cake icon on any day that calendar has an event.
+
+```yaml
+day_badges:
+  - conditions:
+      calendar: calendar.birthdays
+    icon: mdi:cake-variant
+    background_color: '#E91E63'
+```
+
+### Show a badge on days with a standup meeting
+
+This badge appears on any day that has an event whose title contains "standup", making it easy to spot those days at a glance.
+
+```yaml
+day_badges:
+  - conditions:
+      title: standup
+    text: Standup
+    background_color: '#1565C0'
+```
+
+### Show an icon and text in one badge
+
+Set both `icon` and `text` on the same badge when you want a compact chip with an MDI icon followed by a label. The card renders this as one badge, not two separate badges.
+
+```yaml
+day_badges:
+  - conditions:
+      calendar: calendar.helper_day_types
+      all_day: true
+      title: Schoolday
+    icon: mdi:school
+    text: School
+    background_color: '#EDE7F6'
+```
+
+### Use values from matched event metadata
+
+Badge display fields can reference simple values from the event that matched the badge conditions. This is useful when a helper calendar stores day classification metadata in the event description.
+
+Only full-value path templates are supported. The whole string must be a template like `{{ event.description_json.badge_text }}`. Partial strings such as `Type: {{ event.description_json.badge_text }}` are not interpolated and remain literal text.
+
+```yaml
+day_badges:
+  - conditions:
+      calendar: calendar.helper_day_types
+      all_day: true
+    icon: "{{ event.description_json.icon }}"
+    text: "{{ event.description_json.badge_text }}"
+    background_color: "{{ event.description_json.badge_color }}"
+```
+
+The matched helper event description can contain a JSON object like this:
+
+```json
+{
+  "icon": "mdi:school",
+  "badge_text": "School",
+  "badge_color": "#EDE7F6"
+}
+```
+
+This renders one badge with the `mdi:school` icon, the `School` label, and the `#EDE7F6` background color.
+
+Supported dynamic display fields are `icon`, `text`, `background_color`, and `color`. Available paths include `event.description_json.<field>`, `event.title`, `event.summary`, `event.calendar`, `event.entity_id`, `title`, `calendar`, and `date`.
+
+Dynamic badge values are intentionally narrow in scope:
+
+- This is not a general-purpose template engine.
+- JavaScript, expressions, function calls, conditionals, filters, arithmetic, bracket access, and mixed string interpolation are not supported.
+- Invalid JSON descriptions are ignored.
+- Missing fields are ignored safely.
+- Values that resolve to objects or arrays are ignored for display fields.
+- Dynamic `background_color` and `color` values must resolve to supported CSS color formats, such as hex, `rgb()`/`rgba()`, `hsl()`/`hsla()`, or a recognized named color. Invalid color values are ignored.
+- Dynamic resolution applies only to `day_badges` display fields and `tap_action.event_data`, not matching, priority, or hidden calendar rules.
+
+### Fire a DOM event when tapping a badge
+
+You can make an individual day badge clickable by adding `tap_action`. Currently, day badges support only `action: fire-dom-event`. Other Home Assistant actions such as `navigate`, `url`, `call-service`, `more-info`, `hold_action`, and `double_tap_action` are not supported for day badges.
+
+`tap_action.event_data` supports the same safe full-value templates as dynamic badge text, icon, and color. Values can resolve from `date`, `calendar`, `title`, `event`, and `event.description_json`. Only scalar string, number, and boolean values are included in the dispatched event detail.
+
+```yaml
+day_badges:
+  - conditions:
+      calendar: calendar.helper_day_types
+      all_day: true
+      title: Schoolday
+    icon: "{{ event.description_json.icon }}"
+    text: "{{ event.description_json.badge_text }}"
+    background_color: "{{ event.description_json.badge_color }}"
+    tap_action:
+      action: fire-dom-event
+      event_type: open-day-detail
+      event_data:
+        date: "{{ date }}"
+        calendar: "{{ calendar }}"
+        title: "{{ title }}"
+```
+
+When tapped, the card dispatches a bubbling, composed `CustomEvent` named `open-day-detail`. The event `detail` contains the resolved `event_data` values.
+
+### Mark all-day event days with an indicator
+
+This badge shows a calendar icon on every day that has at least one all-day event.
+
+```yaml
+day_badges:
+  - conditions:
+      all_day: true
+    icon: mdi:calendar-today
+    background_color: '#FF9800'
+```
+
+### Combine conditions for precise targeting
+
+You can stack multiple conditions in one badge. This example shows a star icon only on days that have an event from `calendar.work` with "review" in the title.
+
+```yaml
+day_badges:
+  - conditions:
+      calendar: calendar.work
+      title: review
+    icon: mdi:star
+    background_color: '#FFC107'
+```
+
+### Show multiple badges on the same day
+
+All badge definitions are evaluated independently, so more than one can appear on the same day. Here, a day that has both a birthday event and a work standup will show both the cake icon and the "Standup" chip.
+
+```yaml
+day_badges:
+  - conditions:
+      calendar: calendar.birthdays
+    icon: mdi:cake-variant
+    background_color: '#E91E63'
+  - conditions:
+      title: standup
+    text: Standup
+    background_color: '#1565C0'
+```

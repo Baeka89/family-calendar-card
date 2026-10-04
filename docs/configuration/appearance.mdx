@@ -1,0 +1,210 @@
+---
+title: "Appearance and Colors: Family Calendar Card"
+sidebarTitle: "Appearance"
+description: "Customize calendar colors, event color mode, header style, background images, font sizes, and dark mode for the Family Calendar Card."
+---
+
+The Family Calendar Card gives you extensive control over its visual presentation. You can assign distinct colors to each calendar, choose how those colors are applied to event chips, style the header independently from the card body, and even set a background image — all through YAML configuration.
+
+<Tip>
+  Looking for font size, event text, time text, or location text settings?
+
+  Font-related display options are documented in [Display Options](/configuration/display), including:
+
+  - `event_font_size`
+  - `event_time_font_size`
+  - `event_location_font_size`
+  - `event_font_colors`
+</Tip>
+
+## Calendar Colors
+
+<ParamField path="colors" default="[]" type="map">
+  A map of calendar entity IDs to hex color strings. Each calendar's events are rendered in the color you specify. If you omit a calendar, the card assigns it an automatic color from its built-in palette.
+
+  ```yaml
+  colors:
+    calendar.family: "#4CAF50"
+    calendar.work: "#2196F3"
+    calendar.holidays_in_united_states: "#FF5722"
+  ```
+</ParamField>
+
+<ParamField path="event_font_colors" default="[]" type="map">
+  A map of calendar entity IDs to hex color strings for the text rendered on event chips. Use this when the auto-contrast logic does not produce readable text against your chosen calendar color.
+
+  ```yaml
+  event_font_colors:
+    calendar.family: "#ffffff"
+    calendar.work: "#ffffff"
+  ```
+</ParamField>
+
+## Event Color Modes
+
+<ParamField path="event_color_mode" default="classic" type="string">
+  Controls how the calendar color is applied to event chips. Three modes are available:
+
+  - **`classic`** — the entire event chip background is filled with the calendar color, matching the look of most traditional calendar applications
+  - **`left-neutral`** — the chip has a neutral background with a colored vertical bar on the left edge; good for maintaining readability with dark colors
+  - **`left-tint`** — the chip has a lightly tinted background (derived from the calendar color) with a colored left bar
+</ParamField>
+
+<ParamField path="event_neutral_background" default="#F8F3E9" type="string">
+  The hex background color applied to event chips when `event_color_mode` is `left-neutral`. Only this option — not `colors` — affects the chip background in this mode.
+</ParamField>
+
+<ParamField path="event_tint_opacity" default="80" type="number">
+  A value from `0` to `100` controlling how strongly the calendar color tints the chip background in `left-tint` mode. `0` produces a fully neutral background; `100` produces a fully saturated background.
+</ParamField>
+
+<ParamField path="event_color_bar_width" default="18" type="number">
+  The width in pixels of the colored left border applied to event chips in `left-neutral` and `left-tint` modes.
+</ParamField>
+
+## Header Appearance
+
+<ParamField path="header_color" default="var(--primary-color)" type="string">
+  The background color of the card header. Accepts a hex string (e.g. `#1A1A2E`), a CSS variable (e.g. `var(--primary-color)`), or the special value `match-card-background` to make the header blend seamlessly with the card body.
+</ParamField>
+
+<ParamField path="header_text_color" type="string">
+  The color of text and icon elements inside the header. Accepts a hex string. When omitted, the card calculates a contrasting color automatically based on `header_color`.
+</ParamField>
+
+<ParamField path="header_background_opacity" default="0" type="number">
+  The transparency of the header background, from `0` (fully opaque) to `100` (fully transparent). Values between these extremes produce a semi-transparent header. Useful when you set a background image and want the image to show through the header.
+</ParamField>
+
+<ParamField path="header_background_transparent" default="false" type="boolean">
+  Legacy shortcut for a fully transparent header. When `header_background_opacity` is not set, `true` is equivalent to `header_background_opacity: 100`.
+</ParamField>
+
+## Card Background
+
+<Note>
+  The card inherits Home Assistant theme values for its background, border radius, border width, border color, and box shadow. If your active HA theme sets `ha-card-background`, `ha-card-border-radius`, `ha-card-border-width`, `ha-card-border-color`, or `ha-card-box-shadow`, the card picks them up automatically. The built-in light/dark card color is only used as a final fallback when none of those theme values are defined.
+</Note>
+
+<ParamField path="background_opacity" default="0" type="number">
+  The transparency of the card body background, from `0` (fully opaque) to `100` (fully transparent). Setting this to `100` lets the underlying dashboard wallpaper or HA theme background show through.
+</ParamField>
+
+<ParamField path="background_transparent" default="false" type="boolean">
+  Legacy shortcut for a fully transparent card body. When `background_opacity` is not set, `true` is equivalent to `background_opacity: 100`.
+</ParamField>
+
+<ParamField path="grid_color" type="string">
+  The color used for Month and Week Compact grid lines, Schedule dividers and hour lines, and Agenda dividers. It accepts normal CSS color values, including hex colors and CSS variables. When omitted, the card keeps its light or dark default; transparent backgrounds use a readable translucent white.
+
+  ```yaml
+  background_opacity: 100
+  grid_color: "#ffffff"
+  ```
+</ParamField>
+
+<ParamField path="background_image_url" type="string">
+  A URL pointing to an image to display behind the calendar grid. Local Home Assistant paths (e.g. `/local/calendar-bg.jpg`) and remote URLs are both supported.
+</ParamField>
+
+<ParamField path="background_image_size" default="cover" type="string">
+  CSS `background-size` value for the background image. Options: `cover`, `contain`, `auto`.
+</ParamField>
+
+<ParamField path="background_image_position" default="center" type="string">
+  CSS `background-position` value for the background image. Options: `center`, `top`, `bottom`, `left`, `right`.
+</ParamField>
+
+<ParamField path="background_image_repeat" default="no-repeat" type="string">
+  CSS `background-repeat` value for the background image. Options: `no-repeat`, `repeat`, `repeat-x`, `repeat-y`.
+</ParamField>
+
+## Layout
+
+<ParamField path="compact_height" default="false" type="boolean">
+  Make the card fit precisely into its parent container's height instead of expanding to fit its content.
+
+  This is especially useful in Home Assistant **Panel** dashboards and fixed-height grid layouts. In a Panel dashboard, the parent container is usually the full available dashboard viewport, so `compact_height: true` makes Family Calendar Card automatically size itself to fill the screen height.
+
+  Use this when:
+  - the card should fill a wall-tablet or kiosk screen
+  - the card is inside a fixed-height grid area
+  - Agenda view should scroll internally instead of making the whole dashboard taller
+  - Month/Schedule view should compress vertically to fit the available space
+
+  Avoid this in normal masonry/sidebar layouts where the card's parent may not have a defined height. In those layouts, use the default content height or adjust `height_scale` for Schedule view.
+</ParamField>
+
+<ParamField path="compact_width" default="false" type="boolean">
+  Reduce internal horizontal padding. Use this when the card is placed in a narrow column and you want to maximise the space available for the calendar grid itself.
+</ParamField>
+
+<ParamField path="height_scale" default="1.0" type="number">
+  A multiplier applied to the hour-row height in the **Schedule** view (also known as `week-standard`). A value of `1.5` makes each hour slot 50% taller; `0.75` compresses them. Does not affect Month, Week Compact, or Agenda views.
+</ParamField>
+
+## Light/Dark Mode
+
+<ParamField path="color_scheme" default="auto" type="string">
+  Controls whether the card renders in light or dark mode. `auto` follows the Home Assistant theme, `light` always uses the light appearance, and `dark` always uses the dark appearance regardless of the theme.
+</ParamField>
+
+## Today Highlight
+
+<ParamField path="today_background_color" type="string">
+  A simple hex color applied as the background of today's cell in all views. For more control, use `today_style` instead.
+</ParamField>
+
+<ParamField path="today_style" type="object">
+  An advanced object for fine-grained styling of today's cell. You can set any combination of the following keys:
+
+  | Key | Type | Description |
+  | --- | --- | --- |
+  | `background_color` | hex string | Background fill color |
+  | `opacity` | 0–1 | Opacity of the background fill |
+  | `border_color` | hex string | Color of the cell border |
+  | `border_width` | number | Width of the cell border in pixels |
+
+  When both `today_background_color` and `today_style` are set, `today_style` takes precedence.
+
+  ```yaml
+  today_style:
+    background_color: "#1A1A2E"
+    opacity: 0.4
+    border_color: "#E94560"
+    border_width: 2
+  ```
+</ParamField>
+
+## Example
+
+The configuration below creates a dark-themed card with a background image, semi-transparent header, and custom event colors:
+
+```yaml
+type: custom:family-calendar-card
+title: Family Calendar
+entities:
+  - calendar.family
+  - calendar.work
+color_scheme: dark
+colors:
+  calendar.family: "#4CAF50"
+  calendar.work: "#2196F3"
+event_color_mode: left-tint
+event_tint_opacity: 60
+event_color_bar_width: 14
+header_color: "#0D0D1A"
+header_text_color: "#E0E0E0"
+header_background_opacity: 20
+background_image_url: /local/dark-calendar-bg.jpg
+background_image_size: cover
+background_image_position: center
+background_opacity: 85
+compact_height: false
+height_scale: 1.2
+today_style:
+  background_color: "#E94560"
+  opacity: 0.25
+  border_color: "#E94560"
+  border_width: 2
+```

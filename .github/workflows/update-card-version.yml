@@ -1,0 +1,111 @@
+name: Update Card Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version to write, for example v1.2.3 or v1.2.3-beta0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate requested version
+        id: version
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          VERSION="$REQUESTED_VERSION"
+
+          if ! echo "$VERSION" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$'; then
+            echo "ERROR: Version must look like v1.2.3 or v1.2.3-beta0"
+            exit 1
+          fi
+
+          if git ls-remote --tags origin "refs/tags/$VERSION" | grep -q "$VERSION"; then
+            echo "ERROR: Tag $VERSION already exists"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Update FAMILY_CALENDAR_CARD_VERSION
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          perl -0pi -e "s/const FAMILY_CALENDAR_CARD_VERSION = '[^']+';/const FAMILY_CALENDAR_CARD_VERSION = '$VERSION';/" src/version.js
+          npm run build
+
+          DETECTED_VERSION="$(grep -oE "FAMILY_CALENDAR_CARD_VERSION = '[^']+'" src/version.js | sed -E "s/.*'([^']+)'.*/\1/")"
+          GENERATED_VERSION="$(grep -oE "FAMILY_CALENDAR_CARD_VERSION = '[^']+'" family-calendar-card.js | sed -E "s/.*'([^']+)'.*/\1/")"
+          echo "Detected source version: $DETECTED_VERSION"
+          echo "Detected generated version: $GENERATED_VERSION"
+
+          if [ "$DETECTED_VERSION" != "$VERSION" ] || [ "$GENERATED_VERSION" != "$VERSION" ]; then
+            echo "ERROR: Failed to update FAMILY_CALENDAR_CARD_VERSION"
+            exit 1
+          fi
+
+          if echo "$DETECTED_VERSION" | grep -q "__" || [ "$DETECTED_VERSION" = "dev" ]; then
+            echo "ERROR: Invalid FAMILY_CALENDAR_CARD_VERSION"
+            exit 1
+          fi
+
+      - name: Verify release staging checks
+        run: |
+          VERSION="$(grep -oE "FAMILY_CALENDAR_CARD_VERSION = '[^']+'" src/version.js | sed -E "s/.*'([^']+)'.*/\1/")"
+          GENERATED_VERSION="$(grep -oE "FAMILY_CALENDAR_CARD_VERSION = '[^']+'" family-calendar-card.js | sed -E "s/.*'([^']+)'.*/\1/")"
+
+          echo "Detected source version: $VERSION"
+          echo "Detected generated version: $GENERATED_VERSION"
+
+          if [ "$GENERATED_VERSION" != "$VERSION" ]; then
+            echo "ERROR: Generated bundle version does not match source version"
+            exit 1
+          fi
+
+          if [ -z "$VERSION" ] || [ "$VERSION" = "dev" ] || echo "$VERSION" | grep -q "__"; then
+            echo "ERROR: Invalid FAMILY_CALENDAR_CARD_VERSION"
+            exit 1
+          fi
+
+          if ! echo "$VERSION" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$'; then
+            echo "ERROR: Version must look like v1.2.3 or v1.2.3-beta0"
+            exit 1
+          fi
+
+      - name: Create release prep pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: release-prep/${{ steps.version.outputs.version }}
+          base: main
+          delete-branch: true
+          title: Prepare release ${{ steps.version.outputs.version }}
+          commit-message: Prepare release ${{ steps.version.outputs.version }}
+          body: |
+            Updates `FAMILY_CALENDAR_CARD_VERSION` in `src/version.js` to `${{ steps.version.outputs.version }}` and rebuilds `family-calendar-card.js`.
+
+            This workflow validated the version string and the same source checks used by the release staging workflow before opening this PR.
+          add-paths: |
+            src/version.js
+            family-calendar-card.js

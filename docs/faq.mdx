@@ -1,0 +1,204 @@
+---
+title: "Frequently Asked Questions: Family Calendar Card"
+sidebarTitle: "FAQ"
+description: "Answers to common questions about Family Calendar Card covering installation, configuration, Google Calendar, language settings, and HACS updates."
+---
+
+The Family Calendar Card is a custom Lovelace card for Home Assistant that brings a full-featured calendar view to your dashboards. Whether you're just getting started or looking to understand a specific configuration option, this page answers the questions users ask most often. If you run into a specific problem rather than a general question, see the [Troubleshooting](/troubleshooting) page instead.
+
+<AccordionGroup>
+  <Accordion title="Is Family Calendar Card free?">
+    Yes — the card is completely free and open source, published under the MIT license. You can use it on as many Home Assistant instances as you like without any cost or subscription.
+
+    If you find the card useful and want to support the developer's ongoing work, you can do so via GitHub Sponsors or Buy Me a Coffee. Links are available on the [project's GitHub page](https://github.com/Baeka89/family-calendar-card).
+  </Accordion>
+
+  <Accordion title="Does it work with Google Calendar?">
+    Yes. Connect your Google Calendar to Home Assistant using the built-in Google Calendar integration. Once connected, each calendar appears as a `calendar.*` entity (for example, `calendar.my_google_calendar`) that you can add to the card's `entities` list.
+
+    **Important limitations with Google Calendar:**
+
+    - **Editing events** is not natively supported through the Home Assistant Google Calendar integration. Google Calendar edits are simulated via create-then-delete, which changes the event's UID. To truly edit an event, use the Google Calendar app or website directly.
+    - **Deleting events** does work through Home Assistant and the card.
+    - **Creating new events** works if the calendar is writable in HA.
+
+    <Note>
+      These limitations come from the Home Assistant Google Calendar integration, not from the card itself. They apply regardless of which calendar UI you use in HA.
+    </Note>
+  </Accordion>
+
+  <Accordion title="What calendar integrations are supported?">
+    Any integration that exposes a `calendar.*` entity in Home Assistant will work with the card. This includes:
+
+    - **Google Calendar** (via the HA Google Calendar integration)
+    - **CalDAV** — covers Nextcloud Calendar, iCloud Calendar, Fastmail, Radicale, Baikal, and any other CalDAV-compatible server
+    - **Local Home Assistant calendars** (created directly in HA)
+    - Any third-party integration that creates `calendar.*` entities
+
+    If you can see an entity in **Developer Tools → States** with a `calendar.` prefix, you can use it with the card.
+  </Accordion>
+
+  <Accordion title="Can I use multiple calendars at once?">
+    Yes. Add as many entity IDs as you need to the `entities` list:
+
+    ```yaml
+    type: custom:family-calendar-card
+    entities:
+      - calendar.personal
+      - calendar.work
+      - calendar.family_shared
+    ```
+
+    Each calendar is automatically assigned a distinct color. You can override individual colors using the `colors` map:
+
+    ```yaml
+    colors:
+      calendar.personal: "#4A90D9"
+      calendar.work: "#E94E4E"
+    ```
+
+    Users can also toggle individual calendars on and off using the calendar filter controls in the card header.
+  </Accordion>
+
+  <Accordion title='What is "family-calendar-card-legacy"? Is it different from "family-calendar-card"?'>
+    They are the same card. The project was originally named **Family Calendar Card** and was later renamed to **Family Calendar Card**. Both card type identifiers continue to work:
+
+    ```yaml
+    type: custom:family-calendar-card   # current name
+    type: custom:family-calendar-card-legacy   # legacy name, still supported
+    ```
+
+    The JavaScript file is still named `family-calendar-card.js` for backwards compatibility — renaming it would break existing installations. You do not need to change anything if you installed the card before the rename.
+
+    <Note>
+      New installations should use `type: custom:family-calendar-card` in their YAML. Both types register from the same file.
+    </Note>
+  </Accordion>
+
+  <Accordion title="How do I update the card via HACS?">
+    1. Open **HACS** in the Home Assistant sidebar.
+    2. Go to **Frontend**.
+    3. Find **Family Calendar Card** in the list.
+    4. If an update is available, click the card entry and then click **Update**.
+    5. After HACS finishes downloading, hard-refresh your browser with `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac) to ensure the browser loads the new JavaScript file and not a cached version.
+
+    <Tip>
+      If the card still shows the old version number after updating, clear your browser cache or open the dashboard in a private/incognito window to confirm the update took effect.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="I updated through HACS, but I do not see the latest features. Why?">
+    HACS showing the latest version confirms that the current files are installed on disk. It does not prove that your browser or dashboard is loading the current frontend resource.
+
+    This is especially common if you have more than one Family Calendar Card resource registered, or if your browser cached an old bundle after an update.
+
+    Check **Settings → Dashboards → Resources**, remove duplicate or old resources, and make sure the active HACS resource uses `/hacsfiles/family-calendar-card/family-calendar-card.js`. Then hard-refresh the browser or try a private/incognito window.
+
+    See [Updated to the latest version, but still seeing old behavior](/troubleshooting#updated-to-the-latest-version-but-still-seeing-old-behavior) for the full checklist.
+  </Accordion>
+
+  <Accordion title="Can I use the card without writing YAML?">
+    Yes. The card ships with a visual configuration editor that is accessible directly from the Home Assistant dashboard card editor. Click **Edit Dashboard**, add or edit a Family Calendar Card, and the graphical editor appears automatically. It covers all the common options including calendars, view modes, colors, and weather.
+
+    Advanced options that require manual YAML editing include:
+
+    - `event_styles` — custom styling rules for individual events
+    - `day_styles` — custom styling rules for specific days
+    - `day_badges` — icons or labels shown on day cells
+    - `virtual_calendars` — computed calendars derived from other data
+
+    For most users, the visual editor is all that's needed.
+  </Accordion>
+
+  <Accordion title="What languages does the card support?">
+    The card currently supports the following languages:
+
+    | Code | Language |
+    | --- | --- |
+    | `en` | English |
+    | `fr` | French |
+    | `de` | German |
+    | `nl` | Dutch |
+    | `es` | Spanish |
+    | `et` | Estonian |
+    | `ca` | Catalan |
+    | `da` | Danish |
+    | `sv` | Swedish |
+
+    The language is auto-detected from your Home Assistant profile settings. To override it, add the `language` key to your card YAML:
+
+    ```yaml
+    language: fr
+    ```
+
+    <Note>
+      Language affects UI labels and day/month names. To separately control how dates and times are formatted (e.g. 12-hour vs 24-hour clock, date order), use the `locale` key — for example, `locale: en-GB`.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Does the card support dark mode?">
+    Yes. The card has full dark mode support with three options controlled by the `color_scheme` config key:
+
+    ```yaml
+    color_scheme: auto    # follows your system or HA theme (default)
+    color_scheme: light   # always use the light theme
+    color_scheme: dark    # always use the dark theme
+    ```
+
+    A dark mode toggle button is shown in the card header by default, allowing users to switch modes on the fly without editing the config. To hide this button, add:
+
+    ```yaml
+    hide_dark_mode_toggle: true
+    ```
+  </Accordion>
+
+  <Accordion title="How do I make the card fill the full height in a panel dashboard?">
+    Set `compact_height: true` in your card config:
+
+    ```yaml
+    type: custom:family-calendar-card
+    entities:
+      - calendar.my_calendar
+    compact_height: true
+    ```
+
+    This tells the card to measure its parent container and expand to fill the available vertical space. It is designed specifically for use in Home Assistant **panel** and **grid** dashboard layouts where the card occupies a fixed-height region.
+
+    <Warning>
+      Do not use `compact_height: true` in a standard vertical (sidebar) dashboard layout. In that layout the container has no fixed height, so the card may collapse to zero height. Use `height_scale` to adjust sizing in standard layouts instead.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Can I hide specific events from showing on the card?">
+    Yes. Use the `event_styles` configuration to define rules that match events and apply `hide: true` to them:
+
+    ```yaml
+    event_styles:
+      - match:
+          title: "Team Standup"
+        style:
+          hide: true
+    ```
+
+    Rules can match on any combination of event properties including calendar entity, title, description, and more. Multiple conditions in a single rule are combined with AND logic.
+
+    See the **Event Styles** documentation for the full list of available conditions and style properties.
+  </Accordion>
+
+  <Accordion title="How do I add a weather forecast to the calendar?">
+    Set the `header_weather_sensor` key to a valid `weather.*` entity in your Home Assistant instance:
+
+    ```yaml
+    type: custom:family-calendar-card
+    entities:
+      - calendar.my_calendar
+    header_weather_sensor: weather.home
+    ```
+
+    The card displays current conditions in the header. Daily forecasts are enabled by default and appear in calendar views when the entity supports them. Set `show_daily_weather_forecast: false` to keep the header conditions without requesting or displaying per-day forecasts; in this mode, the entity does not need to support daily forecasts.
+
+    <Tip>
+      Not sure what your weather entity is called? Open **Developer Tools → States** in Home Assistant and filter by `weather.` to see all available weather entities.
+    </Tip>
+  </Accordion>
+</AccordionGroup>

@@ -1,0 +1,86 @@
+---
+title: "Installing Family Calendar Card in Home Assistant"
+sidebarTitle: "Installation"
+description: "Install Family Calendar Card via HACS in one click, or manually by downloading the JS file and registering it as a Lovelace resource."
+---
+
+You can install Family Calendar Card in two ways: through HACS (Home Assistant Community Store), which handles updates automatically and is recommended for most users, or manually by downloading the JavaScript file and registering it as a Lovelace resource yourself. Both methods result in the same card with the same features.
+
+## Install the Card
+
+<Tabs>
+  <Tab title="HACS (Recommended)">
+    HACS manages the download, registration, and future updates for you. If you haven't installed HACS yet, follow the [official HACS installation guide](https://hacs.xyz/docs/use/) first.
+
+    Click the button below to open Family Calendar Card directly in your Home Assistant's HACS:
+
+    <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=Baeka89&repository=family-calendar-card&category=frontend" target="_blank" rel="noopener noreferrer">
+  <img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open your Home Assistant instance and open a repository inside the Home Assistant Community Store." />
+</a>
+
+    <Steps>
+      <Step title="Open HACS in Home Assistant">
+        In your Home Assistant sidebar, click **HACS** to open the Community Store.
+      </Step>
+      <Step title="Navigate to Frontend">
+        Click **Frontend** in the HACS navigation to browse Lovelace cards and UI components.
+      </Step>
+      <Step title="Search for Family Calendar Card">
+        Use the search bar to find **Family Calendar Card**. Click the result to open its detail page.
+      </Step>
+      <Step title="Install the card">
+        Click the **Download** button (or **Install** if you see that label). HACS will fetch the latest release and register the resource automatically.
+      </Step>
+      <Step title="Reload your browser">
+        Hard-reload your browser (Ctrl\+Shift\+R on Windows/Linux, Cmd\+Shift\+R on macOS) so the new JavaScript file is picked up. The card is now ready to use.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Manual">
+    Manual installation gives you full control over the file location and resource registration. You'll need filesystem access to your Home Assistant configuration directory.
+
+    <Steps>
+      <Step title="Download the JavaScript file">
+        Go to the [GitHub releases page](https://github.com/Baeka89/family-calendar-card/releases) and download `family-calendar-card.js` from the latest release assets.
+      </Step>
+      <Step title="Copy the file to your www folder">
+        Place the downloaded file in your Home Assistant configuration's `www` directory:
+
+        ```text
+        <config>/www/family-calendar-card.js
+        ```
+
+        Create the `www` folder if it doesn't exist yet.
+      </Step>
+      <Step title="Open the Resources settings">
+        In Home Assistant, go to **Settings → Dashboards**, then click the **⋮** menu in the top-right corner and select **Resources**.
+      </Step>
+      <Step title="Add the resource">
+        Click **Add Resource** and fill in the following fields:
+
+        | Field | Value |
+        | --- | --- |
+        | URL | `/local/family-calendar-card.js` |
+        | Resource type | **JavaScript Module** |
+
+        Click **Create** to save.
+      </Step>
+      <Step title="Reload your browser">
+        Hard-reload your browser (Ctrl\+Shift\+R on Windows/Linux, Cmd\+Shift\+R on macOS) to load the newly registered resource. The card is now available in your dashboard editor.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+<Note>
+  The card was previously called **Family Calendar Card**. It was renamed to Family Calendar Card in v4.0.0. If you have existing dashboard YAML that uses `type: custom:family-calendar-card-legacy`, it will continue to work without any changes — both type names are supported.
+</Note>
+
+## Requirements
+
+Before installing, make sure your setup meets the following requirements:
+
+- **Home Assistant** — any reasonably recent version with Lovelace dashboards enabled.
+- **At least one calendar entity** — for example `calendar.family`, `calendar.work`, or any entity provided by a calendar integration such as Google Calendar, CalDAV, or Local Calendar. You can check your available calendar entities under **Settings → Devices & Services** or in **Developer Tools → States** by filtering for the `calendar.` domain.
+
+If you don't have a calendar integration set up yet, add one from **Settings → Devices & Services → Add Integration** before proceeding.

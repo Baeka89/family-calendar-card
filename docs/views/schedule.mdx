@@ -1,0 +1,146 @@
+---
+title: "Schedule View: Timed Weekly Grid for Family Calendar"
+sidebarTitle: "Schedule"
+description: "Schedule view renders a timed weekly grid with days as columns and hours as rows, positioning events as blocks by their actual start and end times."
+---
+
+Schedule view renders your week as a **timed grid** — days as columns, hours as rows. Events appear as blocks positioned by their real start and end times, so you can see event duration, gaps between commitments, overlapping meetings, and where the current moment falls relative to what's coming next.
+
+This is the right view when you care about **time-of-day precision**, not just which day something is on.
+
+## Activating Schedule View
+
+Set `default_view` to `schedule` (or its canonical name `week-standard`) in your card configuration:
+
+```yaml
+type: custom:family-calendar-card
+default_view: schedule
+entities:
+  - calendar.family
+```
+
+`schedule` and `week-standard` refer to the same timed grid view. The card normalizes `schedule` to `week-standard` internally. New examples use `schedule` because that is the user-facing label in the view selector.
+
+## When to use Schedule
+
+Schedule is the right choice when you want to:
+
+- See **meetings** laid out on a real timeline.
+- Plan a **workday** and know exactly when things start and end.
+- **Spot gaps and conflicts** at a glance — overlapping blocks are visually obvious.
+- **View event duration spatially** — a one-hour event and a three-hour event look proportionally different.
+
+## Configuration Options
+
+<ParamField path="week_start_hour" default="0" type="number">
+  Used by **Schedule** only.
+
+  The earliest hour row displayed in the timed grid, in 24-hour format (0–23). Without `lock_schedule_hours`, the grid expands upward as needed to include any event that starts before this hour.
+</ParamField>
+
+<ParamField path="week_end_hour" default="23" type="number">
+  Used by **Schedule** only.
+
+  The latest hour row displayed in the timed grid, in 24-hour format (0–23). Without `lock_schedule_hours`, the grid expands downward to accommodate late events.
+</ParamField>
+
+<ParamField path="lock_schedule_hours" default="false" type="boolean">
+  Used by **Schedule** only.
+
+  When `true`, the hour range is fixed to exactly `week_start_hour` through `week_end_hour` regardless of where events fall. The grid will not expand to show events outside that window. Use this to keep the Schedule view anchored to working hours and prevent layout shifts when outlier events exist.
+</ParamField>
+
+<ParamField path="show_current_time_bar" default="false" type="boolean">
+  Used by **Schedule** only.
+
+  When `true`, renders a horizontal "now" line across today's column at the current time of day, giving you a live "you are here" marker against your scheduled events.
+</ParamField>
+
+<ParamField path="week_days" default="[0,1,2,3,4,5,6]" type="array">
+  Used by **Week**. Ignored in those views when their `rolling_days_*` option is set.
+
+  An array of day numbers controlling which days appear as columns. Days are numbered `0` (Sunday) through `6` (Saturday). Pass `[1,2,3,4,5]` to show Monday through Friday only.
+</ParamField>
+
+<ParamField path="first_day_of_week" default="0" type="number">
+  Used by **Month**, **Week**, and **Schedule**. In Week Compact and Schedule, only affects normal week mode — it is ignored in rolling-days mode.
+
+  The day number (0–6) that anchors the left edge of the week. Set to `1` to start each week on Monday.
+</ParamField>
+
+<ParamField path="rolling_days_schedule" type="number">
+  Used by **Schedule** only.
+
+  By default Schedule snaps to full calendar weeks. Set `rolling_days_schedule` to a positive integer to switch to a rolling window of that many days starting from today, rather than aligning to week boundaries. When set, `week_days` and `first_day_of_week` are ignored in this view.
+</ParamField>
+
+<ParamField path="use_24hr_schedule" default="false" type="boolean">
+  Used by **Month**, **Week**, **Schedule**, and **Agenda**. Despite the name, it is used by the shared event-time formatter, not only the Schedule view.
+
+  When `true`, event times use 24-hour format (e.g. `14:00`) instead of 12-hour format with AM/PM.
+</ParamField>
+
+<ParamField path="shorten_event_times" default="false" type="boolean">
+  Used by **Month**, **Week**, **Schedule**, and **Agenda**.
+
+  When `true`, event time labels are abbreviated — for example `10 AM` instead of `10:00 AM`, or `10h` in 24-hour mode. Useful when columns are narrow.
+</ParamField>
+
+<ParamField path="show_event_location" default="false" type="boolean">
+  Used by **Week**, **Schedule**, and **Agenda**. Also applies to **Month** only when `show_all_details_month` is enabled (it does not affect normal Month event bubbles).
+
+  When `true`, the location field of each event is displayed on a second line below the event title.
+</ParamField>
+
+<ParamField path="use_short_location" default="false" type="boolean">
+  Used by **Week**, **Schedule**, and **Agenda**. Also applies to **Month** only when `show_all_details_month` is enabled. Has no visible effect unless `show_event_location` is also enabled.
+
+  Truncates long location strings to a shorter form so they don't push event blocks taller.
+</ParamField>
+
+<ParamField path="hide_times_for_calendars" type="array">
+  Used by **Month**, **Week**, **Schedule**, and **Agenda**.
+
+  An array of calendar entity IDs whose events should not display time labels. Useful for all-day-style calendars where exact times are noise.
+</ParamField>
+
+<ParamField path="past_event_mode" default="none" type="string">
+  Used by **Month**, **Week**, **Schedule**, and **Agenda**. Controls how events that have already ended are handled across the card. Accepted values:
+
+  - `none` — past events look identical to upcoming events (default).
+  - `muted` — past events render at reduced opacity to de-emphasise them.
+  - `hide` — past events are not rendered.
+</ParamField>
+
+## Example Configuration
+
+A workday-oriented Schedule view from 8 AM to 6 PM, Monday through Friday, with the current-time bar enabled and past events muted:
+
+```yaml
+type: custom:family-calendar-card
+default_view: schedule
+entities:
+  - calendar.family
+  - calendar.work
+week_days: [1, 2, 3, 4, 5]
+week_start_hour: 8
+week_end_hour: 18
+lock_schedule_hours: true
+show_current_time_bar: true
+shorten_event_times: true
+past_event_mode: muted
+```
+
+## Tips
+
+<Tip>
+  Pair `lock_schedule_hours: true` with a tight `week_start_hour` / `week_end_hour` range to keep the grid anchored to your working day, even if a late-evening event slips into your calendar.
+</Tip>
+
+<Note>
+  All-day events are rendered in a separate banner row at the top of the grid, above the timed columns. They are always visible regardless of the `week_start_hour` / `week_end_hour` range.
+</Note>
+
+<Note>
+  Looking for a simpler weekly overview without an hourly grid? See [Week Compact view](/views/week).
+</Note>

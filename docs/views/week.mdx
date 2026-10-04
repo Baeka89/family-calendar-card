@@ -1,0 +1,130 @@
+---
+title: "Week View: Glanceable Weekly Calendar Layout"
+sidebarTitle: "Week"
+description: "Week view shows each day of the week as a column with stacked events, providing a clean, glanceable layout for family dashboards and wall tablets."
+---
+
+Week view shows each day of the week as its own column, with that day's events stacked beneath the date. It is designed for **quick scanning** rather than minute-by-minute planning: you see what is happening on each day at a glance, without an hourly grid.
+
+<Note>
+  For a full hourly grid with event blocks positioned by their start and end times, use the [Schedule view](/views/schedule) instead.
+</Note>
+
+## Activating Week View
+
+Set `default_view` to `week-compact` (or its shorthand `week`) in your card configuration:
+
+```yaml
+type: custom:family-calendar-card
+default_view: week-compact
+entities:
+  - calendar.family
+```
+
+Both `week` and `week-compact` refer to the same view. The card normalizes `week` to `week-compact` internally.
+
+## When to use Week Compact
+
+Week Compact is the right choice when you want:
+
+- **Family wall dashboards** that need to be readable from across the room.
+- A **weekly overview** without the visual weight of a time-grid.
+- **Narrow dashboard columns** or sidebar placements where a full timed grid wouldn't fit.
+- **Quick weekly planning** — see what each day looks like without zooming into hours.
+
+## Configuration Options
+
+<ParamField path="week_days" default="[0,1,2,3,4,5,6]" type="array">
+  Used by **Week** and **Schedule**. Ignored in those views when their `rolling_days_*` option is set.
+
+  An array of day numbers controlling which days appear as columns. Days are numbered `0` (Sunday) through `6` (Saturday). Pass `[1,2,3,4,5]` to show Monday through Friday only, making each column wider and easier to read on smaller screens.
+</ParamField>
+
+<ParamField path="first_day_of_week" default="0" type="number">
+  Used by **Month**, **Week**, and **Schedule**. In Week Compact and Schedule, only affects normal week mode — it is ignored in rolling-days mode.
+
+  The day number (0–6) that anchors the left edge of the week. Set to `1` to start each week on Monday.
+</ParamField>
+
+<ParamField path="rolling_days_week_compact">
+  Used by **Week** only.
+
+  By default Week Compact snaps to full calendar weeks. Set `rolling_days_week_compact` to a positive integer to switch to a rolling window of that many days starting from today, rather than aligning to week boundaries. When set, `week_days` and `first_day_of_week` are ignored in this view.
+</ParamField>
+
+<ParamField path="day_badge_layout_week" default="inline" type="string">
+  Used by **Week** and **Schedule** day headers only. It does not change Month, Agenda, or day badge matching.
+
+  - `inline` — the default. The day number and matching day badges share one row.
+  - `stacked` — matching day badges appear below the day number. This gives icon-and-text badges more room on tablet dashboards.
+
+  ```yaml
+  day_badge_layout_week: stacked
+  ```
+</ParamField>
+
+<ParamField path="shorten_event_times" default="false" type="boolean">
+  Used by **Month**, **Week**, **Schedule**, and **Agenda**.
+
+  When `true`, event time labels are abbreviated — for example `10 AM` instead of `10:00 AM` — saving horizontal space in narrow columns.
+</ParamField>
+
+<ParamField path="show_event_location" default="false" type="boolean">
+  Used by **Week**, **Schedule**, and **Agenda**. Also applies to **Month** only when `show_all_details_month` is enabled (it does not affect normal Month event bubbles).
+
+  When `true`, the location field of each event is displayed on a second line below the event title.
+</ParamField>
+
+<ParamField path="use_short_location" default="false" type="boolean">
+  Used by **Week**, **Schedule**, and **Agenda**. Also applies to **Month** only when `show_all_details_month` is enabled. Has no visible effect unless `show_event_location` is also enabled.
+
+  Truncates long location strings to a shorter form so they don't push event blocks taller.
+</ParamField>
+
+<ParamField path="use_24hr_schedule" default="false" type="boolean">
+  Used by **Month**, **Week**, **Schedule**, and **Agenda**. Despite the name, it is used by the shared event-time formatter, not only the Schedule view.
+
+  When `true`, event times use 24-hour format (e.g. `14:00`) instead of 12-hour format with AM/PM.
+</ParamField>
+
+<ParamField path="hide_times_for_calendars" type="array">
+  Used by **Month**, **Week**, **Schedule**, and **Agenda**.
+
+  An array of calendar entity IDs whose events should not display time labels. Useful for all-day-style calendars where exact times are noise.
+</ParamField>
+
+<ParamField path="past_event_mode" default="none" type="string">
+  Used by **Month**, **Week**, **Schedule**, and **Agenda**. Controls how events that have already ended are handled across the card. Accepted values:
+
+  - `none` — past events look identical to upcoming events (default).
+  - `muted` — past events render at reduced opacity.
+  - `hide` — past events are not rendered.
+</ParamField>
+
+<Note>
+  Timed-grid options like `week_start_hour`, `week_end_hour`, `lock_schedule_hours`, and `show_current_time_bar` belong to the [Schedule view](/views/schedule). They do not apply here because Week Compact does not render an hourly grid.
+</Note>
+
+## Example Configuration
+
+A Monday-to-Friday compact week with shortened event times — useful for a narrow sidebar card:
+
+```yaml
+type: custom:family-calendar-card
+default_view: week-compact
+entities:
+  - calendar.family
+  - calendar.work
+week_days: [1, 2, 3, 4, 5]
+shorten_event_times: true
+```
+
+## Tips
+
+<Tip>
+  Removing weekend columns with `week_days: [1,2,3,4,5]` makes each weekday column noticeably wider. On a narrow sidebar card this can be the difference between readable event titles and truncated text.
+</Tip>
+
+<Tip>
+  Want a moving "today \+ next few days" view instead of a fixed calendar week? Set `rolling_days_week_compact: 6` to show today plus the next six days.
+</Tip>

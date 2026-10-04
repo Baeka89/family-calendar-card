@@ -1,0 +1,153 @@
+---
+title: "Weather & Time Display in the Family Calendar Card"
+sidebarTitle: "Weather"
+description: "Add weather forecasts and a live clock to your Family Calendar Card header using Home Assistant weather and time sensor entities."
+---
+
+The Family Calendar Card can pull current conditions and, when available, a daily forecast from a Home Assistant `weather.*` entity. Current conditions and today's temperature appear in the card header. Per-day forecast icons can appear in Month, Week Compact, Week Standard/Schedule, and Agenda views.
+
+## Weather Forecast
+
+<ParamField path="header_weather_sensor" type="string">
+  The entity ID of a Home Assistant `weather.*` entity. When set, the card:
+
+  - Reads **current conditions** (state and temperature) directly from the entity for the header summary.
+  - Subscribes to **daily forecasts** through Home Assistant's live forecast API and renders an MDI weather icon plus high/low temperatures for each day.
+
+  Examples: `weather.home`, `weather.openweathermap`, `weather.met_no`.
+</ParamField>
+
+<ParamField path="show_daily_weather_forecast" type="boolean" default="true">
+  Controls whether daily forecasts appear inside calendar days. Set this to `false` to keep the current condition, icon, and temperature in the header without requesting or displaying daily forecast data.
+</ParamField>
+
+### Requirements
+
+To display weather data you need:
+
+1. A weather integration installed and configured in Home Assistant — for example, [Met.no](https://www.home-assistant.io/integrations/met/), [OpenWeatherMap](https://www.home-assistant.io/integrations/openweathermap/), or [AccuWeather](https://www.home-assistant.io/integrations/accuweather/).
+2. When `show_daily_weather_forecast` is enabled, the `weather.*` entity must support the **daily forecast** type. Home Assistant exposes this as the `FORECAST_DAILY` feature on the entity. Most modern HA weather integrations support daily forecasts out of the box, but a few (especially radar-only or current-conditions-only integrations) do not.
+
+With `show_daily_weather_forecast: false`, the card can still show current conditions in the header from a `weather.*` entity that does not provide daily forecasts.
+
+### Example
+
+```yaml
+type: custom:family-calendar-card
+title: Family Calendar
+entities:
+  - calendar.family
+header_weather_sensor: weather.home
+```
+
+### Header-only weather
+
+```yaml
+type: custom:family-calendar-card
+entities:
+  - calendar.family
+header_weather_sensor: weather.home
+show_daily_weather_forecast: false
+```
+
+<Tip>
+  Popular weather integrations known to provide daily forecasts: Met.no (free, no sign-up), OpenWeatherMap, AccuWeather, Pirate Weather, and the built-in HA weather platform.
+</Tip>
+
+<Note>
+  Weather icons in the card are rendered using MDI (Material Design Icons), not emoji. They scale crisply at any display size and automatically respect your card's light or dark color scheme without any extra configuration.
+</Note>
+
+### Troubleshooting
+
+<Warning>
+  **Current conditions show but day-cell forecasts are empty.** This usually means the `weather.*` entity does not advertise daily-forecast support. Verify by calling the `weather.get_forecasts` service in Home Assistant Developer Tools with `type: daily`. If the response is empty or errors out, switch to a weather integration that supports daily forecasts (Met.no is a good free option).
+</Warning>
+
+<Warning>
+  **Forecasts stop updating after a while.** The card maintains a live subscription to the weather entity's forecast stream. If your weather integration is rate-limited or disconnected, forecasts may go stale. Reload the dashboard tab to re-establish the subscription, and check the integration's status page in Home Assistant.
+</Warning>
+
+## Live Time Display
+
+In addition to weather, you can display a real-time clock in the card header by pointing the card at a Home Assistant time sensor.
+
+<ParamField path="header_time_sensor" type="string">
+  The entity ID of a Home Assistant sensor that provides the current time as its state. The most common choice is `sensor.time`, which is provided by the [Time & Date](https://www.home-assistant.io/integrations/time_date/) integration. When set, the current time is shown in the card header and updates automatically each minute.
+</ParamField>
+
+### Setting Up `sensor.time`
+
+If you have not already added the Time & Date integration, enable `sensor.time` by adding the following to your `configuration.yaml`:
+
+```yaml
+sensor:
+  - platform: time_date
+    display_options:
+      - time
+```
+
+Then restart Home Assistant and use the sensor in the card:
+
+```yaml
+type: custom:family-calendar-card
+title: Family Calendar
+entities:
+  - calendar.family
+header_time_sensor: sensor.time
+header_weather_sensor: weather.home
+```
+
+## Custom header items
+
+Use `header_items` to add short, structured icon and value pairs after the title, live time, and weather summary. Each item pulls its value from a Home Assistant entity (or from static text) and updates only when that entity changes. Use header items for glanceable data such as sunrise and sunset times, indoor temperature, or a simple label. For the best responsive layout, keep the list to 1–4 short items.
+
+<ParamField path="header_items" type="array">
+  Optional list of custom header items. Each item accepts:
+
+  - `icon`: optional MDI icon shown before the value, such as `mdi:weather-sunset-up`.
+  - `entity`: optional Home Assistant entity ID. When set, the card reads the entity's state.
+  - `attribute`: optional attribute name. When set, the card displays the named attribute instead of the entity state.
+  - `text`: optional static text. Used as a fallback when the entity is missing, or on its own for a static label.
+  - `format`: optional display format. Defaults to `auto`. Supported values are `auto`, `raw`, `time`, `date`, and `datetime`.
+
+  With `auto`, the card picks a compact format based on the entity: timestamp entities show a local time, date entities show a localized date, entities with a unit of measurement keep their unit, and everything else displays as raw state text.
+</ParamField>
+
+### Example
+
+```yaml
+type: custom:family-calendar-card
+title: Family Calendar
+entities:
+  - calendar.family
+header_weather_sensor: weather.home
+header_time_sensor: sensor.time
+header_items:
+  - icon: mdi:weather-sunset-up
+    entity: sensor.sun_next_rising
+  - icon: mdi:weather-sunset-down
+    entity: sensor.sun_next_setting
+  - icon: mdi:home
+    text: Family
+```
+
+<Note>
+  Header items hide automatically when their resolved value is empty, `unknown`, or `unavailable`. If an entity is missing and `text` is provided, the card displays the text fallback instead. Values and icon names are escaped before rendering — arbitrary HTML and Jinja templates are intentionally not supported.
+</Note>
+
+## Combined Example
+
+The configuration below shows a card that displays both a live clock and a daily weather forecast in the header:
+
+```yaml
+type: custom:family-calendar-card
+title: Family Calendar
+entities:
+  - calendar.family
+  - calendar.work
+header_weather_sensor: weather.home
+header_time_sensor: sensor.time
+default_view: month
+color_scheme: auto
+```

@@ -1,0 +1,370 @@
+---
+title: "Display & Header Options for Family Calendar Card"
+sidebarTitle: "Display Options"
+description: "Control header visibility, navigation, calendar badge display, and event formatting options for the Family Calendar Card in Home Assistant."
+---
+
+The Family Calendar Card gives you fine-grained control over which interface elements are visible and how individual events are presented. Whether you want a completely frameless calendar embedded in a dashboard or a fully interactive card with navigation controls and calendar toggles, the options below let you build exactly what you need.
+
+## Header Options
+
+The header sits at the top of the card and contains the title, navigation arrows, view selector, add-event button, and the dark-mode toggle. You can hide any combination of these controls independently.
+
+<ParamField path="hide_header" default="false" type="boolean">
+  Hide the entire card header, including the title and all controls. Useful when you want only the calendar grid itself to appear.
+</ParamField>
+
+<ParamField path="hide_year" default="false" type="boolean">
+  Remove the year from the date shown in the header. Helpful when space is tight and the year is implied.
+</ParamField>
+
+<ParamField path="period_date_format" type="string">
+  Controls how the month is written in the header period label — the week/agenda date range (e.g. "21.–27. Sept. 2026") and the standard month view's title (e.g. "September 2026"). Accepts:
+
+  - omitted (default) — each view keeps its own traditional style: abbreviated for the week/agenda range, full text for the month view title.
+  - `short` — abbreviated month everywhere, e.g. "21.–27. Sept. 2026" / "Sep 2026".
+  - `long` — full month name everywhere, e.g. "21.–27. September 2026" / "September 2026".
+  - `numeric` — digits only, e.g. "21.–27.09.2026" / "9 2026".
+
+  Combine with `hide_year` to also drop the year, e.g. `period_date_format: numeric` + `hide_year: true` → "21.9. - 27.9.".
+
+  ```yaml
+  period_date_format: numeric
+  ```
+</ParamField>
+
+<ParamField path="hide_navigation_buttons" default="false" type="boolean">
+  Hide the previous and next navigation arrows so the card stays fixed on the current period.
+</ParamField>
+
+<ParamField path="hide_view_selector" default="false" type="boolean">
+  Hide the view-selector dropdown (Month / Week / Schedule / Agenda) so the card stays locked to its `default_view`.
+</ParamField>
+
+<ParamField path="hide_add_event_button" default="false" type="boolean">
+  Hide the **Add Event** button from the header.
+</ParamField>
+
+<ParamField path="hide_dark_mode_toggle" default="false" type="boolean">
+  Hide the light/dark mode toggle button.
+</ParamField>
+
+<ParamField path="hide_controls" default="false" type="boolean">
+  Hide all controls at once — equivalent to setting `hide_navigation_buttons`, `hide_view_selector`, and `hide_add_event_button` to `true` simultaneously.
+</ParamField>
+
+<ParamField path="compact_header" default="false" type="boolean">
+  Collapse the header into a single row by placing the title and controls side by side. This saves vertical space on smaller cards.
+</ParamField>
+
+<ParamField path="show_dashboard_nav_button" default="false" type="boolean">
+  Show a button in the header that navigates to another Home Assistant dashboard. You must also set `header_dashboard_path` for the button to appear.
+</ParamField>
+
+<ParamField path="header_dashboard_path" type="string">
+  The path of the dashboard to open when the navigation button is clicked. For example, `/lovelace/calendar` or `/lovelace-custom/overview`. Requires `show_dashboard_nav_button: true`. Ignored when `header_dashboard_tap_action` is set.
+</ParamField>
+
+<ParamField path="header_dashboard_tap_action" type="object">
+  Replaces the Home button's plain dashboard navigation with a richer action — the same `tap_action` shape used throughout Home Assistant (tile card, button card, ...):
+
+  - `{ action: url, url_path: "https://..." }` — opens a URL in a new tab.
+  - `{ action: call-service, service: "domain.service", service_data: {...} }` — calls any Home Assistant service. This is how to open a popup card (e.g. a [Bubble Card](https://github.com/Clooos/Bubble-Card) pop-up) via [Browser Mod](https://github.com/thomasloven/hass-browser_mod)'s `browser_mod.popup` service, passing the popup card's own config as `content`.
+  - `{ action: fire-dom-event, event_type: "...", event_data: {...} }` — dispatches a custom DOM event on the card (the same mechanism [day badges](/advanced/day-badges) already use), for setups that listen for it elsewhere.
+  - `{ action: navigate, navigation_path: "/lovelace/x" }` — equivalent to `header_dashboard_path`, spelled out explicitly.
+
+  ```yaml
+  show_dashboard_nav_button: true
+  header_dashboard_tap_action:
+    action: call-service
+    service: browser_mod.popup
+    service_data:
+      title: Menu
+      content:
+        type: custom:bubble-card
+        card_type: pop-up
+  ```
+
+  This, the Home button's color, and every `header_nav_buttons` entry below are fully configurable in the visual editor's "When tapped" control — no YAML required.
+</ParamField>
+
+<ParamField path="header_dashboard_button_color" type="string">
+  Overrides the Home button's default look. Accepts three kinds of value:
+
+  - omitted — the button keeps its default appearance (a subtle, theme-following tint).
+  - `calendar:<entity_id>` — matches one of your configured calendars' own color, e.g. `calendar:calendar.family`. Updates automatically if that calendar's color changes.
+  - `calendar:virtual:<id>` — matches a [virtual calendar](/advanced/virtual-calendars) badge's own color instead, e.g. `calendar:virtual:kids`.
+  - any other value — a freely chosen CSS color, e.g. `#1976d2` or `tomato`.
+
+  ```yaml
+  header_dashboard_button_color: "calendar:calendar.family"
+  ```
+</ParamField>
+
+<ParamField path="header_nav_buttons" type="array">
+  Add up to 4 extra header buttons, each linking to a different dashboard — the same icon-or-text, path-based pattern as the button above, repeated. Useful for a family dashboard with quick links to each person's own view. Each item accepts:
+
+  - `icon`: optional MDI icon shown on the button, such as `mdi:account-child`. Takes priority over `label` when both are set.
+  - `label`: optional text shown on the button when no `icon` is set. `text` is accepted as an alias.
+  - `path`: a dashboard path to open, e.g. `/lovelace-kids` or `/lovelace/overview`. Ignored when `tap_action` is set.
+  - `tap_action`: optional. Same shape as `header_dashboard_tap_action` above (`url` / `call-service` / `fire-dom-event` / `navigate`) — use this instead of `path` to open a URL, call a service (e.g. a Browser Mod popup), or fire a custom event.
+  - `color`: optional. Same three kinds of value as `header_dashboard_button_color` above — omitted for the default look, `calendar:<entity_id>` / `calendar:virtual:<id>` to match a calendar's own color, or any other CSS color to choose one freely.
+
+  A button is only rendered once it has a destination (`path` **or** a valid `tap_action`) **and** either an `icon` or a `label`. Buttons beyond the 4th are ignored.
+
+  Button text uses the same 13px, medium-weight typography as calendar badges. When any header button matches a calendar color, the Home and custom navigation button borders use the same 2px thickness as calendar badges; each calendar-bound button uses its selected calendar's border color.
+
+  ```yaml
+  header_nav_buttons:
+    - icon: mdi:account-child
+      path: /lovelace-kids
+      color: "calendar:calendar.kids"
+    - label: Work
+      path: /lovelace-work
+      color: "#f9a825"
+    - icon: mdi:cog
+      tap_action:
+        action: call-service
+        service: browser_mod.popup
+        service_data:
+          content:
+            type: custom:bubble-card
+            card_type: pop-up
+  ```
+
+  <Note>
+    This option, including the color picker, is fully configurable in the visual editor (Display & layout → Header navigation buttons), the same way as the single dashboard button above.
+  </Note>
+</ParamField>
+
+## Calendar List Options
+
+The calendar list lets users toggle individual calendars on or off from inside the card. These options control whether the list is shown and how each calendar is labelled.
+
+<ParamField path="hide_calendars" default="false" type="boolean">
+  Hide the calendar visibility toggle list entirely.
+</ParamField>
+
+<ParamField path="hide_calendar_names" default="false" type="boolean">
+  Hide the text name next to each calendar's colored dot in the calendar list, showing only the color indicators.
+</ParamField>
+
+<ParamField path="default_hidden_calendars" type="list">
+  A list of calendar entity IDs that should be hidden when the card loads for the first time. The user can still reveal them using the calendar toggle list. Once the user changes their selection it is saved in browser storage and overrides this initial default for that browser.
+
+  ```yaml
+  default_hidden_calendars:
+    - calendar.work
+    - calendar.holidays_in_united_states
+  ```
+</ParamField>
+
+<ParamField path="default_calendar_visibility" type="map">
+  A map of calendar entity IDs to initial visibility states. Use `show`, `shown`, `visible`, `on`, or `true` to force a calendar visible; use `hide`, `hidden`, `off`, or `false` to hide it initially. This is an alternative to `default_hidden_calendars` when you prefer one map of explicit states.
+
+  ```yaml
+  default_calendar_visibility:
+    calendar.family: show
+    calendar.work: hide
+  ```
+</ParamField>
+
+<ParamField path="calendar_visibility" type="map">
+  Legacy alias for `default_calendar_visibility`. Use `default_calendar_visibility` for new configurations.
+</ParamField>
+
+<ParamField path="calendar_names" type="map">
+  Override the display name of any calendar in the card UI. The key is the entity ID and the value is the name you want shown.
+
+  ```yaml
+  calendar_names:
+    calendar.family: "Family"
+    calendar.work: "Work"
+  ```
+</ParamField>
+
+<ParamField path="calendar_badge_icons" type="map">
+  Assign an MDI icon to a calendar. The icon appears as a badge next to the calendar's colored dot in the calendar list and, optionally, on each event from that calendar.
+
+  ```yaml
+  calendar_badge_icons:
+    calendar.family: mdi:home-heart
+    calendar.work: mdi:briefcase
+  ```
+</ParamField>
+
+<ParamField path="hide_badge_calendars" type="list">
+  A list of calendar entity IDs to exclude from the calendar badge row that appears in the card header. Calendars listed here will still appear in the main calendar grid and in the calendar toggle list — they are only hidden from the compact badge indicator strip at the top of the card.
+
+  ```yaml
+  hide_badge_calendars:
+    - calendar.holidays_in_united_states
+    - calendar.boss_calendar
+  ```
+</ParamField>
+
+## Event Display Options
+
+<ParamField path="event_font_size" default="11" type="number">
+  The font size (in pixels) of the event title text.
+</ParamField>
+
+<ParamField path="event_time_font_size" default="9" type="number">
+  The font size (in pixels) of the event start/end time text.
+</ParamField>
+
+<ParamField path="event_location_font_size" default="9" type="number">
+  The font size (in pixels) of the event location text.
+</ParamField>
+
+```yaml
+type: custom:family-calendar-card
+event_font_size: 14
+event_time_font_size: 12
+event_location_font_size: 11
+```
+
+<ParamField path="event_calendar_friendly_name" default="false" type="boolean">
+  Show the calendar's friendly name beneath the event title in event detail modals.
+</ParamField>
+
+<ParamField path="event_title_prefix" default="none" type="string">
+  Prepend a prefix to every event title in the calendar grid. Options:
+
+  - `none` — no prefix
+  - `badge_icon` — prepend the calendar's MDI badge icon (requires `calendar_badge_icons`)
+  - `friendly_name` — prepend the calendar's display name
+</ParamField>
+
+<ParamField path="hide_event_calendar_bubble" default="false" type="boolean">
+  Hide the small colored dot (calendar indicator) that appears on each event chip in the grid.
+</ParamField>
+
+<ParamField path="hide_times_for_calendars" type="list">
+  A list of calendar entity IDs for which event start and end times should be hidden. Applies to Month, Week Compact, Schedule, and Agenda views. Useful for all-day or informational calendars where times add clutter.
+
+  ```yaml
+  hide_times_for_calendars:
+    - calendar.holidays_in_united_states
+  ```
+</ParamField>
+
+<ParamField path="shorten_event_times" default="false" type="boolean">
+  Display times in a compact format — for example, `10 AM` instead of `10:00 AM`. Applies to Month, Week Compact, Schedule, and Agenda views.
+</ParamField>
+
+<ParamField path="time_zone" type="string">
+  Override the browser or WebView timezone used by the card. Use an IANA timezone name, such as `America/New_York`.
+
+  Leave this unset to keep the existing behavior, which uses the device's local timezone. If the value is blank or invalid, the card ignores it and falls back to the device timezone.
+
+  ```yaml
+  time_zone: America/New_York
+  ```
+</ParamField>
+
+<ParamField path="display_full_weekday_names" default="false" type="boolean">
+  Display full weekday names, such as `Monday` and `Tuesday`, instead of abbreviated names like `Mon` and `Tue`. The card formats names using the configured `locale` or `language`, or the locale inherited from Home Assistant when neither is set.
+</ParamField>
+
+### Week Compact day header
+
+These options apply only to the **Week Compact** view. The spacing value controls both the space below the header and its bottom padding. The header continues to size naturally around dates, weather, and day badges.
+
+<ParamField path="week_compact_weekday_font_size" default="12" type="number">
+  Set the weekday-name font size in pixels.
+</ParamField>
+
+<ParamField path="week_compact_weekday_color" type="string">
+  Set the weekday-name color to any CSS color value. Leave it unset to use the existing light, dark, or custom-background color.
+</ParamField>
+
+<ParamField path="week_compact_day_header_spacing" default="12" type="number">
+  Set the day header's vertical spacing and bottom padding in pixels. Use a smaller value to shorten the header without imposing a fixed height.
+</ParamField>
+
+```yaml
+type: custom:family-calendar-card
+default_view: week-compact
+week_compact_weekday_font_size: 10
+week_compact_weekday_color: "#475569"
+week_compact_day_header_spacing: 4
+```
+
+<ParamField path="day_badge_layout_week" default="inline" type="string">
+  Control how day badges are arranged in **Week** and **Schedule** day headers. Use `inline` to keep the date and badges on one row, or `stacked` to place badges below the date. Invalid values fall back to `inline`.
+
+  ```yaml
+  day_badge_layout_week: stacked
+  ```
+</ParamField>
+
+<ParamField path="show_event_location" default="false" type="boolean">
+  Show the event's location text below the event title. Applies to **Week Compact**, **Schedule**, and **Agenda** views. Also applies to **Month** only when `show_all_details_month` is enabled.
+</ParamField>
+
+<ParamField path="use_short_location" default="false" type="boolean">
+  When `show_event_location` is also enabled, truncate long location strings to a shorter form so they don't push event blocks taller. Applies to **Week Compact**, **Schedule**, and **Agenda** views. Also applies to **Month** only when `show_all_details_month` is enabled.
+</ParamField>
+
+<ParamField path="past_event_mode" default="none" type="string">
+  Controls how events that have already ended are displayed:
+
+  - `none` — past events appear exactly like future events
+  - `hide` — past events are removed from view entirely
+  - `muted` — past events are shown with reduced opacity to de-emphasise them
+</ParamField>
+
+<ParamField path="hide_the_past" default="false" type="boolean">
+  Legacy alias for `past_event_mode: hide`. Use `past_event_mode` for new configurations because it also supports the `muted` option.
+</ParamField>
+
+<ParamField path="disable_swipe_controls" default="false" type="boolean">
+  Disable touch swipe gestures for navigating between weeks and months. Useful on dashboards where the card is embedded inside another scrollable container.
+</ParamField>
+
+<ParamField path="idle_reset_minutes" type="number">
+  Automatically resets the card to its configured `default_view`, today's date, and default calendar selection after this many minutes of inactivity. See [External Control](/advanced/external-control) for details and for the window events an automation can dispatch to trigger the same reset on a schedule.
+</ParamField>
+
+## Example
+
+```yaml
+type: custom:family-calendar-card
+title: Family Calendar
+entities:
+  - calendar.family
+  - calendar.work
+  - calendar.holidays_in_united_states
+compact_header: true
+hide_dark_mode_toggle: true
+hide_add_event_button: false
+show_dashboard_nav_button: true
+header_dashboard_path: /lovelace/home
+header_nav_buttons:
+  - icon: mdi:account-child
+    path: /lovelace-kids
+  - label: Work
+    path: /lovelace-work
+default_hidden_calendars:
+  - calendar.holidays_in_united_states
+calendar_names:
+  calendar.family: "Family"
+  calendar.work: "Work"
+calendar_badge_icons:
+  calendar.family: mdi:home-heart
+  calendar.work: mdi:briefcase
+event_font_size: 12
+event_time_font_size: 10
+shorten_event_times: true
+time_zone: America/New_York
+display_full_weekday_names: true
+day_badge_layout_week: stacked
+show_event_location: true
+use_short_location: true
+past_event_mode: muted
+hide_times_for_calendars:
+  - calendar.holidays_in_united_states
+hide_badge_calendars:
+  - calendar.holidays_in_united_states
+```

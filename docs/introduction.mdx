@@ -1,0 +1,55 @@
+---
+title: "Family Calendar Card: A Beautiful Home Assistant Calendar"
+sidebarTitle: "Introduction"
+description: "Family Calendar Card adds a beautiful, family-friendly calendar to your Home Assistant dashboard with multiple views, event management, and weather."
+---
+
+Family Calendar Card is a custom Lovelace card for Home Assistant that transforms your dashboard into a polished, family-friendly calendar experience. Whether you're tracking household schedules, work meetings, or school events, it brings together all your Home Assistant calendar entities into one beautiful, interactive view — no coding required.
+
+## Feature Highlights
+
+<CardGroup cols={2}>
+  <Card title="Multiple View Modes" icon="calendar-days">
+    Switch between month, week, and agenda views to see your schedule exactly the way you want. Each view is optimized for quick scanning and easy navigation.
+  </Card>
+
+  <Card title="Multi-Calendar Support" icon="layer-group">
+    Display events from multiple Home Assistant calendar entities side by side. Color-code calendars for family members, rooms, or projects so everything stays organized at a glance.
+  </Card>
+
+  <Card title="Event Management" icon="calendar-plus">
+    Create, edit, and delete calendar events directly from your dashboard without leaving Home Assistant. Tap any event to view its full details or make changes on the spot.
+  </Card>
+
+  <Card title="Weather Integration" icon="cloud-sun">
+    Optionally show daily weather forecasts inline with your calendar events so you can plan your week with the full picture in mind.
+  </Card>
+
+  <Card title="Deep Customization" icon="sliders">
+    Tailor the card to match your dashboard's style. Adjust colors, fonts, first day of the week, past-event appearance, and dozens of other options through a visual editor or YAML.
+  </Card>
+
+  <Card title="Easy HACS Install" icon="download">
+    Install Family Calendar Card in seconds through HACS (Home Assistant Community Store) — no build steps, no dependencies, just a single JavaScript file.
+  </Card>
+</CardGroup>
+
+## How It Works
+
+Family Calendar Card reads events directly from your Home Assistant calendar entities — such as `calendar.family` or `calendar.work` — and renders them in whichever view you choose. It communicates with Home Assistant's native calendar API, so any calendar integration already connected to your instance (Google Calendar, CalDAV, Local Calendar, and more) works automatically.
+
+You configure the card through Home Assistant's built-in visual Lovelace editor, which exposes all common options as form fields. If you prefer full control, every option is also available as a YAML property, making it easy to version-control your dashboard configuration or share snippets with the community.
+
+The card registers under the type name `custom:family-calendar-card` (version 4.0.0 and later). Legacy configurations using `custom:family-calendar-card-legacy` continue to work without any changes, for now.
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="wrench" href="/installation">
+    Install the card via HACS or manually in just a few steps.
+  </Card>
+
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Add the card to your dashboard and show your first calendar in under two minutes.
+  </Card>
+</CardGroup>

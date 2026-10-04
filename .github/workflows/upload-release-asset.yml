@@ -1,0 +1,35 @@
+name: Attach JS release asset for download metrics
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  upload-asset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Report release asset version
+        run: |
+          if grep -q "__FAMILY_CALENDAR_CARD_VERSION__" family-calendar-card.js; then
+            echo "::warning::family-calendar-card.js still contains the version placeholder"
+          fi
+
+          VERSION="$(grep -oE "FAMILY_CALENDAR_CARD_VERSION = '[^']+'" family-calendar-card.js | sed -E "s/.*'([^']+)'.*/\1/")"
+          echo "Detected version: $VERSION"
+
+          if [ -z "$VERSION" ] || [ "$VERSION" = "dev" ]; then
+            echo "::warning::Invalid FAMILY_CALENDAR_CARD_VERSION"
+          elif ! echo "$VERSION" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$'; then
+            echo "::warning::Version should look like v1.2.3 or v1.2.3-beta0"
+          fi
+
+      - name: Upload family-calendar-card.js to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: family-calendar-card.js

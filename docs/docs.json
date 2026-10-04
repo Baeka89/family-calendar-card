@@ -1,0 +1,116 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "almond",
+  "name": "Family Calendar Card",
+  "description": "Documentation for the Family Calendar Card — a beautiful, customizable Home Assistant calendar card.",
+  "colors": {
+    "primary": "#242424",
+    "light": "#aeaeac",
+    "dark": "#484641"
+  },
+  "favicon": {
+    "light": "/images/977.ico",
+    "dark": "/images/977.ico"
+  },
+  "icons": {
+    "library": "lucide"
+  },
+  "styling": {
+    "eyebrows": "breadcrumbs"
+  },
+  "contextual": {
+    "options": ["copy", "view", "assistant", "mcp", "add-mcp"]
+  },
+  "logo": {
+    "light": "/images/976.png",
+    "dark": "/images/976.png"
+  },
+  "navbar": {
+    "links": [],
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/Baeka89/family-calendar-card"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/Baeka89/family-calendar-card"
+    }
+  },
+  "navigation": {
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Home",
+          "icon": "house",
+          "href": "/"
+        },
+        {
+          "anchor": "GitHub",
+          "icon": "github",
+          "href": "https://github.com/Baeka89/family-calendar-card"
+        }
+      ]
+    },
+    "directory": "card",
+    "groups": [
+      {
+        "group": "Get Started",
+        "icon": "rocket",
+        "expanded": true,
+        "pages": ["introduction", "installation", "quickstart"]
+      },
+      {
+        "group": "Views & Layout",
+        "icon": "calendar",
+        "expanded": true,
+        "pages": [
+          "views/month",
+          "views/week",
+          "views/schedule",
+          "views/agenda"
+        ]
+      },
+      {
+        "group": "Configuration",
+        "icon": "settings",
+        "expanded": true,
+        "pages": [
+          "configuration/basic",
+          "configuration/display",
+          "configuration/event-management",
+          "configuration/appearance",
+          "configuration/weather"
+        ]
+      },
+      {
+        "group": "Advanced",
+        "icon": "code",
+        "expanded": true,
+        "pages": [
+          "advanced/event-styles",
+          "advanced/day-styles",
+          "advanced/day-badges",
+          "advanced/virtual-calendars",
+          "advanced/combine-calendars",
+          "advanced/family-events",
+          "advanced/uix",
+          "advanced/external-control"
+        ]
+      },
+      {
+        "group": "Help",
+        "icon": "life-buoy",
+        "expanded": true,
+        "pages": ["troubleshooting", "faq"]
+      }
+    ]
+  },
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/introduction",
+      "permanent": true
+    }
+  ]
+}

@@ -1,0 +1,173 @@
+---
+title: "Managing Calendar Events with the Family Calendar Card"
+sidebarTitle: "Event Management"
+description: "Create, edit, and delete calendar events directly from the Family Calendar Card, with support for recurring events and read-only calendars."
+---
+
+The Family Calendar Card supports full create, read, update, and delete (CRUD) operations for calendar events directly from your Home Assistant dashboard. You can add a team meeting, tweak an existing appointment, or remove an event that was cancelled — all without leaving the card.
+
+## Support by Calendar Type
+
+What you can do from inside the card depends on the underlying Home Assistant calendar integration. The card adapts its UI to each calendar's capabilities — buttons for unsupported actions are hidden or disabled automatically.
+
+| Calendar type | Create | Edit | Delete |
+| --- | :-: | :-: | :-: |
+| **Local Calendar** (Home Assistant built-in) | ✅ | ✅ | ✅ |
+| **Google Calendar** | ✅ | ✅ \* | ✅ |
+| **CalDAV** | ✅ | \* | \* |
+
+<Note>
+  **\* Google Calendar edits use a safe create-then-delete flow.** The Home Assistant Google Calendar integration does not expose a true update operation, so the card simulates editing by creating a new event with your changes and then deleting the original. From the user's perspective the event appears edited; under the hood it is a brand new event.
+
+  One side effect: the event's UID changes, and any external links or integrations that reference the original UID will need to be updated.
+</Note>
+
+<Note>
+  **CalDAV is version dependent.** The card can always add new events to a CalDAV calendar, but editing and deleting existing events is dependent on the CalDAV version. The card reads those capabilities and shows Edit/Delete buttons accordingly.
+</Note>
+
+## Creating Events
+
+To create a new event, click the **Add Event** button in the card header. A modal form opens where you fill in:
+
+- **Event title** (required)
+- **Start date and time**
+- **End date and time**
+- **All-day toggle** — when enabled, time fields are hidden and the event spans the full day
+- **Location** — optional venue or address
+- **Description** — optional free-text notes (supports Markdown and basic HTML)
+- **Calendar** — choose which calendar the event is saved to from a dropdown of your writable calendars
+
+Click **Create Event** to save. The card refreshes immediately to show the new event in the grid.
+
+## Editing Events
+
+To edit an existing event, click it anywhere in the calendar grid to open the event detail modal. Then click **Edit Event**. The same form used for creation appears, pre-populated with the event's current data. Make your changes, then click **Save Changes**.
+
+The **Edit** button only appears for events on calendars that support editing. See [Support by Calendar Type](#support-by-calendar-type) above for the per-integration matrix.
+
+## Recurring Events
+
+When creating or editing an event, toggle the **Recurring** switch to reveal recurrence options:
+
+- **Frequency** — `Daily`, `Weekly`, `Monthly`, or `Yearly`
+- **Interval** — repeat every N frequency units (e.g. every 2 weeks)
+- **Weekdays** — for weekly recurrence, select which days of the week the event falls on
+- **End condition** — choose `Never`, `On a date` (enter an end date), or `After N occurrences`
+
+## Deleting Events
+
+From the event detail modal, click **Delete**. You will be asked to confirm. For recurring events, a second prompt asks you how to apply the deletion:
+
+| Option | Effect |
+| --- | --- |
+| **This event only** | Removes only the single occurrence you clicked |
+| **This and future events** | Removes this occurrence and every one after it |
+| **All events** | Removes the entire recurring series |
+
+The **Delete** button only appears for events on calendars that support deletion. See [Support by Calendar Type](#support-by-calendar-type) above.
+
+## Custom Event Colors
+
+You can override the color of any event directly from the event detail modal without changing the event in Home Assistant or the source calendar. Custom colors are stored in the browser and apply only on that device, which makes them ideal for personalizing shared family calendars or highlighting events on a single dashboard.
+
+To set a custom color, click the event in the calendar grid to open the detail modal, then click **Custom Color**. A compact color picker opens with:
+
+- A row of preset color swatches
+- A native color picker (`<input type="color">`)
+- A hex input synced with the picker, validated against `#RRGGBB` format
+- A live preview of the event chip
+- **Apply Color**, **Use Default**, and **Cancel** actions
+
+Click **Apply Color** to save the override, or **Use Default** to remove any existing override and fall back to the calendar's color and any matching [event style rules](/advanced/event-styles).
+
+### Recurring events
+
+When you set a custom color on a recurring event, you're asked how far the override should apply:
+
+| Option | Effect |
+| --- | --- |
+| **This event only** | Colors only the single occurrence you clicked |
+| **This and future events** | Colors this occurrence and every one after it |
+| **All events** | Colors the entire recurring series |
+
+More specific scopes take precedence: a per-occurrence override wins over a future-rule override, which wins over a series-wide override.
+
+### Combined events
+
+If you use [combined calendars](/advanced/combine-calendars), the event may appear on more than one source calendar at once. Selecting **Custom Color** on a combined event first prompts you to choose which calendar copy to color, so you can style each source independently.
+
+### How overrides interact with `event_styles`
+
+A custom color set from the modal overrides the `background_color` (also known as `color`) supplied by any matching [event style rule](/advanced/event-styles). All other style properties from `event_styles` — icons, opacity, filters, font color, and so on — still apply. If you want to revert to the styled or calendar default, open the modal again and click **Use Default**.
+
+<Note>
+  Custom colors are persisted in browser storage under the same key as hidden-calendar preferences. Set a unique [`preference_storage_key`](/configuration/basic#param-preference-storage-key) on each card to keep overrides from bleeding across dashboards. Clearing browser data for Home Assistant, or switching to a different device or user profile, resets the overrides.
+</Note>
+
+## Configuration Options
+
+<ParamField path="enable_event_management" default="true" type="boolean">
+  Master switch for all event management features. Set to `false` to make the card completely read-only — the Add Event button is hidden and clicking events opens a read-only detail view with no Edit or Delete actions.
+</ParamField>
+
+<ParamField path="readonly_calendars" type="list">
+  A list of calendar entity IDs that should be treated as read-only even when event management is enabled. Events on these calendars can be viewed but not edited or deleted from the card.
+
+  ```yaml
+  readonly_calendars:
+    - calendar.holidays_in_united_states
+    - calendar.boss_calendar
+  ```
+</ParamField>
+
+<ParamField path="hide_add_event_button" default="false" type="boolean">
+  Hide the **Add Event** button from the header. This also hides the contextual **Add Event** button in the `show_events` day-events popup (see [Month view](/views/month)). Users can still edit and delete existing events unless you also disable event management or mark calendars as read-only.
+</ParamField>
+
+<ParamField path="event_modal_size" default="medium" type="string">
+  Set the width of the event management modal. Supported values are `narrow`, `medium`, `wide`, and `full`. Invalid or missing values fall back to `medium`. The setting applies to every event modal — create, edit, view, and delete confirmations.
+
+  ```yaml
+  event_modal_size: wide
+  ```
+</ParamField>
+
+<ParamField path="location_links" default="false" type="boolean">
+  Let users click the location in the event detail modal to reveal location actions. This does not change event rows in Month, Week, Schedule, or Agenda views.
+
+  When enabled, clicking a modal location reveals **Open in Google Maps** and **Copy address** actions. Maps open only after the user clicks the action.
+
+  ```yaml
+  location_links: true
+  ```
+</ParamField>
+
+## Example
+
+```yaml
+type: custom:family-calendar-card
+title: Family Calendar
+entities:
+  - calendar.family
+  - calendar.work
+  - calendar.holidays_in_united_states
+enable_event_management: true
+readonly_calendars:
+  - calendar.holidays_in_united_states
+hide_add_event_button: false
+event_modal_size: wide
+```
+
+<Tip>
+  Event descriptions support Markdown and basic HTML. You can use `**bold**`, `_italic_`, bullet lists, and links in description fields. All HTML is sanitised before rendering, so unsafe tags are stripped automatically.
+</Tip>
+
+<Warning>
+  Some events created outside of Home Assistant — for example, events imported from an ICS file or synced from third-party integrations — may be missing a UID field. Without a UID, the card cannot uniquely identify the event and will show a "Cannot Modify" notice instead of Edit and Delete buttons. If you need to modify such an event, recreate it directly from the card or from the source calendar application.
+</Warning>
+## Retrying a partially saved edit
+
+If creating the replacement succeeds but deleting the original fails, the error tells you that the replacement was saved. Retry with the same values and destination while the card remains open. The card then retries deletion without creating another replacement. Combined edits skip targets that have already been saved.
+
+This retry state belongs to the active card instance. After reloading the dashboard, inspect the calendar for duplicates before editing again. To change values after a partial save, first finish the original operation and then reopen the editor.

@@ -1,0 +1,85 @@
+---
+title: "Quickstart: Add Family Calendar Card to Your Dashboard"
+sidebarTitle: "Quickstart"
+description: "Add the Family Calendar Card to your Home Assistant dashboard in under two minutes using the visual editor or a simple YAML snippet."
+---
+
+Once the card is installed, adding it to your Home Assistant dashboard takes less than two minutes. You can configure it entirely through the built-in visual editor — no YAML required — or drop in a short YAML snippet if you prefer to manage your dashboard as code. Either way, you'll have a working calendar on your screen in just a few steps.
+
+<Note>
+  Make sure you have completed the [installation steps](/installation) before continuing. You'll need at least one Home Assistant calendar entity (for example `calendar.family` or `calendar.work`) available in your instance.
+</Note>
+
+## Add the Card to Your Dashboard
+
+<Tabs>
+  <Tab title="Visual Editor">
+    The visual editor exposes all common options as form fields, so you can get a calendar up and running without writing any configuration by hand.
+
+    <Steps>
+      <Step title="Enter edit mode">
+        Open the dashboard where you want to add the card, then click the **pencil icon** (Edit) in the top-right corner to enter edit mode.
+      </Step>
+      <Step title="Add a new card">
+        Click **+ Add Card** at the bottom of the dashboard. In the card picker, type **Family** in the search box, then select **Family Calendar Card** from the results.
+      </Step>
+      <Step title="Select your calendar entities">
+        In the **Entities** field, search for and select the calendar entities you want to display — for example `calendar.family` or `calendar.work`. You can add as many calendars as you like.
+      </Step>
+      <Step title="Configure the view and title">
+        Set a **Title** for the card (for example "Family Calendar") and choose a **Default View** — `month`, `week-compact`, `week-standard`, or `agenda`. Explore the other options such as first day of the week, past event appearance, and weather integration to suit your preferences.
+      </Step>
+      <Step title="Save the card">
+        Click **Save** to add the card to your dashboard, then click **Done** to exit edit mode. Your calendar is now live.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="YAML">
+    If you prefer to configure your dashboard in YAML — or want to share or version-control your setup — you can define the card with a minimal snippet and expand it as needed.
+
+    **Minimal configuration**
+
+    This is all you need to get started. It displays events from a single calendar entity using the card's default settings.
+
+    ```yaml
+    type: custom:family-calendar-card
+    title: Family Calendar
+    entities:
+      - calendar.family
+    ```
+
+    **Expanded configuration**
+
+    The example below adds a second calendar, sets the default view to month, starts the week on Monday (`1`), and mutes past events so they don't dominate the view.
+
+    ```yaml
+    type: custom:family-calendar-card
+    title: Family Calendar
+    entities:
+      - calendar.family
+      - calendar.work
+    default_view: month
+    first_day_of_week: 1
+    past_event_mode: muted
+    ```
+
+    To use this YAML, enter dashboard edit mode, click **+ Add Card**, scroll to the bottom of the card picker, and select **Manual**. Paste your YAML into the editor and click **Save**.
+
+    <Note>
+      Each value under `entities` must be a valid Home Assistant calendar entity ID. You can find your available calendar entities in **Developer Tools → States** by filtering for the `calendar.` domain.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+Now that your calendar card is on the dashboard, explore what else you can do with it.
+
+<CardGroup cols={2}>
+  <Card title="Month View" icon="calendar" href="/views/month">
+    Learn how the month view works and how to customize its layout and event display.
+  </Card>
+  <Card title="Basic Configuration" icon="gear" href="/configuration/basic">
+    Browse all available configuration options — colors, fonts, weather, and more.
+  </Card>
+</CardGroup>

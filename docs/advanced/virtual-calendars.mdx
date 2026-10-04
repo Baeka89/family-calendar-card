@@ -1,0 +1,86 @@
+---
+title: "Virtual Calendars: Group Calendar Entities into Named Sets"
+sidebarTitle: "Virtual Calendars"
+description: "Use virtual_calendars to combine multiple Home Assistant calendar entities under a single name, color, and icon in the Family Calendar Card."
+---
+
+If your Home Assistant setup has many calendar entities — for example, a separate calendar for each family member, or different calendars per project — the card header's toggle list can quickly become cluttered. Virtual calendars solve this by letting you group multiple real calendar entities under a single named entry. When a user toggles the virtual calendar on or off in the header, all of its member calendars are shown or hidden together. Events from all grouped entities are aggregated and displayed with the virtual calendar's shared color and icon, giving your view a clean, organized appearance.
+
+## Configuration
+
+Virtual calendars are defined as a list under the `virtual_calendars` key. Each entry represents one group.
+
+<ParamField path="virtual_calendars[].id" type="string" required>
+  A unique internal identifier for this virtual calendar. This ID is used when referencing the virtual calendar in `event_styles` or `day_styles` match rules. It must be unique across all virtual calendar definitions.
+</ParamField>
+
+<ParamField path="virtual_calendars[].name" type="string">
+  The display name shown in the card header's calendar toggle list.
+</ParamField>
+
+<ParamField path="virtual_calendars[].entities" type="string[]">
+  A list of real Home Assistant calendar entity IDs to include in this group. Events from all listed entities are combined and treated as belonging to this virtual calendar.
+</ParamField>
+
+<ParamField path="virtual_calendars[].color" type="string">
+  A hex color string applied to all events from this virtual calendar. Individual event colors from the source entities are replaced by this shared color.
+</ParamField>
+
+<ParamField path="virtual_calendars[].icon" type="string">
+  An MDI icon name (e.g. `mdi:account-group`) displayed next to the virtual calendar's name in the header toggle.
+</ParamField>
+
+<Warning>
+  Each `id` must be unique. If two virtual calendar entries share the same `id`, the card will raise a validation error and may not render correctly. Choose IDs that are descriptive and won't conflict, such as `family`, `work`, or `sports_league`.
+</Warning>
+
+## How Virtual Calendars Appear in the Card
+
+Virtual calendars replace their member entities in the card header's toggle list — you see the virtual calendar's name and icon instead of the individual entity IDs. Toggling the virtual calendar on or off controls all of its member entities at once.
+
+Event chips on the calendar display the virtual calendar's `color` rather than the original entity color, and any `event_styles` or `day_styles` rules that reference the virtual calendar's `id` will match events from all its member entities.
+
+## Using Virtual Calendars with Event Styles
+
+You can target a virtual calendar in `event_styles` match rules by using its `id` as you would a normal entity ID in the `calendar` match field.
+
+```yaml
+event_styles:
+  - match:
+      calendar: family
+    style:
+      font_color: '#ffffff'
+```
+
+## Visual Editor Support
+
+You can create and manage virtual calendars directly in the card's visual configuration editor without writing YAML. The editor provides fields for name, entity selection, color, and icon for each group.
+
+## Example
+
+This configuration creates two virtual calendars: one for family members and one for work-related calendars.
+
+```yaml
+virtual_calendars:
+  - id: family
+    name: Family
+    entities:
+      - calendar.mom
+      - calendar.dad
+      - calendar.kids_school
+    color: '#4CAF50'
+    icon: mdi:account-group
+  - id: work
+    name: Work
+    entities:
+      - calendar.meetings
+      - calendar.deadlines
+    color: '#1565C0'
+    icon: mdi:briefcase
+```
+
+With this configuration, the card header shows two toggles — **Family** and **Work** — instead of five separate calendar entity entries. Toggling "Family" off hides events from all three family calendars simultaneously.
+
+<Tip>
+  Pair virtual calendars with `combine_calendars: true` if family members or colleagues share events across their individual calendars. Combined with virtual calendars, duplicate events will be merged and shown once using the primary matching calendar color. If the duplicate sources are inside the same virtual group, that is the virtual calendar color.
+</Tip>

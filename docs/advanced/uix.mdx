@@ -1,0 +1,84 @@
+---
+title: "uix: Inject Custom CSS into Family Calendar Card"
+sidebarTitle: "Custom CSS (uix)"
+description: "Use the uix.style option to inject raw CSS into Family Calendar Card's shadow DOM and override internal styling for events, days, and headers."
+---
+
+The `uix` option is a YAML-only escape hatch for power users who need low-level visual control beyond what the standard appearance, event-style, and day-style options provide. Set `uix.style` to a raw CSS string and the card injects that CSS directly into its shadow DOM at render time. This lets you override any internal style — spacing, font sizes, element visibility, animation durations — without needing a custom theme or additional frontend resources like Card Mod.
+
+<Note>
+  `uix.style` is intended for advanced users. Internal class names and CSS variables may change between card releases, so custom `uix` overrides may need updating after card upgrades.
+</Note>
+
+## Configuration
+
+<ParamField path="uix.style" type="string">
+  A raw CSS string injected into the card's shadow DOM. Use a YAML block scalar (`|`) so newlines and indentation are preserved verbatim.
+</ParamField>
+
+## Basic Example
+
+```yaml
+type: custom:family-calendar-card
+entities:
+  - calendar.family
+uix:
+  style: |
+    .day-number { font-weight: 700; }
+    .event-chip { border-radius: 4px; }
+```
+
+## Common Use Cases
+
+### Make day numbers bolder
+
+```yaml
+uix:
+  style: |
+    .day-number {
+      font-weight: 700;
+      font-size: 1.05em;
+    }
+```
+
+### Round event chips
+
+```yaml
+uix:
+  style: |
+    .event-chip {
+      border-radius: 6px;
+    }
+```
+
+### Tighten internal padding
+
+```yaml
+uix:
+  style: |
+    .calendar-body {
+      padding: 4px;
+    }
+```
+
+## When to Use `uix.style` vs Other Options
+
+Reach for `uix.style` only when the built-in options don't cover what you need.
+
+| Goal | Use |
+| --- | --- |
+| Change event background or icon | [`event_styles`](/advanced/event-styles) |
+| Highlight a specific day or weekend | [`day_styles`](/advanced/day-styles) |
+| Add a chip to days with certain events | [`day_badges`](/advanced/day-badges) |
+| Header colors, background images, density | [Appearance options](/configuration/appearance) |
+| Anything else not covered above | `uix.style` |
+
+## Cautions
+
+<Warning>
+  CSS injected via `uix.style` is applied as written. Mistyped selectors or invalid declarations can leave the card visually broken — if that happens, remove the `uix` block to restore the default styling.
+</Warning>
+
+<Warning>
+  Class names inside the card's shadow DOM are not part of a public API. They may change in any release. If a future upgrade visually breaks your overrides, expect to update the selectors.
+</Warning>

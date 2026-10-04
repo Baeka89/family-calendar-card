@@ -1,0 +1,117 @@
+---
+title: "Basic Configuration Options for Family Calendar Card"
+sidebarTitle: "Basic Options"
+description: "Configure entities, default view, language, first day of week, and core display settings for the Family Calendar Card in Home Assistant."
+---
+
+The Family Calendar Card requires only a list of calendar entities to get started, but a handful of core options let you tailor the card's behavior to your household. Most of these options are available in the visual editor — you only need YAML if you prefer it or are version-controlling your dashboard.
+
+## Required Options
+
+<ParamField path="entities" type="list" required>
+  A list of one or more Home Assistant calendar entity IDs to display. This is the only truly required field — every other option has a sensible default.
+
+  ```yaml
+  entities:
+    - calendar.family
+    - calendar.work
+    - calendar.holidays_in_united_states
+  ```
+</ParamField>
+
+<ParamField path="title" default="Family Calendar" type="string">
+  The title displayed in the card header. Set `title: ""` to hide only the title while retaining any other configured header content, such as time, weather, custom header items, or controls.
+
+  ```yaml
+  title: My Calendar
+  ```
+
+  ```yaml
+  # Hide the title but keep the rest of the header
+  title: ""
+  ```
+</ParamField>
+
+## Core Options
+
+<ParamField path="default_view" default="month" type="string">
+  The view shown when the card first loads. Accepted values:
+
+  - **`month`** — traditional monthly grid.
+  - **`week`** or **`week-compact`** — compact weekly overview where each day is a column with stacked events. The card normalizes `week` to `week-compact` internally.
+  - **`schedule`** or **`week-standard`** — timed weekly grid with days as columns and hours as rows. Events are positioned as blocks by their actual start and end times. The card normalizes `schedule` to `week-standard` internally.
+  - **`agenda`** — scrollable day-by-day list of upcoming events, rolling forward from today.
+
+  See [Week](/views/week), [Schedule](/views/schedule), [Month](/views/month), and [Agenda](/views/agenda) for the full per-view docs.
+</ParamField>
+
+<ParamField path="first_day_of_week" default="0" type="number">
+  The day the week starts on, expressed as a number where `0` = Sunday, `1` = Monday, and so on through `6` = Saturday.
+</ParamField>
+
+<ParamField path="week_days" default="[0, 1, 2, 3, 4, 5, 6]" type="array">
+  An array of day numbers (0–6) to include in week and schedule views. Omitting a day hides it entirely from those views. Defaults to all seven days: `[0, 1, 2, 3, 4, 5, 6]`.
+
+  Use `[1, 2, 3, 4, 5]` to show Monday through Friday only.
+</ParamField>
+
+<ParamField path="language" type="string">
+  The language used for all UI strings — day names, month names, button labels, and more. Supported values: `en`, `fr`, `de`, `nl`, `es`, `et`, `ca`, `da`, `sv`. When omitted, the card automatically detects the language set in your Home Assistant profile.
+</ParamField>
+
+<ParamField path="locale" type="string">
+  A BCP 47 locale string (e.g. `en-US`, `de-DE`, `fr-CA`) that overrides the default locale associated with the selected language. Use this when you want, for example, German UI strings but Swiss date formatting (`de-CH`).
+</ParamField>
+
+<ParamField path="color_scheme" default="auto" type="string">
+  Controls light/dark mode for the card. `auto` follows the Home Assistant theme, `light` forces a light appearance, and `dark` forces a dark appearance.
+</ParamField>
+
+<ParamField path="preference_storage_key" type="string">
+  A unique string used as the browser-storage key for saving hidden calendars and [custom event colors](/configuration/event-management#custom-event-colors). When you have multiple Family Calendar Cards on the same dashboard — or several dashboards sharing the same browser — give each card a different key so their preferences do not overwrite each other. The selected view and date are not persisted; they always start from `default_view` and today.
+</ParamField>
+
+## People & Calendar Mapping
+
+<ParamField path="calendar_person_entities" default="[]" type="map">
+  A map of calendar entity IDs to Home Assistant `person.*` entity IDs. When configured, the card reads each person entity's current location state and displays a small avatar or badge on the calendar to show where household members are. This is especially useful on a family dashboard where you want to see at a glance that a family member is at school, at work, or home.
+
+  ```yaml
+  calendar_person_entities:
+    calendar.ian: person.ian
+    calendar.sarah: person.sarah
+  ```
+
+  The key must be a calendar entity ID that is already listed under `entities`. The value must be a valid `person.*` entity ID tracked by Home Assistant's [Person integration](https://www.home-assistant.io/integrations/person/).
+</ParamField>
+
+## Example
+
+The YAML below shows a complete basic configuration that covers the most commonly used options:
+
+```yaml
+type: custom:family-calendar-card
+title: Family Calendar
+entities:
+  - calendar.family
+  - calendar.work
+  - calendar.holidays_in_united_states
+default_view: month
+first_day_of_week: 1
+week_days:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+language: en
+locale: en-GB
+color_scheme: auto
+preference_storage_key: main_dashboard_calendar
+calendar_person_entities:
+  calendar.family: person.parent
+```
+
+<Note>
+  The visual editor covers all of these options — and many more — through a point-and-click interface. Open the card editor in Home Assistant, click the card, then select **Edit** to access it. You only need to write YAML manually if you prefer or if you are managing your configuration in version control.
+</Note>

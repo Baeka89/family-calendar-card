@@ -1,0 +1,121 @@
+---
+title: "Agenda View: Scrollable Rolling Day List"
+sidebarTitle: "Agenda"
+description: "The Agenda view shows a scrollable rolling day list starting from today, perfect for an always-current event feed on your Home Assistant dashboard."
+---
+
+The Agenda view is a forward-rolling, day-by-day event list that always starts from today and looks ahead a configurable number of days. Unlike the timed-grid Week and Schedule views, the Agenda view is a flat, linear list anchored to the present moment. Every time you open the card, the list begins at today's date so you never have to scroll back to find where you are. This makes it the best choice for dashboards where you want an always-current "what's coming up" feed that requires no navigation.
+
+## Activating Agenda View
+
+Set `default_view` to `agenda` in your card configuration:
+
+```yaml
+type: custom:family-calendar-card
+default_view: agenda
+```
+
+## Configuration Options
+
+<ParamField path="rolling_days_agenda" default="null" type="number">
+  Used by **Agenda** only.
+
+  The number of days ahead the Agenda view covers, counting from today. Set it to `7` for a one-week lookahead, or `30` for a rolling month. The list stops after this many days regardless of whether there are events remaining.
+</ParamField>
+
+<ParamField path="agenda_compact_events" default="false" type="boolean">
+  Used by **Agenda** only.
+
+  When `true`, event rows use a denser layout with reduced padding and smaller text, fitting more events on screen at once. Enable this when you have a high event volume or a small card footprint and want to maximise the number of visible rows.
+</ParamField>
+
+<ParamField path="hide_empty_days" default="false" type="boolean">
+  Used by **Agenda** only.
+
+  When `true`, days with no events are omitted from the list. Combined with a long `rolling_days_agenda`, this creates a tight feed that jumps directly from one event-filled day to the next, skipping quiet days entirely.
+</ParamField>
+
+<ParamField path="shorten_event_times" default="false" type="boolean">
+  Used by **Month**, **Week**, **Schedule**, and **Agenda**.
+
+  When `true`, event times are abbreviated — for example `2 PM` instead of `2:00 PM`. Pair this with `agenda_compact_events: true` for the most space-efficient Agenda layout.
+</ParamField>
+
+<ParamField path="use_24hr_schedule" default="false" type="boolean">
+  Used by **Month**, **Week**, **Schedule**, and **Agenda**. Despite the name, it is used by the shared event-time formatter, not only the Schedule view.
+
+  When `true`, event times use 24-hour format (e.g. `14:00`) instead of 12-hour format with AM/PM.
+</ParamField>
+
+<ParamField path="show_event_location" default="false" type="boolean">
+  Used by **Week**, **Schedule**, and **Agenda**. Also applies to **Month** only when `show_all_details_month` is enabled.
+
+  When `true`, the location field of each event is shown on a line below the event title. Particularly useful in an agenda context where you're planning your day and need to know where to be.
+</ParamField>
+
+<ParamField path="use_short_location" default="false" type="boolean">
+  Used by **Week**, **Schedule**, and **Agenda**. Also applies to **Month** only when `show_all_details_month` is enabled. Has no visible effect unless `show_event_location` is also enabled.
+
+  Truncates long addresses to a shorter form so they don't push event rows taller.
+</ParamField>
+
+<ParamField path="hide_times_for_calendars" default="[]" type="array">
+  Used by **Month**, **Week**, **Schedule**, and **Agenda**.
+
+  An array of calendar entity IDs whose events should not display time labels. Useful for all-day-style calendars where exact times are noise.
+</ParamField>
+
+<ParamField path="past_event_mode" default="none" type="string">
+  Used by **Month**, **Week**, **Schedule**, and **Agenda**. Controls how events that have already ended are handled across the card. Accepted values:
+
+  - `none` — past events look the same as upcoming events (default).
+  - `muted` — past events are rendered at reduced opacity to draw attention to what's still coming.
+  - `hide` — past events are removed from the list entirely, leaving only future events visible.
+</ParamField>
+
+## Jump to Today
+
+<Note>
+  If you scroll the Agenda list forward to browse upcoming events, a **Jump to Today** button appears in the card header. Tapping it instantly resets the scroll position back to today's date section so you never lose your place. This button only appears when you have scrolled away from today — it is hidden when today's section is already visible at the top of the list.
+</Note>
+
+## Example Configuration
+
+The following configuration sets up Agenda view with a 30-day rolling window, compact event rows, hidden empty days, and location display:
+
+```yaml
+type: custom:family-calendar-card
+default_view: agenda
+rolling_days_agenda: 30
+agenda_compact_events: true
+hide_empty_days: true
+shorten_event_times: true
+past_event_mode: muted
+show_event_location: true
+use_short_location: false
+```
+
+## Tips
+
+<Tip>
+  For a "daily briefing" style tile on your main dashboard, combine `rolling_days_agenda: 7`, `hide_empty_days: true`, and `past_event_mode: hide`. The card will always show a clean, forward-looking week of events with no clutter from things that have already passed.
+</Tip>
+
+<Tip>
+  If you want the Agenda view inside a fixed-height grid card, add `compact_height: true` to prevent the list from expanding the card's vertical footprint as the event count grows. The list will scroll internally within the fixed container instead.
+</Tip>
+
+<Tip>
+  Prefer one-line compact event titles? Use `uix.style` to truncate them with an ellipsis:
+
+  ```yaml
+  uix:
+    style: |
+      .calendar-container.agenda-compact-events .agenda-event-title {
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+  ```
+</Tip>

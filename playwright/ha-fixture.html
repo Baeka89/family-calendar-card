@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>HA Fixture</title>
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --accent-color: #1d4ed8;
+      --card-background-color: #ffffff;
+      --ha-card-background: #ffffff;
+      --primary-text-color: #111827;
+      --secondary-text-color: #4b5563;
+      --divider-color: #d1d5db;
+    }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #f3f4f6;
+      font-family: Arial, sans-serif;
+    }
+    body.dark-fixture {
+      --primary-color: #1e40af;
+      --accent-color: #60a5fa;
+      --card-background-color: #111827;
+      --ha-card-background: #111827;
+      --primary-text-color: #f9fafb;
+      --secondary-text-color: #d1d5db;
+      --divider-color: #4b5563;
+      background: #020617;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script src="../family-calendar-card.js"></script>
+  <script>
+    window.renderCalendarCard = ({ config, events, weather = {}, states = {}, darkMode = false, parentStyle = '' }) => {
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+      app.removeAttribute('style');
+      if (parentStyle) app.setAttribute('style', parentStyle);
+      document.body.classList.toggle('dark-fixture', !!darkMode);
+      const el = document.createElement('family-calendar-card-legacy');
+      const hass = {
+        language: 'en',
+        locale: { language: 'en' },
+        themes: { darkMode },
+        states: {
+          'calendar.family': { entity_id: 'calendar.family', attributes: { friendly_name: 'Family', supported_features: 7 } },
+          'calendar.work': { entity_id: 'calendar.work', attributes: { friendly_name: 'Work', supported_features: 7 } },
+          ...Object.fromEntries(Object.entries(weather).map(([entity_id, attributes]) => [entity_id, { entity_id, state: attributes.condition || 'sunny', attributes }])),
+          ...states
+        },
+        callApi: async (method, endpoint, payload) => {
+          const normalizedMethod = String(method || '').toUpperCase();
+          if (normalizedMethod === 'GET' && endpoint.startsWith('calendars/')) {
+            const calendarPath = endpoint.slice('calendars/'.length);
+            const calendarEntity = calendarPath.split('?')[0];
+            return events[calendarEntity] || [];
+          }
+          return [];
+        },
+        callService: async () => ({})
+      };
+      el.setConfig(config);
+      el.hass = hass;
+      app.appendChild(el);
+    };
+  </script>
+</body>
+</html>

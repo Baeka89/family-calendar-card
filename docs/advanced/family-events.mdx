@@ -1,0 +1,100 @@
+---
+title: "Family Events: Mark a Single-Calendar Event as Shared"
+sidebarTitle: "Family Events"
+description: "Use family_event_match to make one real event, entered in just one person's calendar, render with the same multi-color combined look as a genuine cross-calendar duplicate — without adding it to every calendar."
+---
+
+[Combine Calendars](/advanced/combine-calendars) merges an event that genuinely exists in two or more calendars into one multi-color chip. That requires the event to actually be entered in every one of those calendars — for a family dinner, someone has to add it to Mom's calendar, Dad's calendar, and the kids' calendars separately.
+
+`family_event_match` gets the same multi-color "everyone's involved" look from a single entry. Add a small marker to an event's title in just one person's calendar — from any ordinary phone calendar app, no Home Assistant access needed — and the card recognizes it and renders it as if it were shared across the whole family, without ever writing anything to the other calendars.
+
+## Prefix rules with per-rule calendars and colors
+
+Use `family_event_rules` to configure up to five independent parenthesized markers. For each marker, choose which calendars contribute visual colors and select calendar colors, one custom color, or a gradient made from the selected calendars. The same three color modes are available globally for events that are genuinely combined from multiple calendars. The global `combine_style` setting controls how the selected colors appear (bars, stripes, or dots); combined background and indicator width remain global as well. These selected calendars contribute only visual markers; the event remains stored and editable in its original calendar.
+
+The visual editor lets you add rules one at a time. It starts with one row and reveals more only when you add them. Turn on **Hide processed prefixes in event titles** to remove a matched marker from the displayed title.
+
+```yaml
+family_event_rules:
+  - tag: P
+    calendars:
+      - calendar.papa
+      - calendar.kind
+    color_mode: gradient # calendar, solid, or gradient
+  - tag: M
+    calendars:
+      - calendar.mama
+      - calendar.kind
+    color_mode: solid
+    color: '#8E44AD'
+hide_family_event_prefixes: false
+```
+
+## Backward compatibility
+
+<ParamField path="family_event_tag" type="string">
+  A short marker — usually a single letter — that you put in parentheses in an event's title. Type just the letter, without the parentheses: `F` matches `(F)`. Matching ignores upper and lower case, so `(f)` and `(F)` both work, and the marker can be anywhere in the title (`(F) Zoo trip` or `Zoo trip (F)`).
+
+  This legacy single-marker setting remains supported for existing YAML configurations. For new setups, use `family_event_rules` in the visual editor.
+
+  ```yaml
+  family_event_tag: F
+  ```
+</ParamField>
+
+Only the exact bracketed marker counts: with the marker `F`, an event titled `(Family) Zoo trip` is **not** treated as a family event, because `(F)` is not contained in `(Family)`.
+
+## The Advanced Way: `family_event_match`
+
+For anything beyond a single bracketed letter — several markers, checking the description instead of the title, limiting a rule to particular calendars — use `family_event_match`. If you set both options, an event counts as a family event when it matches **either** one.
+
+`family_event_match` is a match rule using the exact same syntax as [Event & Day Rules](/advanced/event-styles) — the same `title`, `description`, `calendar`, text operators (`contains`, `exact`, `regex`, ...), and `any` / `all` / `not` composition. Any event matching this rule is treated as a family event: the card synthesizes the same internal shape a genuine [combined](/advanced/combine-calendars) event has, so every existing renderer — multi-color bars/stripes, the calendar-badge list shown in the event details modal — already understands it without any further configuration.
+
+The event itself is never duplicated or written anywhere. Editing or deleting it still affects only the one real event, in the one real calendar it was actually entered in.
+
+```yaml
+family_event_match:
+  title: "contains:(F)"
+```
+
+With this, adding an event titled `(F) Zoo trip` to just Dad's calendar renders it with Mom's, Dad's, and every other configured calendar's color, exactly like a real shared event would.
+
+## Choosing Which Calendars Count as "the Family"
+
+<ParamField path="family_calendars" type="array">
+  The calendar entity IDs to render a matched event as shared across. Defaults to every calendar listed in `entities` when omitted — the common case for a household dashboard where "family" means everyone on it.
+
+  Set this explicitly if you only want a subset treated as "family" — for example, excluding a shared household chores calendar that's also configured on the dashboard but isn't a person.
+
+  ```yaml
+  family_calendars:
+    - calendar.mom
+    - calendar.dad
+    - calendar.kid_1
+    - calendar.kid_2
+  ```
+</ParamField>
+
+## Interaction with Hidden Calendars
+
+Hiding a family member's calendar badge does **not** hide a family event that actually lives in a *different* calendar — the event's visibility is governed only by whether its one real calendar is shown. Hiding that family member's badge does remove their color stripe from the event, the same way it would for a genuinely combined event.
+
+If the real calendar the event was entered in is hidden, the family event disappears entirely, since there's nothing left to render.
+
+## Example
+
+```yaml
+type: custom:family-calendar-card
+entities:
+  - calendar.mom
+  - calendar.dad
+  - calendar.kid_1
+family_event_match:
+  any:
+    - { title: "contains:(F)" }
+    - { title: "contains:#family" }
+```
+
+<Note>
+  `family_event_tag`, `family_event_match`, and `family_calendars` remain supported for backward compatibility. New configurations can use the adaptive `family_event_rules` editor.
+</Note>

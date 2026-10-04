@@ -1,0 +1,272 @@
+---
+title: "Day Styles: Highlight and Color Calendar Days"
+sidebarTitle: "Day Styles"
+description: "Use day_styles rules to apply custom background colors, borders, and opacity to calendar days based on conditions like today, weekend, or has_event."
+---
+
+The `day_styles` configuration lets you define a list of rules that change how individual calendar day cells look. Each rule pairs a `match` block (or the legacy `condition` shorthand) with a `style` object, and an optional `priority` integer decides which rule wins when multiple rules set the same property on the same day. Use this feature to visually distinguish weekends from weekdays, draw attention to today's cell, dim days in the past, or automatically tint days that have events scheduled.
+
+## Rule Structure
+
+Each entry in `day_styles` accepts the following top-level keys:
+
+- **`match`** — describes which days the rule applies to using the [shared advanced match schema](/advanced/event-styles#advanced-match-schema). `when` is accepted as an alias.
+- **`condition`** — legacy shorthand for simple day rules (see [Legacy condition shorthand](#legacy-condition-shorthand) below). Still fully supported.
+- **`style`** — the visual properties to apply to matching days. Style fields may also be written at the top level of the rule (sibling to `condition`).
+- **`priority`** — optional integer (default `0`) that resolves conflicts when multiple rules set the same property on the same day. Conflicts are resolved **per property** — see [Priority](#priority).
+- **`id`** — optional string identifier. Auto-generated (`day-style-1`, `day-style-2`, …) if omitted.
+
+## Day match fields
+
+Use one or more of the following fields inside `match.day` to filter by date properties. By default, a day must satisfy **all** specified fields to match.
+
+<ParamField path="match.day.today" type="boolean">
+  When `true`, matches only the current day. When `false`, matches every day except today.
+</ParamField>
+
+<ParamField path="match.day.past" type="boolean">
+  When `true`, matches days strictly before today. When `false`, matches today and future days.
+</ParamField>
+
+<ParamField path="match.day.future" type="boolean">
+  When `true`, matches days strictly after today. When `false`, matches today and past days.
+</ParamField>
+
+<ParamField path="match.day.weekend" type="boolean">
+  When `true`, matches Saturdays and Sundays.
+</ParamField>
+
+<ParamField path="match.day.weekday" type="boolean">
+  When `true`, matches Mondays through Fridays.
+</ParamField>
+
+<ParamField path="match.day.day_of_week" type="number | string | array">
+  One or more weekdays. Accepts numbers (0 = Sunday, 6 = Saturday), weekday names (`'Monday'`, `'Tue'`, etc.) honoring the card's locale, or an array mixing the two.
+</ParamField>
+
+<ParamField path="match.day.has_event" type="boolean | object">
+  When `true`, matches days that have at least one event. When set to an object, the value is treated as an event match — only days with at least one event satisfying that match qualify. For example, `has_event: { title_contains: 'Soccer', calendar: 'calendar.school' }` matches any day with a Soccer event on `calendar.school`. The matched event is also used to resolve `background: 'auto'`.
+</ParamField>
+
+<ParamField path="match.day.no_event" type="boolean | object">
+  Inverse of `has_event`. When `true`, matches days with no events. When set to an object, matches days where **no** event satisfies that sub-match.
+</ParamField>
+
+You can also nest event-scoped conditions under `match.event` and combine blocks with `match.any`, `match.all`, `match.and`, and `match.not` — see the [shared advanced match schema](/advanced/event-styles#advanced-match-schema). Text fields accept a plain string or a matcher object, but each text operator takes one string. To match multiple event text values in `day_styles`, put each alternative in an explicit `event` block under `match.any`; do not copy the event-style shorthand or pass an array to `contains`. See [Text matching](/advanced/event-styles#text-matching) for the shared text operators.
+
+```yaml
+match:
+  any:
+    - event:
+        title: "Dentist"
+    - event:
+        title: "Annual Leave"
+```
+
+### Example: only weekdays in the future
+
+```yaml
+day_styles:
+  - match:
+      day:
+        weekday: true
+        future: true
+    style:
+      background_color: '#FFF8E1'
+```
+
+### Example: days with a Soccer event on the school calendar
+
+```yaml
+day_styles:
+  - match:
+      day:
+        has_event:
+          calendar: calendar.school
+          title_contains: Soccer
+    style:
+      background_color: auto
+```
+
+### Example: workdays without any meetings
+
+```yaml
+day_styles:
+  - match:
+      day:
+        weekday: true
+        no_event:
+          calendar: calendar.work
+    style:
+      opacity: 0.5
+```
+
+## Legacy condition shorthand
+
+The original `condition` form continues to work and is automatically converted into the advanced `match` schema at load time. Existing configurations do not need to change.
+
+<ParamField path="condition" type="string">
+  One of the following named conditions. A day matches when it satisfies the specified condition.
+
+  | Value | Matches |
+  | --- | --- |
+  | `today` | The current calendar day |
+  | `past` | Any day before today |
+  | `future` | Any day after today |
+  | `weekend` | Saturday or Sunday |
+  | `weekday` | Monday through Friday |
+  | `has_event` | Any day that has at least one visible event from a specific calendar (requires the `calendar` sibling key) |
+  | `day_of_week` | A specific weekday (requires the `day_of_week` sibling key — see below) |
+</ParamField>
+
+### Using `day_of_week`
+
+When `condition` is `day_of_week`, add a sibling `day_of_week` key with the target day number (0 = Sunday, 6 = Saturday). You can also provide a list of numbers to match multiple days with one rule.
+
+```yaml
+day_styles:
+  - condition: day_of_week
+    day_of_week: 1        # Monday
+    style:
+      background_color: '#E3F2FD'
+```
+
+### Using `has_event`
+
+When `condition` is `has_event`, you must also provide a `calendar` sibling key containing the entity ID (or virtual calendar ID) to watch. The rule only applies to days where that specific calendar has at least one event. A legacy `has_event` rule without `calendar` (or `title_match`) is ignored — use the advanced `match.day.has_event: true` form instead if you want to match any event.
+
+You can optionally narrow the rule further by adding a `title_match` sibling key. When set, the rule only matches days where the named calendar has at least one event whose title contains the given string. `title_match` uses the same single-string matching syntax as `event_styles` and `day_badges` — prefix the value with `exact:` for an exact match or `regex:` for a regular expression. It does not accept an array; use the event-scoped `match.any` form shown above for multiple titles. See [Text matching](/advanced/event-styles#text-matching).
+
+```yaml
+# Any event on calendar.work makes the day match
+day_styles:
+  - condition: has_event
+    calendar: calendar.work
+    style:
+      background_color: '#FFF9C4'
+
+# Only days where calendar.work has a "standup" event match
+day_styles:
+  - condition: has_event
+    calendar: calendar.work
+    title_match: standup
+    style:
+      background_color: '#E3F2FD'
+      border_color: '#1565C0'
+      border_width: 2
+```
+
+## Style Fields
+
+<ParamField path="style.background_color" type="string">
+  A hex color string applied to the day cell's background. You can also pass `'auto'` to let the card automatically compute a soft tint derived from the event colors present on that day.
+</ParamField>
+
+<ParamField path="style.opacity" type="number">
+  A number between `0` and `1` that controls the day cell's overall transparency.
+</ParamField>
+
+<ParamField path="style.border_color" type="string">
+  A hex color string for the day cell's border.
+</ParamField>
+
+<ParamField path="style.border_width" type="number">
+  The border width in pixels.
+</ParamField>
+
+## Priority
+
+<ParamField path="priority" default="0" type="integer">
+  When two or more rules match the same day, conflicts are resolved **per style property** (`background`, `opacity`, `border_color`, `border_width`). For each property, the rule with the highest `priority` wins; ties go to the rule defined earlier in the list. Style properties not set by the winning rule fall through to the next matching rule, so e.g. one rule can supply the background and a lower-priority rule can still contribute the opacity.
+</ParamField>
+
+## Convenience Shorthands
+
+In addition to the full `day_styles` list, the card also accepts a pair of shorthand options for styling today's cell. These are processed as `day_styles` rules internally and are a quick alternative to writing a full condition block.
+
+<ParamField path="today_background_color" type="string">
+  A hex color shorthand for setting today's background. Equivalent to a `day_styles` rule with `condition: today` and `style.background_color` set to the same value.
+</ParamField>
+
+<ParamField path="today_style" type="object">
+  An object with any combination of `background_color`, `opacity`, `border_color`, and `border_width` applied to today's cell.
+
+  ```yaml
+  today_style:
+    background_color: '#E3F2FD'
+    border_color: '#1565C0'
+    border_width: 2
+  ```
+</ParamField>
+
+## Examples
+
+### Highlight weekends with a light gray background
+
+This rule gives Saturday and Sunday cells a subtle gray tint to help them stand out from the work week.
+
+```yaml
+day_styles:
+  - condition: weekend
+    style:
+      background_color: '#F5F5F5'
+```
+
+### Show today with a bold blue background
+
+A high `priority` of `10` ensures this rule overrides any other day style that might also match today, such as `weekend`.
+
+```yaml
+day_styles:
+  - condition: today
+    style:
+      background_color: '#1565C0'
+    priority: 10
+```
+
+### Dim past days
+
+This rule reduces the opacity of every day in the past, creating a visual separation between what has happened and what is coming up.
+
+```yaml
+day_styles:
+  - condition: past
+    style:
+      opacity: 0.4
+```
+
+### Auto-tint days that have events
+
+Instead of choosing a fixed background color, pass `'auto'` and let the card compute a soft tint derived from the event colors on each matching day.
+
+```yaml
+day_styles:
+  - condition: has_event
+    calendar: calendar.personal
+    style:
+      background_color: 'auto'
+```
+
+### Combine multiple rules
+
+Rules are independent and additive. Here, past days are dimmed, weekends get a warm tint, and today is boldly highlighted above both.
+
+```yaml
+day_styles:
+  - condition: past
+    style:
+      opacity: 0.4
+    priority: 1
+  - condition: weekend
+    style:
+      background_color: '#FFF8E1'
+    priority: 2
+  - condition: today
+    style:
+      background_color: '#1565C0'
+    priority: 10
+```
+
+<Tip>
+  Use `background_color: 'auto'` on days with events alongside a fixed background color for today. Set a higher `priority` on the today rule so it always wins, even if today has events.
+</Tip>

@@ -1,0 +1,304 @@
+---
+title: "Family Calendar Card: Troubleshooting Common Issues"
+sidebarTitle: "Troubleshooting"
+description: "Fix common problems with the Family Calendar Card including missing events, blank cards, event editing errors, weather not showing, and layout issues."
+---
+
+The Family Calendar Card is designed to work out of the box with any Home Assistant calendar integration, but a few common configuration issues can cause unexpected behavior. This page walks you through the most frequently encountered problems and how to resolve them. Work through the section that matches your symptom, and if nothing here helps, see the bug report guidance at the bottom of this page.
+
+<AccordionGroup>
+  <Accordion title="Card shows: Custom element does not exist (family-calendar-card)">
+    This error means Home Assistant has not loaded the card's JavaScript file as a dashboard resource. The card UI will not render at all until the resource is registered.
+
+    **Steps to fix:**
+
+    1. In Home Assistant, go to **Settings → Dashboards → Resources** (you may need to enable Advanced Mode in your profile first).
+    2. Check that `family-calendar-card.js` is listed and its type is set to **JavaScript Module**.
+    3. If the entry is missing, add it manually. The URL should match your installation path, for example `/hacsfiles/family-calendar-card/family-calendar-card.js` (HACS) or `/local/family-calendar-card.js` (manual).
+    4. Hard-refresh your browser with `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac) to force the browser to reload the resource.
+
+    <Note>
+      If you installed via HACS, the resource entry is usually added automatically. If it's missing, try removing and re-downloading the card in HACS, then check Resources again.
+    </Note>
+  </Accordion>
+
+  <Accordion title="No events appear / calendar is blank">
+    A blank calendar most often means the card cannot find any events from the configured entities, or the entities themselves are not returning data.
+
+    **Things to check:**
+
+    - Verify that the entity IDs in your `entities` list exactly match calendar entities in Home Assistant. Entity IDs are case-sensitive.
+    - Open the **Calendar** view in the Home Assistant sidebar and confirm your events appear there. If they don't, the problem is with the calendar integration itself, not the card.
+    - Review your YAML for typos in the `entities` block:
+
+    ```yaml
+    type: custom:family-calendar-card
+    entities:
+      - calendar.my_google_calendar
+      - calendar.family
+    ```
+
+    - Temporarily remove any filters that could be hiding all events, such as:
+
+    ```yaml
+    past_event_mode: hide
+    default_hidden_calendars:
+      - calendar.my_google_calendar
+    ```
+
+    <Tip>
+      Open your browser's developer console (F12) and look for any errors from the card while the dashboard loads. Connection errors may indicate that Home Assistant is slow to deliver calendar data — try refreshing the page after a few seconds.
+    </Tip>
+  </Accordion>
+
+  <Accordion
+    title="Updated to the latest version, but still seeing old behavior"
+    id="updated-to-the-latest-version-but-still-seeing-old-behavior"
+  >
+    If HACS shows the latest version but new frontend behavior is missing, the most common cause is a stale dashboard resource or browser cache. HACS confirms that the files are installed. It does not confirm that Home Assistant or your browser is loading the current file.
+
+    This is especially likely if you have more than one Family Calendar Card resource registered (for example, an old manually-added copy alongside a HACS-managed one), or if your browser cached an old bundle after an update.
+
+    **Symptoms:**
+
+    - New options or features are missing
+    - Documented options have no effect
+    - The card editor looks outdated
+    - The card editor is missing the **About / Diagnostics** section
+
+    **Steps to fix:**
+
+    1. **Confirm HACS version**
+
+       Open **HACS → Frontend → Family Calendar Card** and confirm it shows the version you expect. This only confirms installation, so continue with the resource checks below if the dashboard still looks old.
+
+    2. **Check Dashboard Resources**
+
+       In Home Assistant, go to **Settings → Dashboards → Resources**. Look for every resource entry that points to `family-calendar-card.js`.
+
+    3. **Remove duplicate or outdated resources**
+
+       Delete any duplicate or stale entries, such as one still pointing at a different, older folder than the one below.
+
+    4. **Keep only the current resource**
+
+       For a HACS install, the resource should use:
+
+       ```text
+       /hacsfiles/family-calendar-card/family-calendar-card.js
+       ```
+
+       <Note>
+         The filename is intentionally still `family-calendar-card.js`. The important part is the folder path: `family-calendar-card`, not `family-calendar-card-legacy`.
+       </Note>
+
+    5. **Refresh or restart**
+
+       Hard-refresh your browser with `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac). If the old UI still appears, try a private/incognito window, clear your browser cache, or restart Home Assistant.
+
+    6. **Verify the current editor loads**
+
+       Edit the card in your dashboard and scroll to the bottom of the card editor. Seeing the **About / Diagnostics** section is a good sign that the current frontend/editor is loading. If that section is missing, an old frontend resource is probably still being loaded.
+
+    7. **Include details when opening an issue**
+
+       If you still need help, include screenshots of:
+
+       - The HACS version shown for Family Calendar Card
+       - **Settings → Dashboards → Resources**
+       - The bottom of the card editor, especially whether **About / Diagnostics** appears
+
+    <Tip>
+      This checklist is most useful when HACS shows the latest version but new options or editor sections are missing. Other bugs can have different causes.
+    </Tip>
+  </Accordion>
+
+  <Accordion title='"Add Event" button is missing'>
+    The **Add Event** button is hidden when event management is disabled or no writable calendar is available.
+
+    Check each of the following in your card YAML:
+
+    - `enable_event_management: false` — set this to `true` to enable event management.
+    - `hide_add_event_button: true` — set this to `false` or remove the line entirely.
+    - All of your calendar entities are listed under `readonly_calendars` — remove any calendars you want to write to from that list.
+
+    ```yaml
+    type: custom:family-calendar-card
+    entities:
+      - calendar.my_calendar
+    enable_event_management: true
+    hide_add_event_button: false
+    readonly_calendars: []
+    ```
+
+    <Note>
+      At least one calendar entity must be writable (i.e., your Home Assistant integration must support creating events for that calendar). Read-only integrations — such as some holiday calendars — cannot receive new events regardless of card settings.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Cannot edit or delete an event">
+    There are several reasons an event might not be editable or deletable:
+
+    **Google Calendar events** Editing events is not supported through the Home Assistant Google Calendar integration. Google Calendar edits are simulated via create-then-delete, which changes the event's UID. To truly edit an event, use the Google Calendar app or website directly. Deletion does work through HA.
+
+    **Event is missing a UID** Some calendar integrations do not attach a UID to every event. Without a UID, the card cannot uniquely identify the event to send an edit or delete request. The only fix is to delete the event and recreate it through a source that generates UIDs.
+
+    **Calendar is marked read-only in the card config** Check whether the calendar is listed under `readonly_calendars`:
+
+    ```yaml
+    readonly_calendars:
+      - calendar.work_holidays
+    ```
+
+    Remove it from the list if you want to allow editing.
+
+    **Event management is disabled globally** Confirm `enable_event_management` is not set to `false` in your card config.
+
+    <Warning>
+      Never store sensitive data in calendar event titles or descriptions with the expectation that the card's read-only setting will protect it. `readonly_calendars` only affects the card UI — the underlying HA integration may still allow edits through other means.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Weather icons not showing">
+    Weather icons require a valid `weather.*` entity that provides a daily forecast.
+
+    **Steps to fix:**
+
+    1. Confirm you have set `header_weather_sensor` in your card config:
+
+    ```yaml
+    header_weather_sensor: weather.home
+    ```
+
+    2. Open **Developer Tools → States** in Home Assistant and search for your weather entity (e.g. `weather.home`). Verify it exists and has a valid state.
+    3. Confirm that the weather integration provides a **daily forecast**. Some integrations only provide hourly forecasts, which the card does not use for day-cell icons.
+    4. If the entity exists and has a daily forecast but icons still don't appear, check the browser console for errors related to the weather subscription.
+
+    <Tip>
+      On slower Home Assistant instances, weather data may take a few seconds to arrive after the page loads. Refresh the page and wait a moment before concluding the icons are broken.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Card height is wrong / too tall / too short">
+    Height behavior depends on the dashboard layout you're using.
+
+    **Using a panel or grid dashboard layout** Enable compact height mode to let the card fill its container:
+
+    ```yaml
+    compact_height: true
+    ```
+
+    This tells the card to measure its parent container and size itself to fit the available vertical space. It works correctly in HA panel and grid dashboard layouts.
+
+    **Using a sidebar or standard layout** The card auto-sizes to its content in standard layouts. If it appears clipped, check whether `compact_height: true` is set — this mode is not appropriate for sidebar layouts and may cause the card to collapse. Remove it or set it to `false`.
+
+    **Fine-tuning the height** Use `height_scale` to proportionally scale the card taller or shorter:
+
+    ```yaml
+    height_scale: 1.2   # 20% taller than default
+    height_scale: 0.85  # 15% shorter than default
+    ```
+
+    <Note>
+      `compact_height: true` requires the card to be placed in a grid or panel dashboard layout. In a standard vertical layout, use `height_scale` instead.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Events are duplicated">
+    If you see the same event appearing twice (or more), you likely have multiple calendar entities that both contain that event — for example, a personal Google Calendar and a shared family calendar that both include the same entry.
+
+    Enable calendar combining to automatically deduplicate events that share the same normalized title, start time, end time, and location:
+
+    ```yaml
+    combine_calendars: true
+    ```
+
+    <Note>
+      Deduplication does not rely on event UIDs. If duplicates persist after enabling `combine_calendars`, compare the event title, start time, end time, and location across calendars. Any difference in those fields makes the card treat the entries as distinct events.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Wrong language or date format">
+    The card auto-detects your language from Home Assistant's locale settings. If detection produces the wrong language or date format, you can override both explicitly.
+
+    **Set the display language:**
+
+    ```yaml
+    language: de
+    ```
+
+    Supported language codes: `en` (English), `fr` (French), `de` (German), `nl` (Dutch), `es` (Spanish), `ca` (Catalan), `da` (Danish), `sv` (Swedish).
+
+    **Set the date and time locale:**
+
+    ```yaml
+    locale: en-US
+    ```
+
+    The `locale` key controls how dates and times are formatted (e.g. `MM/DD/YYYY` vs `DD.MM.YYYY`) and is independent of the `language` key.
+
+    <Tip>
+      If you share a dashboard with users in different regions, set both `language` and `locale` explicitly so formatting is consistent regardless of individual HA profiles.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Card only shows the header after updating">
+    If the card header appears but the calendar body is missing, check whether your dashboard card has an explicit `grid_options.rows` value that is too small.
+
+    This can happen in v4.5.0 and newer because the card body now fills the available height of the Home Assistant dashboard card. If the dashboard card is only one row tall, the calendar body may collapse and only the header remains visible.
+
+    **Fix:**
+
+    ```yaml
+    grid_options:
+      rows: 8
+    ```
+
+    If you currently have `rows:` set to anything less than 4, it is probably too small.
+
+    <Tip>
+      The safest approach remains removing `rows:` entirely and letting the card size naturally.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Stale-refresh warning or wrong events after startup">
+    The card keeps a local snapshot of the last successful calendar fetch so it can render events immediately when Home Assistant reloads, even before a fresh refresh completes. The snapshot is stored in the browser (IndexedDB) and is scoped to your current card configuration.
+
+    **What you might see:**
+
+    - A brief flash of previously known events on startup before the current data loads.
+    - A small **"Calendar data may be stale"** warning if no successful refresh has completed for 30 minutes (for example, when Home Assistant is unreachable or a calendar integration is failing).
+    - Events that were deleted on your calendar still appearing until the next successful refresh finishes.
+
+    This is expected behavior. A successful refresh — including one that legitimately returns no events — replaces the cached snapshot. Failed refreshes leave the last-known-good data in place instead of blanking the card.
+
+    **If cached data looks wrong or you want to force a clean reload:**
+
+    1. Edit the card and scroll to **About / Diagnostics**.
+    2. Select **Flush event cache**.
+    3. The card clears its stored snapshots and triggers a fresh fetch from Home Assistant.
+
+    <Note>
+      Flushing only removes Family Calendar Card snapshots from your browser. It does not delete any events from your calendar integrations.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Submitting a bug report">
+    If none of the above resolves your issue, please open a GitHub issue so the maintainer can investigate.
+
+    **Before submitting, gather the following:**
+
+    - Which dashboard view and card position is affected
+    - Your complete card YAML configuration (remove any sensitive entity names if needed)
+    - Screenshots or a screen recording of the problem
+    - Your Home Assistant version (found in **Settings → About**)
+    - Your browser and version
+    - Any errors shown in the browser developer console (F12 → Console tab)
+
+    <Warning>
+      Incomplete bug reports are much harder to diagnose. Including your full YAML config and HA version is the single most helpful thing you can do.
+    </Warning>
+
+    Open an issue at [github.com/Baeka89/family-calendar-card](https://github.com/Baeka89/family-calendar-card/issues).
+  </Accordion>
+</AccordionGroup>

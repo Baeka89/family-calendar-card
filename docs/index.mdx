@@ -1,0 +1,134 @@
+---
+title: Family Calendar Card
+description: Install, configure, and customize the Family Calendar Card for your Home Assistant dashboard, with views, event styling, weather, and more.
+mode: frame
+---
+
+<div data-product-guide-index className="flex w-full flex-col gap-8 max-w-5xl mx-auto px-4 md:px-8 lg:px-12 py-10 lg:gap-14 lg:py-16">
+  <div className="flex max-w-[540px] flex-col gap-2 self-center text-center">
+    <h1 className="text-[30px] font-medium leading-9 tracking-tight text-gray-900 dark:text-gray-50">
+      Family Calendar Card
+    </h1>
+    <p className="text-balance text-base leading-relaxed tracking-tight text-gray-600 dark:text-gray-400">
+      A beautiful, family-friendly calendar card for Home Assistant dashboards — with multi-calendar support, event management, weather, and deep customization.
+    </p>
+  </div>
+
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <Card
+      title={<span className="product-guide-feature-card-title">Get Started</span>}
+      icon="rocket"
+      href="/introduction"
+      className="product-guide-feature-card"
+      size={64}
+    >
+      <span className="product-guide-feature-card-description">Install via HACS and add your first calendar card in minutes.</span>
+    </Card>
+
+    <a
+      href="/views/month"
+      className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
+    >
+      <Icon icon="calendar" color="rgb(var(--primary))" size={18} className="shrink-0" />
+      <div className="flex flex-col gap-1">
+        <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Views & Layout</span>
+        <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+          Month, Week, Schedule, and Agenda views — pick what works for your household.
+        </span>
+      </div>
+    </a>
+    <a
+      href="/configuration/basic"
+      className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
+    >
+      <Icon icon="settings" color="rgb(var(--primary))" size={18} className="shrink-0" />
+      <div className="flex flex-col gap-1">
+        <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Configuration</span>
+        <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+          Control every detail: colors, fonts, event display, weather, and more.
+        </span>
+      </div>
+    </a>
+  </div>
+
+  <hr className="border-0 border-t border-border" />
+
+  <div className="flex flex-col gap-4">
+    <h2 className="font-serif text-xl font-medium leading-normal text-gray-900 dark:text-gray-50">Common tasks</h2>
+
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <a
+        href="/installation"
+        className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
+      >
+        <Icon icon="download" color="rgb(var(--primary))" size={18} className="shrink-0" />
+        <div className="flex flex-col gap-1">
+          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Install the card</span>
+          <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+            One-click install via HACS, or manual download and resource setup.
+          </span>
+        </div>
+      </a>
+      <a
+        href="/configuration/appearance"
+        className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
+      >
+        <Icon icon="palette" color="rgb(var(--primary))" size={18} className="shrink-0" />
+        <div className="flex flex-col gap-1">
+          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Customize appearance</span>
+          <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+            Set calendar colors, header style, background images, and dark mode.
+          </span>
+        </div>
+      </a>
+      <a
+        href="/advanced/virtual-calendars"
+        className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
+      >
+        <Icon icon="layers" color="rgb(var(--primary))" size={18} className="shrink-0" />
+        <div className="flex flex-col gap-1">
+          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Create virtual calendars</span>
+          <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+            Group multiple calendar entities under a single display name and color.
+          </span>
+        </div>
+      </a>
+      <a
+        href="/advanced/event-styles"
+        className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
+      >
+        <Icon icon="paintbrush" color="rgb(var(--primary))" size={18} className="shrink-0" />
+        <div className="flex flex-col gap-1">
+          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Style events</span>
+          <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+            Apply custom colors, icons, and visibility rules to individual events.
+          </span>
+        </div>
+      </a>
+      <a
+        href="/configuration/weather"
+        className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
+      >
+        <Icon icon="cloud-sun" color="rgb(var(--primary))" size={18} className="shrink-0" />
+        <div className="flex flex-col gap-1">
+          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Add weather forecast</span>
+          <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+            Display daily weather icons and forecasts alongside your events.
+          </span>
+        </div>
+      </a>
+      <a
+        href="/troubleshooting"
+        className="rounded-2xl flex flex-col gap-4 border bg-gray-50 p-4 outline-none shadow-sm shadow-gray-950/5 transition hover:border-primary hover:shadow-md dark:bg-gray-950 dark:shadow-black/20 dark:hover:border-primary"
+      >
+        <Icon icon="wrench" color="rgb(var(--primary))" size={18} className="shrink-0" />
+        <div className="flex flex-col gap-1">
+          <span className="font-serif text-base font-medium text-gray-900 dark:text-gray-50">Troubleshoot issues</span>
+          <span className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+            Fix common problems with calendar entities, event display, and layouts.
+          </span>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>

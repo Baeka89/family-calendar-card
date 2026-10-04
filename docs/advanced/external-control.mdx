@@ -1,0 +1,106 @@
+---
+title: "External Control: Reset the Card from an Automation or Idle Timer"
+sidebarTitle: "External Control"
+description: "Dispatch family-calendar-card-reset and family-calendar-card-set-calendars window events from a Home Assistant automation, or use idle_reset_minutes, to return the card to its configured defaults."
+---
+
+A wall-mounted tablet is often left on whatever view or calendar selection the last person tapped. This page covers two ways to bring the card back to its configured state: dispatching window events from an automation, and an optional built-in idle timer.
+
+Both apply the same defaults as the card's own **Today** button and the calendar toggle chips: the configured `default_view`, today's date, and the calendars listed in `default_hidden_calendars` / `default_calendar_visibility`.
+
+## Idle Reset (No Automation Needed)
+
+<ParamField path="idle_reset_minutes" type="number">
+  When set, the card resets itself — date, view, and calendar selection — after this many minutes with no touch, click, key press, or scroll on the card's browser tab. Any of those interactions restarts the timer. Omit this option, or leave it unset, to disable idle reset. The reset never interrupts an open event dialog; it is applied as soon as the dialog closes.
+
+  The idle period keeps counting even while this card isn't the one on screen — for example, after switching to a different dashboard view (which unmounts the card) or while the browser tab is in the background. The card checks the elapsed time as soon as it's shown again and applies the reset immediately if the configured period has already passed, rather than only counting time while actively in the foreground.
+</ParamField>
+
+```yaml
+type: custom:family-calendar-card
+entities:
+  - calendar.family
+idle_reset_minutes: 15
+```
+
+This runs entirely in the browser tab showing the card, so it works even if nothing else on the dashboard changes and no automation exists. If several cards are on the same dashboard, each can set its own `idle_reset_minutes` independently.
+
+## Window Events (Automation-Driven)
+
+The card listens for two `window` events so that Home Assistant automations — or any script running in the same browser tab — can trigger a reset on a schedule (for example, every night at 2 AM, or a few minutes after a "goodnight" scene).
+
+<Note>
+  A Home Assistant automation cannot reach into a browser tab on its own. To dispatch these events from an automation you need a bridge that runs code in the browser, such as [Browser Mod](https://github.com/thomasloven/hass-browser_mod)'s `browser_mod.javascript` service. The examples below use Browser Mod, but any mechanism that runs JavaScript in the dashboard's browser tab works.
+</Note>
+
+### `family-calendar-card-reset`
+
+Resets date, view, and calendar selection to their configured defaults — the same effect as tapping **Today** and clearing every calendar toggle back to `default_hidden_calendars`.
+
+```js
+window.dispatchEvent(new CustomEvent('family-calendar-card-reset'));
+```
+
+<ParamField path="detail.only" type="string or list">
+  Restrict the reset to specific parts: `date` (alias `today`), `view`, and/or `calendars`. Omit `detail`, or `only`, to reset all three.
+</ParamField>
+
+<ParamField path="detail.preference_storage_key" type="string">
+  Limits the reset to the card(s) configured with this [`preference_storage_key`](/configuration/basic#param-preference-storage-key). Omit it to reset every Family Calendar Card currently open in the browser tab.
+</ParamField>
+
+```js
+// Only jump back to today; leave the current view and calendar selection alone.
+window.dispatchEvent(new CustomEvent('family-calendar-card-reset', {
+  detail: { only: 'date' }
+}));
+
+// Only reset the card configured with preference_storage_key: wall-tablet.
+window.dispatchEvent(new CustomEvent('family-calendar-card-reset', {
+  detail: { preference_storage_key: 'wall-tablet' }
+}));
+```
+
+### `family-calendar-card-set-calendars`
+
+Explicitly shows or hides calendars, instead of toggling them like a badge click does. This is useful when an automation needs a specific, known outcome rather than flipping whatever state the chip happens to be in.
+
+<ParamField path="detail.show" type="string or list">
+  Calendar entity IDs, `virtual:<id>` badge IDs, or `"all"` to reveal. Applied after `hide`, so a calendar listed in both ends up shown.
+</ParamField>
+
+<ParamField path="detail.hide" type="string or list">
+  Calendar entity IDs, `virtual:<id>` badge IDs, or `"all"` to hide.
+</ParamField>
+
+<ParamField path="detail.preference_storage_key" type="string">
+  Same targeting behavior as the reset event above.
+</ParamField>
+
+```js
+// Hide work, show everything else.
+window.dispatchEvent(new CustomEvent('family-calendar-card-set-calendars', {
+  detail: { hide: 'calendar.work', show: 'all' }
+}));
+```
+
+Like the built-in **Today** button and calendar chips, both events wait for any open add/edit event dialog to close before applying, so they never interrupt someone mid-edit.
+
+## Automation Example (Browser Mod)
+
+```yaml
+automation:
+  - alias: Reset wall calendar overnight
+    trigger:
+      - platform: time
+        at: "02:00:00"
+    action:
+      - service: browser_mod.javascript
+        data:
+          code: >
+            window.dispatchEvent(new CustomEvent('family-calendar-card-reset', {
+              detail: { preference_storage_key: 'wall-tablet' }
+            }));
+```
+
+Register the target browser with Browser Mod first (see its own documentation), and give the card a `preference_storage_key: wall-tablet` so the reset targets only that dashboard.

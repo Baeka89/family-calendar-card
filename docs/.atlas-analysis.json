@@ -1,0 +1,163 @@
+{
+  "projectType": "frontend",
+  "projectName": "Family Calendar Card",
+  "projectDescription": "A beautiful, highly customizable Home Assistant Lovelace calendar card with multi-calendar support, multiple view modes, event management, weather integration, and rich styling options.",
+  "theme": "almond",
+  "primaryColor": "#242424",
+  "lightColor": "#aeaeac",
+  "darkColor": "#484641",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Views & Layout",
+            "pages": [
+              "views/month",
+              "views/week",
+              "views/schedule",
+              "views/agenda"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/basic",
+              "configuration/display",
+              "configuration/event-management",
+              "configuration/appearance",
+              "configuration/weather"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/event-styles",
+              "advanced/day-styles",
+              "advanced/day-badges",
+              "advanced/virtual-calendars",
+              "advanced/combine-calendars"
+            ]
+          },
+          {
+            "group": "Help",
+            "pages": [
+              "troubleshooting",
+              "faq"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Four view modes: Month, Week (compact), Schedule, and Agenda",
+    "Multi-calendar support with per-calendar color coding",
+    "Full event management: create, edit, and delete events",
+    "Weather forecast display via Home Assistant weather entities",
+    "Virtual calendars to group entities into display-only badge groups",
+    "Rich event styling engine with rule-based event_styles and day_styles",
+    "Day badges for custom conditional indicators on calendar days",
+    "Combine calendars feature to deduplicate events across multiple calendars",
+    "Dark mode support (auto, light, or dark)",
+    "Swipe gesture navigation",
+    "Compact height mode for grid/panel dashboard layouts",
+    "Background images and customizable opacity",
+    "Markdown and HTML support in event descriptions",
+    "Eight supported UI languages: English, French, German, Dutch, Spanish, Catalan, Danish, Swedish",
+    "Visual configuration editor (no YAML required for common options)",
+    "HACS-compatible — installs in one click"
+  ],
+  "publicApiSurface": [
+    "type: custom:family-calendar-card",
+    "type: custom:family-calendar-card-legacy (legacy alias)",
+    "entities: list of calendar entity IDs",
+    "default_view: month | week | week-compact | week-standard | schedule | agenda",
+    "first_day_of_week: 0–6",
+    "week_days: array of day numbers",
+    "week_start_hour / week_end_hour: 0–23",
+    "lock_schedule_hours: boolean",
+    "past_event_mode: none | hide | muted",
+    "show_all_events_month: boolean",
+    "show_all_details_month: boolean",
+    "hide_empty_days: boolean",
+    "agenda_compact_events: boolean",
+    "shorten_event_times: boolean",
+    "disable_swipe_controls: boolean",
+    "rolling_days_week_compact / rolling_days_schedule / rolling_days_agenda: number",
+    "rolling_weeks: number",
+    "show_week_numbers_month: boolean",
+    "compact_height: boolean",
+    "compact_width: boolean",
+    "height_scale: number",
+    "compact_header: boolean",
+    "combine_calendars: boolean",
+    "combine_style: bars | stripes | dots",
+    "combine_background: primary | neutral | #hex",
+    "combine_calendars_width: number",
+    "event_color_mode: classic | left-neutral | left-tint",
+    "event_neutral_background: #hex",
+    "event_tint_opacity: 0–100",
+    "event_color_bar_width: number",
+    "event_font_size: number",
+    "event_time_font_size: number",
+    "event_location_font_size: number",
+    "event_calendar_friendly_name: boolean",
+    "event_title_prefix: none | badge_icon | friendly_name",
+    "show_event_location: boolean",
+    "use_short_location: boolean",
+    "show_current_time_bar: boolean",
+    "colors: map of calendar entity to #hex",
+    "event_font_colors: map of calendar entity to #hex",
+    "calendar_names: map of calendar entity to display name",
+    "calendar_badge_icons: map of calendar entity to mdi:icon",
+    "calendar_person_entities: map of calendar entity to person.* entity",
+    "header_color: #hex | var(--primary-color) | match-card-background",
+    "header_text_color: #hex",
+    "header_background_opacity: 0–100",
+    "background_opacity: 0–100",
+    "background_image_url: URL string",
+    "background_image_size: cover | contain | auto",
+    "background_image_position: center | top | bottom | left | right",
+    "background_image_repeat: no-repeat | repeat | repeat-x | repeat-y",
+    "header_weather_sensor: weather entity ID",
+    "header_time_sensor: sensor entity ID",
+    "hide_header: boolean",
+    "hide_year: boolean",
+    "hide_calendars: boolean",
+    "hide_controls: boolean",
+    "hide_navigation_buttons: boolean",
+    "hide_add_event_button: boolean",
+    "hide_view_selector: boolean",
+    "hide_dark_mode_toggle: boolean",
+    "hide_event_calendar_bubble: boolean",
+    "hide_calendar_names: boolean",
+    "show_dashboard_nav_button: boolean",
+    "header_dashboard_path: string",
+    "enable_event_management: boolean",
+    "readonly_calendars: list of calendar entity IDs",
+    "default_hidden_calendars: list of calendar entity IDs",
+    "hide_badge_calendars: list of calendar entity IDs",
+    "hide_times_for_calendars: list of calendar entity IDs",
+    "color_scheme: auto | light | dark",
+    "language: en | fr | de | nl | es | ca | da | sv",
+    "locale: BCP 47 locale string",
+    "preference_storage_key: string",
+    "event_styles: list of rule objects with match/style/priority",
+    "day_styles: list of rule objects with condition/style/priority",
+    "day_badges: list of badge objects with conditions/text/icon/background_color",
+    "virtual_calendars: list of virtual calendar objects with id/name/entities/color/icon",
+    "today_background_color: #hex",
+    "today_style: object with background_color/opacity/border_color/border_width",
+    "uix: object with style CSS string"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "family-calendar-card",
+  "private": true,
+  "scripts": {
+    "build": "rollup -c",
+    "check:build": "npm run build && git diff --exit-code -- family-calendar-card.js",
+    "test": "node test/run-node-tests.js",
+    "test:visual": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.0",
+    "rollup": "^4.62.2"
+  }
+}

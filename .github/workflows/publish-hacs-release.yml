@@ -1,0 +1,159 @@
+name: Publish HACS Release
+
+# Release process:
+# - FAMILY_CALENDAR_CARD_VERSION must be committed in family-calendar-card.js before release.
+# - Open a release-prep PR that bumps the version, merge it to protected main,
+#   then run this manual workflow from main.
+# - This workflow intentionally fails if the source still contains the version placeholder.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  copilot-requests: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install Copilot CLI
+        id: install_copilot
+        continue-on-error: true
+        run: npm install -g @github/copilot
+
+      - name: Read card version
+        id: version
+        run: |
+          VERSION="$(grep -oE "FAMILY_CALENDAR_CARD_VERSION = '[^']+'" family-calendar-card.js | sed -E "s/.*'([^']+)'.*/\1/")"
+
+          echo "Detected version: $VERSION"
+
+          if [ -z "$VERSION" ] || [ "$VERSION" = "dev" ] || echo "$VERSION" | grep -q "__"; then
+            echo "ERROR: Invalid FAMILY_CALENDAR_CARD_VERSION"
+            exit 1
+          fi
+
+          if ! echo "$VERSION" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$'; then
+            echo "ERROR: Version must look like v1.2.3 or v1.2.3-beta0"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Verify tag does not already exist
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          if git ls-remote --tags origin "refs/tags/$VERSION" | grep -q "$VERSION"; then
+            echo "ERROR: Tag $VERSION already exists"
+            exit 1
+          fi
+
+      - name: Generate GitHub release notes
+        id: generated_notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${{ github.repository }}/releases/generate-notes" \
+            -f tag_name="$VERSION" \
+            -f target_commitish="main" \
+            > generated-release-notes.json
+
+          jq -r '.name' generated-release-notes.json > release-title.txt
+          jq -r '.body' generated-release-notes.json > generated-release-notes.md
+
+      - name: Build AI prompt
+        run: |
+          cat > ai-release-prompt.md <<'EOF_PROMPT'
+          Rewrite the following GitHub generated release notes for a Home Assistant HACS custom dashboard card called family-calendar-card.
+
+          Requirements:
+          - Keep it accurate. Do not invent features, bug fixes, breaking changes, or links.
+          - Preserve PR numbers, contributor mentions, and important configuration keys.
+          - Make it more user-friendly for HACS users.
+          - Call out breaking changes or migration notes if the generated notes clearly imply them.
+          - Use concise Markdown.
+          - Prefer headings like:
+            ## Highlights
+            ## Fixes
+            ## Maintenance
+            ## Full changelog
+          - If there are only a few changes, keep the notes short.
+          - Do not include marketing fluff.
+          - Do not mention that AI rewrote the notes.
+
+          Generated release notes:
+          EOF_PROMPT
+
+          cat generated-release-notes.md >> ai-release-prompt.md
+
+      - name: Start with generated release notes
+        run: cp generated-release-notes.md RELEASE_NOTES.md
+
+      - name: Spiffy release notes with Copilot
+        id: copilot_notes
+        if: steps.install_copilot.outcome == 'success'
+        continue-on-error: true
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          copilot \
+            -p "$(cat ai-release-prompt.md)" \
+            -s \
+            --no-ask-user \
+            > RELEASE_NOTES.ai.md
+
+          if [ ! -s RELEASE_NOTES.ai.md ]; then
+            echo "Copilot returned an empty response"
+            exit 1
+          fi
+
+          mv RELEASE_NOTES.ai.md RELEASE_NOTES.md
+
+      - name: Report release-note source
+        run: |
+          if [ "${{ steps.copilot_notes.outcome }}" = "success" ]; then
+            echo "Using Copilot-polished release notes."
+          else
+            echo "Copilot polishing unavailable or failed; using GitHub-generated release notes instead."
+          fi
+
+      - name: Finish release notes
+        run: |
+          echo "" >> RELEASE_NOTES.md
+          echo "---" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "_Generated from GitHub release notes. Please verify before publishing if this is a draft._" >> RELEASE_NOTES.md
+
+      - name: Create draft GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TITLE="$(cat release-title.txt)"
+
+          PRERELEASE_ARGS=()
+          if [[ "$VERSION" == *-* ]]; then
+            PRERELEASE_ARGS+=(--prerelease)
+          fi
+
+          gh release create "$VERSION" \
+            --target main \
+            --title "$TITLE" \
+            --notes-file RELEASE_NOTES.md \
+            --draft \
+            "${PRERELEASE_ARGS[@]}"
