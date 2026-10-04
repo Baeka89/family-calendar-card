@@ -273,7 +273,7 @@ const cases = [
     viewLabel: 'Week',
     assert: async (card) => {
       await expect(card.locator('.week-compact-event').filter({ hasText: 'Shared Duplicate Demo' })).toHaveCount(1);
-      await expect(card.locator('.week-compact-event').filter({ hasText: 'Shared Duplicate Demo' })).toHaveCSS('background-color', 'rgb(215, 235, 255)');
+      await expect(card.locator('.week-compact-event').filter({ hasText: 'Shared Duplicate Demo' })).toHaveCSS('background-color', 'rgb(255, 95, 102)');
     }
   },
   {
