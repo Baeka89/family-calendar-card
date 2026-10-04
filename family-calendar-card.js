@@ -1315,7 +1315,7 @@ function resolveHeaderButtonColor(rawColor, {
   return normalizeSingleColor(raw) || null;
 }
 
-const FAMILY_CALENDAR_CARD_VERSION = 'dev';
+const FAMILY_CALENDAR_CARD_VERSION = 'v0.1.0';
 
 function getFamilyCalendarCardVersion() {
   return FAMILY_CALENDAR_CARD_VERSION.includes('__')
