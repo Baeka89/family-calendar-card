@@ -5,6 +5,19 @@ Alle wesentlichen Änderungen an diesem Projekt werden hier dokumentiert.
 
 ## [Unreleased]
 
+### English 🇺🇸
+
+#### Added
+
+- **Extra header buttons:** calendar gradients with individually selected real or virtual calendars. Colors follow the selection order and update with the configured calendar colors. Existing button color options remain available.
+
+### Deutsch 🇩🇪
+
+#### Hinzugefügt
+
+- **Zusätzliche Header-Buttons:** Kalender-Farbverläufe mit einzeln auswählbaren echten oder virtuellen Kalendern. Farben folgen der Auswahlreihenfolge und den konfigurierten Kalenderfarben. Bisherige Farboptionen bleiben verfügbar.
+
+
 This section describes the current `dev` snapshot, not a published release. No earlier release history was included in the supplied package.
 Dieser Abschnitt beschreibt den aktuellen `dev`-Stand, keine veröffentlichte Version. Das bereitgestellte Paket enthielt keine frühere Release-Historie.
 

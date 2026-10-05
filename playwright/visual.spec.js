@@ -2319,3 +2319,40 @@ test('regression: color picker and background URL labels stay text in the browse
   });
   expect(result.injected).toBe(false); expect(result.pickerText).toBe('"><b data-injected="true">injected</b>'); expect(result.editorValue).toBe(result.pickerText);
 });
+
+
+for (const view of ['month', 'week', 'schedule', 'agenda']) {
+  test(`header gradient: selected calendar colors in ${view}`, async ({page}) => {
+    await page.goto(`file://${path.join(process.cwd(), 'playwright', 'ha-fixture.html')}`);
+    await page.evaluate(view => {
+      const card = document.createElement('family-calendar-card');
+      card.setConfig({ entities:['calendar.family','calendar.work'], default_view:view,
+        colors:{'calendar.family':'#ff0000','calendar.work':'#0000ff'},
+        header_nav_buttons:[{label:'Gradient',path:'/kids',color:{mode:'gradient',calendars:['calendar.work','calendar.family']}}] });
+      document.body.append(card);
+    }, view);
+    const button=page.locator('family-calendar-card').last().locator('.header-nav-button');
+    await expect(button).toHaveCSS('background-image', /linear-gradient/);
+    const image=await button.evaluate(el=>getComputedStyle(el).backgroundImage);
+    expect(image.indexOf('rgb(204, 204, 255)')).toBeLessThan(image.indexOf('rgb(255, 204, 204)'));
+  });
+}
+
+test('header gradient: visual editor selections survive config round trip', async ({page}) => {
+  await page.goto(`file://${path.join(process.cwd(), 'playwright', 'ha-fixture.html')}`);
+  await page.evaluate(() => {
+    const editor=document.createElement('family-calendar-card-editor');
+    editor.hass={states:{},panels:{},language:'en'};
+    editor.setConfig({entities:['calendar.family','calendar.work'], header_nav_buttons:[{label:'Kids',path:'/kids'}]});
+    document.body.append(editor);
+  });
+  const editor=page.locator('family-calendar-card-editor').last();
+  await editor.evaluate(el => el.querySelectorAll('details').forEach(section => { section.open = true; }));
+  await editor.locator('[data-header-button-color-mode][data-header-button-color-map-key="0"]').selectOption('gradient');
+  const boxes=editor.locator('[data-header-button-gradient-calendar]');
+  await expect(boxes).toHaveCount(2);
+  expect(await editor.evaluate(el=>el._config.header_nav_buttons[0].color)).toEqual({mode:'gradient',calendars:['calendar.family','calendar.work']});
+  await editor.locator('[data-header-button-gradient-calendar][value="calendar.family"]').uncheck();
+  const result=await editor.evaluate(el=>el._config.header_nav_buttons[0].color);
+  expect(result).toEqual({mode:'gradient',calendars:['calendar.work']});
+});

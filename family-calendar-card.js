@@ -822,6 +822,9 @@ function getEntityRenderSignature(hass, entityIds = []) {
 const EDITOR_TRANSLATION_LOCALES = ['en', 'fr', 'de', 'nl', 'es', 'et', 'ca', 'da', 'sv'];
 
 const EDITOR_TRANSLATION_ROWS = [
+  ['Calendar gradient', 'Dégradé de calendriers', 'Kalender-Farbverlauf', 'Kalenderverloop', 'Degradado de calendarios', 'Kalendrite värviüleminek', 'Degradat de calendaris', 'Kalenderfarveforløb', 'Kalendergradient'],
+  ['Gradient calendars', 'Calendriers du dégradé', 'Kalender für den Farbverlauf', 'Kalenders voor het verloop', 'Calendarios del degradado', 'Värviülemineku kalendrid', 'Calendaris del degradat', 'Kalendere til farveforløb', 'Kalendrar för gradienten'],
+  ['Select at least two calendars. Colors follow the selection order from left to right.', 'Sélectionnez au moins deux calendriers. Les couleurs suivent l’ordre de sélection de gauche à droite.', 'Mindestens zwei Kalender auswählen. Die Farben folgen der Auswahlreihenfolge von links nach rechts.', 'Selecteer minstens twee kalenders. Kleuren volgen de selectievolgorde van links naar rechts.', 'Selecciona al menos dos calendarios. Los colores siguen el orden de selección de izquierda a derecha.', 'Valige vähemalt kaks kalendrit. Värvid järgivad valiku järjekorda vasakult paremale.', 'Selecciona almenys dos calendaris. Els colors segueixen l’ordre de selecció d’esquerra a dreta.', 'Vælg mindst to kalendere. Farverne følger valgrækkefølgen fra venstre mod højre.', 'Välj minst två kalendrar. Färgerna följer valordningen från vänster till höger.'],
   ['Prefix {number}', 'Préfixe {number}', 'Präfix {number}', 'Voorvoegsel {number}', 'Prefijo {number}', 'Eesliide {number}', 'Prefix {number}', 'Præfiks {number}', 'Prefix {number}'],
   ['Combined event color', 'Couleur de l’événement combiné', 'Farbe des kombinierten Termins', 'Kleur van gecombineerde afspraak', 'Color del evento combinado', 'Kombineeritud sündmuse värv', 'Color de l’esdeveniment combinat', 'Farve på kombineret begivenhed', 'Färg för kombinerad händelse'],
   ['Blend colors in the side bars', 'Mélanger les couleurs dans les barres latérales', 'Farben in den seitlichen Balken ineinander übergehen lassen', 'Kleuren in de zijbalken laten overvloeien', 'Mezclar los colores en las barras laterales', 'Ühenda värvid külgribadel sujuvaks üleminekuks', 'Barreja els colors a les barres laterals', 'Lad farverne tone sammen i sidemarkeringerne', 'Låt färgerna tona ihop i sidomarkeringarna'],
@@ -1181,6 +1184,14 @@ function normalizeActionDataObject(value) {
 // or a literal CSS color. See resolveHeaderButtonColor() below for what each
 // shape means once it is actually turned into a color at render time.
 function normalizeHeaderButtonColor(rawColor) {
+  if (rawColor && typeof rawColor === 'object' && !Array.isArray(rawColor)) {
+    if (rawColor.mode !== 'gradient') return null;
+    const calendars = Array.isArray(rawColor.calendars)
+      ? [...new Set(rawColor.calendars.filter(value => typeof value === 'string')
+        .map(value => value.trim()).filter(value => /^calendar\.[\w]+$/.test(value) || /^virtual:[\w-]+$/.test(value)))]
+      : [];
+    return { mode: 'gradient', calendars };
+  }
   return normalizeOptionalString(rawColor);
 }
 
@@ -1313,6 +1324,14 @@ function resolveHeaderButtonColor(rawColor, {
   }
 
   return normalizeSingleColor(raw) || null;
+}
+
+// Resolve each stop through the same live lookup used by single-calendar buttons.
+// Unknown/deleted calendars are omitted; callers fall back to the default style.
+function resolveHeaderButtonGradientColors(rawColor, context = {}) {
+  const config = normalizeHeaderButtonColor(rawColor);
+  if (!config || typeof config !== 'object') return [];
+  return config.calendars.map(target => resolveHeaderButtonColor(`calendar:${target}`, context)).filter(Boolean);
 }
 
 const FAMILY_CALENDAR_CARD_VERSION = 'v0.1.0';
@@ -2977,6 +2996,7 @@ class FamilyCalendarCardEditor extends HTMLElement {
   }
 
   getHeaderButtonColorMode(rawColor) {
+    if (rawColor?.mode === 'gradient') return 'gradient';
     const value = String(rawColor || '').trim();
     if (!value) return 'default';
     return value.toLowerCase().startsWith('calendar:') ? 'calendar' : 'custom';
@@ -3179,6 +3199,7 @@ class FamilyCalendarCardEditor extends HTMLElement {
           <option value="default" ${mode === 'default' ? 'selected' : ''}>Default</option>
           <option value="calendar" ${mode === 'calendar' ? 'selected' : ''}>Match a calendar</option>
           <option value="custom" ${mode === 'custom' ? 'selected' : ''}>Custom color</option>
+          ${mapKey !== 'dashboard' ? `<option value="gradient" ${mode === 'gradient' ? 'selected' : ''}>${this.translateEditorLiteral('Calendar gradient')}</option>` : ''}
         </select>
       </div>
       ${mode === 'calendar' ? `
@@ -3189,6 +3210,12 @@ class FamilyCalendarCardEditor extends HTMLElement {
         </select>
       </div>
       ` : ''}
+      ${mode === 'gradient' ? `
+      <div class="field">
+        <span>${this.translateEditorLiteral('Gradient calendars')}</span>
+        <p class="helper">${this.translateEditorLiteral('Select at least two calendars. Colors follow the selection order from left to right.')}</p>
+        ${this.renderHeaderButtonGradientCalendars(mapKey, rawColor)}
+      </div>` : ''}
       ${mode === 'custom' ? this.renderColorInputControl({
         id: `${idPrefix}-color-custom`,
         field: 'header_button_color',
@@ -3196,6 +3223,33 @@ class FamilyCalendarCardEditor extends HTMLElement {
         value: rawColor
       }) : ''}
     `;
+  }
+
+  renderHeaderButtonGradientCalendars(mapKey, rawColor) {
+    const selected = Array.isArray(rawColor?.calendars) ? rawColor.calendars : [];
+    const available = new Map(this.getConfiguredEntitiesForEditor().map(id => [id, this.getEntityFriendlyName(id)]));
+    this.getVirtualCalendarsForEditor().forEach(calendar => {
+      if (calendar?.id) available.set(`virtual:${calendar.id}`, calendar.name || calendar.id);
+    });
+    // Keep selected stops first so their left-to-right order survives editing.
+    const targets = [...new Set([...selected, ...available.keys()])];
+    return targets.map(target => `<label class="list-checkbox-row">
+      <span>${this.escapeHtml(available.get(target) || target)}</span>
+      <input type="checkbox" data-header-button-gradient-calendar="true"
+        data-header-button-color-map-key="${this.escapeHtml(mapKey)}"
+        value="${this.escapeHtml(target)}" ${selected.includes(target) ? 'checked' : ''}>
+    </label>`).join('');
+  }
+
+  handleHeaderButtonGradientCalendarChange(event) {
+    const mapKey = event.target.dataset.headerButtonColorMapKey;
+    const current = this.getHeaderNavButtonsForEditor()[Number(mapKey)]?.color;
+    const selected = Array.isArray(current?.calendars) ? [...current.calendars] : [];
+    const target = event.target.value;
+    const calendars = event.target.checked
+      ? [...new Set([...selected, target])]
+      : selected.filter(value => value !== target);
+    this.setHeaderButtonColor(mapKey, { mode: 'gradient', calendars }, { render: true });
   }
 
   getEditorHeaderButtonColor(mapKey) {
@@ -3222,6 +3276,8 @@ class FamilyCalendarCardEditor extends HTMLElement {
     if (mode === 'calendar') {
       const firstOption = this.getConfiguredEntitiesForEditor()[0];
       nextValue = firstOption ? `calendar:${firstOption}` : '';
+    } else if (mode === 'gradient' && mapKey !== 'dashboard') {
+      nextValue = { mode: 'gradient', calendars: this.getConfiguredEntitiesForEditor().slice(0, 2) };
     } else if (mode === 'custom') {
       const current = this.getEditorHeaderButtonColor(mapKey);
       nextValue = current;
@@ -4384,6 +4440,10 @@ class FamilyCalendarCardEditor extends HTMLElement {
 
     this.querySelectorAll('[data-header-button-color-mode]').forEach((select) => {
       select.addEventListener('change', (event) => this.handleHeaderButtonColorModeChange(event));
+    });
+
+    this.querySelectorAll('[data-header-button-gradient-calendar]').forEach(input => {
+      input.addEventListener('change', event => this.handleHeaderButtonGradientCalendarChange(event));
     });
 
     this.querySelectorAll('[data-header-button-color-calendar]').forEach((select) => {
@@ -16583,6 +16643,20 @@ class FamilyCalendarCard extends HTMLElement {
   // (matching how calendar badges use their own color), a solid border in
   // that color, and readable text/icon color on top of the tint.
   getHeaderButtonColorStyle(rawColor) {
+    if (rawColor?.mode === 'gradient') {
+      const colors = resolveHeaderButtonGradientColors(rawColor, {
+        entities: this._config?.entities || [],
+        getCalendarColor: this.getCalendarColor.bind(this),
+        getVirtualBadgeById: this.getVirtualBadgeById.bind(this),
+        normalizeSingleColor: this.normalizeSingleColor.bind(this)
+      });
+      if (!colors.length) return '';
+      const stops = colors.map(color => this.lightenColor(color, 0.8));
+      const background = stops.length > 1 ? this.createColorGradient(stops) : stops[0];
+      // All stops are lightened consistently with existing button backgrounds.
+      const textColor = this.getContractColor(stops[0]);
+      return `background: ${background}; border-color: ${colors[0]}; color: ${textColor};`;
+    }
     const resolvedColor = this.resolveHeaderButtonColor(rawColor);
     if (!resolvedColor) return '';
 

@@ -9,7 +9,7 @@ on:
 jobs:
   hacs:
     name: HACS Action
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-24.04"
     steps:
       - name: HACS Action
         uses: "hacs/action@main"
