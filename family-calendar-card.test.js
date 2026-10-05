@@ -11631,3 +11631,39 @@ test('regression: picker title and editor background values cannot inject markup
   picker.render(); assert.doesNotMatch(picker.shadowRoot.innerHTML, /<b data-injected/);
   assert.match(picker.shadowRoot.innerHTML, /&lt;b data-injected=&quot;true&quot;&gt;/);
 });
+
+
+test('header gradient normalizes ordered unique stops and ignores invalid targets', async () => {
+  const { normalizeHeaderNavButtons, resolveHeaderButtonGradientColors } = await import('./src/header/header-nav-buttons.js');
+  const color = { mode: 'gradient', calendars: ['calendar.work', 'calendar.family', 'calendar.work', null, 'bad', 'virtual:kids'] };
+  const buttons = normalizeHeaderNavButtons([{ label: 'Kids', path: '/kids', color }]);
+  assert.deepEqual(buttons[0].color.calendars, ['calendar.work', 'calendar.family', 'virtual:kids']);
+  const context = { entities: ['calendar.family', 'calendar.work'], getCalendarColor: id => id === 'calendar.work' ? '#00ff00' : '#ff0000', getVirtualBadgeById: () => ({color:'#0000ff'}) };
+  assert.deepEqual(resolveHeaderButtonGradientColors(buttons[0].color, context), ['#00ff00','#ff0000','#0000ff']);
+  assert.deepEqual(resolveHeaderButtonGradientColors({mode:'gradient',calendars:['calendar.missing']}, context), []);
+});
+
+test('header gradient follows live calendar colors and gracefully handles fewer than two stops', () => {
+  const card = makeCard({ entities: ['calendar.family', 'calendar.work'], colors: { 'calendar.family':'#ff0000', 'calendar.work':'#0000ff' } });
+  const color = { mode:'gradient', calendars:['calendar.family','calendar.work'] };
+  const style = card.getHeaderButtonColorStyle(color);
+  assert.match(style, /linear-gradient\(to right,/);
+  card._config.colors['calendar.work'] = '#00ff00';
+  assert.notEqual(card.getHeaderButtonColorStyle(color), style);
+  assert.doesNotMatch(card.getHeaderButtonColorStyle({ mode:'gradient', calendars:['calendar.family'] }), /linear-gradient/);
+  assert.equal(card.getHeaderButtonColorStyle({ mode:'gradient', calendars:['calendar.missing'] }), '');
+});
+
+test('header gradient editor persists selections and preserves their order', () => {
+  const Editor = customElements.get('family-calendar-card-legacy-editor');
+  const editor = new Editor(); editor._hass = { states:{}, panels:{} };
+  editor.setConfig({ entities:['calendar.family','calendar.work'], header_nav_buttons:[{label:'Kids',path:'/kids'}] });
+  editor.handleHeaderButtonColorModeChange({target:{dataset:{headerButtonColorMapKey:'0'},value:'gradient'}});
+  assert.deepEqual(editor._config.header_nav_buttons[0].color, {mode:'gradient',calendars:['calendar.family','calendar.work']});
+  editor.handleHeaderButtonGradientCalendarChange({target:{dataset:{headerButtonColorMapKey:'0'},value:'calendar.family',checked:false}});
+  editor.handleHeaderButtonGradientCalendarChange({target:{dataset:{headerButtonColorMapKey:'0'},value:'calendar.family',checked:true}});
+  assert.deepEqual(editor._config.header_nav_buttons[0].color.calendars, ['calendar.work','calendar.family']);
+  const markup=editor.renderHeaderNavButtonRow(editor._config.header_nav_buttons[0],0);
+  assert.match(markup, /data-header-button-gradient-calendar/);
+  assert.match(markup, /value="gradient" selected/);
+});

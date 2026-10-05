@@ -1036,6 +1036,7 @@ export class FamilyCalendarCardEditor extends HTMLElement {
   }
 
   getHeaderButtonColorMode(rawColor) {
+    if (rawColor?.mode === 'gradient') return 'gradient';
     const value = String(rawColor || '').trim();
     if (!value) return 'default';
     return value.toLowerCase().startsWith('calendar:') ? 'calendar' : 'custom';
@@ -1238,6 +1239,7 @@ export class FamilyCalendarCardEditor extends HTMLElement {
           <option value="default" ${mode === 'default' ? 'selected' : ''}>Default</option>
           <option value="calendar" ${mode === 'calendar' ? 'selected' : ''}>Match a calendar</option>
           <option value="custom" ${mode === 'custom' ? 'selected' : ''}>Custom color</option>
+          ${mapKey !== 'dashboard' ? `<option value="gradient" ${mode === 'gradient' ? 'selected' : ''}>${this.translateEditorLiteral('Calendar gradient')}</option>` : ''}
         </select>
       </div>
       ${mode === 'calendar' ? `
@@ -1248,6 +1250,12 @@ export class FamilyCalendarCardEditor extends HTMLElement {
         </select>
       </div>
       ` : ''}
+      ${mode === 'gradient' ? `
+      <div class="field">
+        <span>${this.translateEditorLiteral('Gradient calendars')}</span>
+        <p class="helper">${this.translateEditorLiteral('Select at least two calendars. Colors follow the selection order from left to right.')}</p>
+        ${this.renderHeaderButtonGradientCalendars(mapKey, rawColor)}
+      </div>` : ''}
       ${mode === 'custom' ? this.renderColorInputControl({
         id: `${idPrefix}-color-custom`,
         field: 'header_button_color',
@@ -1255,6 +1263,33 @@ export class FamilyCalendarCardEditor extends HTMLElement {
         value: rawColor
       }) : ''}
     `;
+  }
+
+  renderHeaderButtonGradientCalendars(mapKey, rawColor) {
+    const selected = Array.isArray(rawColor?.calendars) ? rawColor.calendars : [];
+    const available = new Map(this.getConfiguredEntitiesForEditor().map(id => [id, this.getEntityFriendlyName(id)]));
+    this.getVirtualCalendarsForEditor().forEach(calendar => {
+      if (calendar?.id) available.set(`virtual:${calendar.id}`, calendar.name || calendar.id);
+    });
+    // Keep selected stops first so their left-to-right order survives editing.
+    const targets = [...new Set([...selected, ...available.keys()])];
+    return targets.map(target => `<label class="list-checkbox-row">
+      <span>${this.escapeHtml(available.get(target) || target)}</span>
+      <input type="checkbox" data-header-button-gradient-calendar="true"
+        data-header-button-color-map-key="${this.escapeHtml(mapKey)}"
+        value="${this.escapeHtml(target)}" ${selected.includes(target) ? 'checked' : ''}>
+    </label>`).join('');
+  }
+
+  handleHeaderButtonGradientCalendarChange(event) {
+    const mapKey = event.target.dataset.headerButtonColorMapKey;
+    const current = this.getHeaderNavButtonsForEditor()[Number(mapKey)]?.color;
+    const selected = Array.isArray(current?.calendars) ? [...current.calendars] : [];
+    const target = event.target.value;
+    const calendars = event.target.checked
+      ? [...new Set([...selected, target])]
+      : selected.filter(value => value !== target);
+    this.setHeaderButtonColor(mapKey, { mode: 'gradient', calendars }, { render: true });
   }
 
   getEditorHeaderButtonColor(mapKey) {
@@ -1281,6 +1316,8 @@ export class FamilyCalendarCardEditor extends HTMLElement {
     if (mode === 'calendar') {
       const firstOption = this.getConfiguredEntitiesForEditor()[0];
       nextValue = firstOption ? `calendar:${firstOption}` : '';
+    } else if (mode === 'gradient' && mapKey !== 'dashboard') {
+      nextValue = { mode: 'gradient', calendars: this.getConfiguredEntitiesForEditor().slice(0, 2) };
     } else if (mode === 'custom') {
       const current = this.getEditorHeaderButtonColor(mapKey);
       nextValue = current;
@@ -2443,6 +2480,10 @@ export class FamilyCalendarCardEditor extends HTMLElement {
 
     this.querySelectorAll('[data-header-button-color-mode]').forEach((select) => {
       select.addEventListener('change', (event) => this.handleHeaderButtonColorModeChange(event));
+    });
+
+    this.querySelectorAll('[data-header-button-gradient-calendar]').forEach(input => {
+      input.addEventListener('change', event => this.handleHeaderButtonGradientCalendarChange(event));
     });
 
     this.querySelectorAll('[data-header-button-color-calendar]').forEach((select) => {

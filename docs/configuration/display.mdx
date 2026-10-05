@@ -368,3 +368,22 @@ hide_times_for_calendars:
 hide_badge_calendars:
   - calendar.holidays_in_united_states
 ```
+
+
+### Calendar gradients for extra header buttons
+
+In the visual editor, select **Calendar gradient** under an extra header button's color settings. Choose real or virtual calendars; their current configured colors form a left-to-right gradient in selection order. Deselect and reselect a calendar to move it to the end. Existing default, single-calendar and custom-color choices remain available.
+
+```yaml
+header_nav_buttons:
+  - label: Family
+    path: /lovelace/family
+    color:
+      mode: gradient
+      calendars:
+        - calendar.family
+        - calendar.work
+        - virtual:kids
+```
+
+Select at least two calendars for a gradient. One available calendar uses its single color; with no available calendars the button uses its default appearance. Background colors retain the light tint used by existing header buttons. The virtual calendar ID must match an entry in `virtual_calendars`.

@@ -36,6 +36,14 @@ function normalizeActionDataObject(value) {
 // or a literal CSS color. See resolveHeaderButtonColor() below for what each
 // shape means once it is actually turned into a color at render time.
 export function normalizeHeaderButtonColor(rawColor) {
+  if (rawColor && typeof rawColor === 'object' && !Array.isArray(rawColor)) {
+    if (rawColor.mode !== 'gradient') return null;
+    const calendars = Array.isArray(rawColor.calendars)
+      ? [...new Set(rawColor.calendars.filter(value => typeof value === 'string')
+        .map(value => value.trim()).filter(value => /^calendar\.[\w]+$/.test(value) || /^virtual:[\w-]+$/.test(value)))]
+      : [];
+    return { mode: 'gradient', calendars };
+  }
   return normalizeOptionalString(rawColor);
 }
 
@@ -168,4 +176,12 @@ export function resolveHeaderButtonColor(rawColor, {
   }
 
   return normalizeSingleColor(raw) || null;
+}
+
+// Resolve each stop through the same live lookup used by single-calendar buttons.
+// Unknown/deleted calendars are omitted; callers fall back to the default style.
+export function resolveHeaderButtonGradientColors(rawColor, context = {}) {
+  const config = normalizeHeaderButtonColor(rawColor);
+  if (!config || typeof config !== 'object') return [];
+  return config.calendars.map(target => resolveHeaderButtonColor(`calendar:${target}`, context)).filter(Boolean);
 }

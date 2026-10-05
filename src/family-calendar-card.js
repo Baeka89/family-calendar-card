@@ -228,6 +228,7 @@ import {
   normalizeHeaderButtonColor as normalizeHeaderButtonColorHelper,
   normalizeHeaderButtonTapAction as normalizeHeaderButtonTapActionHelper,
   normalizeHeaderNavButtons as normalizeHeaderNavButtonsHelper,
+  resolveHeaderButtonGradientColors,
   resolveHeaderButtonColor as resolveHeaderButtonColorHelper
 } from './header/header-nav-buttons.js';
 import { renderDayCell } from './renderers/day-cell-renderer.js';
@@ -4152,6 +4153,20 @@ class FamilyCalendarCard extends HTMLElement {
   // (matching how calendar badges use their own color), a solid border in
   // that color, and readable text/icon color on top of the tint.
   getHeaderButtonColorStyle(rawColor) {
+    if (rawColor?.mode === 'gradient') {
+      const colors = resolveHeaderButtonGradientColors(rawColor, {
+        entities: this._config?.entities || [],
+        getCalendarColor: this.getCalendarColor.bind(this),
+        getVirtualBadgeById: this.getVirtualBadgeById.bind(this),
+        normalizeSingleColor: this.normalizeSingleColor.bind(this)
+      });
+      if (!colors.length) return '';
+      const stops = colors.map(color => this.lightenColor(color, 0.8));
+      const background = stops.length > 1 ? this.createColorGradient(stops) : stops[0];
+      // All stops are lightened consistently with existing button backgrounds.
+      const textColor = this.getContractColor(stops[0]);
+      return `background: ${background}; border-color: ${colors[0]}; color: ${textColor};`;
+    }
     const resolvedColor = this.resolveHeaderButtonColor(rawColor);
     if (!resolvedColor) return '';
 
