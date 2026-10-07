@@ -1,4 +1,4 @@
-export const FAMILY_CALENDAR_CARD_VERSION = 'v0.1.1';
+export const FAMILY_CALENDAR_CARD_VERSION = 'v0.1.2';
 
 export function getFamilyCalendarCardVersion() {
   return FAMILY_CALENDAR_CARD_VERSION.includes('__')
