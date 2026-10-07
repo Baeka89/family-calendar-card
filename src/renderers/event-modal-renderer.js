@@ -14,6 +14,7 @@ export function renderEventDetailsModal({
   canForward,
   canModify,
   customColor = null,
+  displayCalendarsMarkup = '',
   locationLinks = false,
   locationActionsExpanded = false,
   locationMapUrl = '',
@@ -116,6 +117,7 @@ export function renderEventDetailsModal({
           </div>
         ` : ''}
 
+        ${displayCalendarsMarkup}
         <div class="modal-actions">
             <div class="modal-actions-left">
               ${canDelete ? `<button class="btn btn-danger" id="delete-event-btn">${t('delete')}</button>` : ''}

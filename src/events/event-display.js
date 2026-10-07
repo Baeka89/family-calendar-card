@@ -124,8 +124,11 @@ export function shouldShowEventTime(event, { styleOverrides = null, hiddenCalend
   if (styleOverrides?.hide_time === true) return false;
   if (styleOverrides?.show_time === true) return true;
 
-  const visibleEntityIds = event.isCombinedCalendarEvent && Array.isArray(event.sourceEntityIds)
-    ? event.sourceEntityIds.filter(entityId => !hiddenCalendars.has(entityId))
+  const displayEntityIds = event.isDisplayAssignedEvent && Array.isArray(event.sourceCalendars)
+    ? event.sourceCalendars.map(calendar => calendar.entityId)
+    : event.sourceEntityIds;
+  const visibleEntityIds = event.isCombinedCalendarEvent && Array.isArray(displayEntityIds)
+    ? displayEntityIds.filter(entityId => !hiddenCalendars.has(entityId))
     : [event.entityId];
 
   if (visibleEntityIds.length === 0) {
@@ -141,8 +144,11 @@ export function getEventBubbleFontColor(event, { styleOverrides = null, hiddenCa
     return styleOverrides.event_font_color;
   }
 
-  const visibleEntityIds = event.isCombinedCalendarEvent && Array.isArray(event.sourceEntityIds)
-    ? event.sourceEntityIds.filter(entityId => !hiddenCalendars.has(entityId))
+  const displayEntityIds = event.isDisplayAssignedEvent && Array.isArray(event.sourceCalendars)
+    ? event.sourceCalendars.map(calendar => calendar.entityId)
+    : event.sourceEntityIds;
+  const visibleEntityIds = event.isCombinedCalendarEvent && Array.isArray(displayEntityIds)
+    ? displayEntityIds.filter(entityId => !hiddenCalendars.has(entityId))
     : [event.entityId];
 
   const preferredEntityId = visibleEntityIds[0] || event.entityId;

@@ -2356,3 +2356,52 @@ test('header gradient: visual editor selections survive config round trip', asyn
   const result=await editor.evaluate(el=>el._config.header_nav_buttons[0].color);
   expect(result).toEqual({mode:'gradient',calendars:['calendar.work']});
 });
+
+
+test('display calendars: read-only invitation can be assigned and cleared without backend writes', async ({page}) => {
+  await page.goto(`file://${path.join(process.cwd(), 'playwright', 'ha-fixture.html')}`);
+  await page.evaluate(() => {
+    const card=document.createElement('family-calendar-card');
+    card.setConfig({entities:['calendar.family','calendar.work'],default_view:'week',language:'en',enable_event_management:false,
+      preference_storage_key:'display-calendars-browser-test',colors:{'calendar.family':'#ff0000','calendar.work':'#0000ff'}});
+    card._hass={states:{},callService(){throw new Error('Unexpected backend write');},callWS(){throw new Error('Unexpected backend request');}};
+    card._calendarCapabilities={'calendar.family':{isReadonly:true}};
+    document.body.append(card);
+    card.showEventModal({entityId:'calendar.family',uid:'invitation',summary:'Invitation',start:'2026-10-07T10:00:00Z',end:'2026-10-07T11:00:00Z',color:'#ff0000'});
+  });
+  const card=page.locator('family-calendar-card').last();
+  await expect(card.locator('#edit-event-btn')).toHaveCount(0);
+  await card.locator('.event-display-calendars summary').click();
+  await expect(card.locator('[data-display-calendar="calendar.family"]')).toBeDisabled();
+  await card.locator('[data-display-calendar="calendar.work"]').check();
+  await card.locator('#save-display-calendars').click();
+  const state=await card.evaluate(el=>el._eventDisplayCalendars);
+  expect(Object.values(state)).toEqual([['calendar.work']]);
+  await expect(card.locator('#modal-content')).toContainText('Invitation');
+  await card.locator('.event-display-calendars summary').click();
+  await card.locator('[data-display-calendar="calendar.work"]').uncheck();
+  await card.locator('#save-display-calendars').click();
+  expect(await card.evaluate(el=>el._eventDisplayCalendars)).toEqual({});
+});
+
+
+for (const view of ['week', 'schedule', 'month', 'agenda']) {
+  test(`display calendars: visual source colors in ${view}`, async ({page}) => {
+    await page.goto(`file://${path.join(process.cwd(), 'playwright', 'ha-fixture.html')}`);
+    await page.evaluate(({view}) => {
+      const event={entityId:'calendar.family',uid:'display-view',summary:'Shared Invitation',start:'2026-03-17T10:00:00Z',end:'2026-03-17T11:00:00Z',color:'#ff0000'};
+      window.renderCalendarCard({config:{entities:['calendar.family','calendar.work'],default_view:view,colors:{'calendar.family':'#ff0000','calendar.work':'#0000ff'},preference_storage_key:`display-view-${view}`,enable_event_management:false},events:{'calendar.family':[event],'calendar.work':[]},darkMode:false});
+      const card=document.querySelector('family-calendar-card-legacy');
+      // Set a display-only assignment using the same stable UID as the fetched event.
+      card.saveEventDisplayCalendars(event,['calendar.work']);
+      card.render();
+    }, {view});
+    const card=page.locator('family-calendar-card-legacy');
+    // Event data is common to every renderer and keeps true write targets separate.
+    const visible=card.locator('[data-event]').filter({hasText:'Shared Invitation'}).first();
+    await expect(visible).toBeVisible();
+    const data=JSON.parse(await visible.getAttribute('data-event'));
+    expect(data.sourceCalendars.map(item=>item.entityId)).toEqual(['calendar.family','calendar.work']);
+    expect(data.sourceEntityIds).toEqual(['calendar.family']);
+  });
+}

@@ -2,7 +2,7 @@
 
 This repository contains Family Calendar Card, a Home Assistant custom dashboard calendar card.
 
-This is a renamed fork (originally "Daylight Calendar Card") set up to run alongside an existing installation of the original card without tag, filename, or storage-key conflicts. Its custom element is `family-calendar-card`; a silent `family-calendar-card-legacy` alias also exists purely for internal backward-compatibility symmetry with the upstream project's own primary/legacy tag pattern, not because this fork has any real "legacy" history of its own.
+Family Calendar Card is maintained by Baeka89. Its primary custom element is `family-calendar-card`; keep the `family-calendar-card-legacy` compatibility alias, filename and storage keys stable for existing installations.
 
 ## Core rules
 

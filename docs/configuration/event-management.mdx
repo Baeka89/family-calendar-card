@@ -171,3 +171,10 @@ event_modal_size: wide
 If creating the replacement succeeds but deleting the original fails, the error tells you that the replacement was saved. Retry with the same values and destination while the card remains open. The card then retries deletion without creating another replacement. Combined edits skip targets that have already been saved.
 
 This retry state belongs to the active card instance. After reloading the dashboard, inspect the calendar for duplicates before editing again. To change values after a partial save, first finish the original operation and then reopen the editor.
+
+
+### Additional calendar display for an existing event
+
+Open an event (including a read-only invitation) and expand **Also concerns these calendars**. Select the configured calendars and save. The original calendar stays selected. Additional calendar names and colors appear in the card without copying or updating events in calendar services.
+
+Assignments are stored in this browser's local preferences, scoped to the card/dashboard. They are not synchronized to other devices. A recurring event assignment applies only to the selected occurrence. If an integration supplies no stable event identifier, changing its title or dates may require assigning it again. Clear the additional checkboxes and save to remove the assignment. Calendar visibility filters still apply.

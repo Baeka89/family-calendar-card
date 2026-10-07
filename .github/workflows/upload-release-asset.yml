@@ -13,8 +13,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
 
       - name: Report release asset version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           if grep -q "__FAMILY_CALENDAR_CARD_VERSION__" family-calendar-card.js; then
             echo "::warning::family-calendar-card.js still contains the version placeholder"
@@ -22,6 +26,10 @@ jobs:
 
           VERSION="$(grep -oE "FAMILY_CALENDAR_CARD_VERSION = '[^']+'" family-calendar-card.js | sed -E "s/.*'([^']+)'.*/\1/")"
           echo "Detected version: $VERSION"
+          if [ "$VERSION" != "$RELEASE_TAG" ]; then
+            echo "::error::Bundle version does not match release tag"
+            exit 1
+          fi
 
           if [ -z "$VERSION" ] || [ "$VERSION" = "dev" ]; then
             echo "::warning::Invalid FAMILY_CALENDAR_CARD_VERSION"
