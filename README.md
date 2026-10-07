@@ -1,6 +1,6 @@
 # Family Calendar Card for Home Assistant
 
-[![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
+[![HACS](https://img.shields.io/badge/HACS-Compatible-blue.svg)](https://github.com/hacs/integration)
 [![Maintainer](https://img.shields.io/badge/Maintainer-Baeka89-blue.svg)](https://github.com/Baeka89)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/misomazo)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -17,14 +17,15 @@
 
 **Family Calendar Card** bringt mehrere Home-Assistant-Kalender in einer gemeinsamen Dashboard-Karte zusammen. Termine, Familienmitglieder und Wetter lassen sich übersichtlich darstellen und individuell gestalten.
 
-Das Projekt basiert auf der **Daylight Calendar Card**. Eigene Dateinamen, Custom-Element-Namen und Speicherschlüssel ermöglichen den parallelen Betrieb beider Karten.
+Das Projekt wird von **Baeka89** entwickelt und gepflegt. Die Karte lässt sich über den visuellen Editor oder YAML konfigurieren.
 
-**Entwicklungsstand:** Der aktuelle Stand trägt die Version `dev`. Änderungen, die noch keiner Veröffentlichung zugeordnet sind, stehen im [Changelog](CHANGELOG.md).
+**Versionen:** Veröffentlichte Versionen findest du unter [Releases](https://github.com/Baeka89/family-calendar-card/releases). Änderungen sind im [Changelog](CHANGELOG.md) dokumentiert.
 
 ### Features
 
 - **Vier Ansichten:** Monat, Woche, Schedule und Agenda.
 - **Mehrere Kalender:** gemeinsame Darstellung, Kalenderfarben und zusammengeführte Termine.
+- **Zusätzliche Zuordnung:** In den Termindetails unter „Betrifft auch diese Kalender“ weitere konfigurierte Kalender auswählen. Auch bei schreibgeschützten Einladungen werden deren Namen und Farben angezeigt. Die Zuordnung bleibt lokal in diesem Browser gespeichert und ändert den Originaltermin nicht; bei Serien gilt sie nur für das ausgewählte Vorkommen.
 - **Terminverwaltung:** Termine erstellen und bearbeiten, einschließlich Wiederholungen; verfügbare Aktionen hängen von der Kalenderintegration und ihren Schreibrechten ab.
 - **Wetter:** Vorhersagen aus einer Home-Assistant-Wetterentität.
 - **Individuelle Darstellung:** Termin- und Tagesstile, Tages-Badges und virtuelle Kalender.
@@ -54,14 +55,15 @@ Wenn du die Weiterentwicklung unterstützen möchtest: **[Spende via PayPal](htt
 
 **Family Calendar Card** brings multiple Home Assistant calendars together in one dashboard card. Customize how events, family members and weather forecasts appear.
 
-The project is based on **Daylight Calendar Card**. Separate filenames, custom element names and storage keys allow both cards to run side by side.
+The project is developed and maintained by **Baeka89**. Configure the card using the visual editor or YAML.
 
-**Development status:** The current version is `dev`. Changes awaiting a release are listed in the [changelog](CHANGELOG.md).
+**Versions:** Published versions are available under [Releases](https://github.com/Baeka89/family-calendar-card/releases). Changes are documented in the [changelog](CHANGELOG.md).
 
 ### Features
 
 - **Four views:** Month, Week, Schedule and Agenda.
 - **Multiple calendars:** shared views, calendar colors and combined events.
+- **Additional assignments:** Open event details and select additional configured calendars under “Also concerns these calendars”. Their names and colors appear even for read-only invitations. Assignments are stored locally in this browser without changing the original event; recurring assignments apply only to the selected occurrence.
 - **Event management:** create and edit events, including recurring events; available actions depend on the calendar integration and its write permissions.
 - **Weather:** forecasts from a Home Assistant weather entity.
 - **Customization:** event styles, day styles, day badges and virtual calendars.
@@ -103,18 +105,18 @@ To support development: **[Donate via PayPal](https://paypal.me/misomazo)**.
 
 ### HACS
 
-**Deutsch:** Sobald dieses Repository auf GitHub veröffentlicht und für HACS verfügbar ist:
+**Deutsch:**
 
-1. In HACS das Menü für **benutzerdefinierte Repositories** öffnen.
-2. `https://github.com/Baeka89/family-calendar-card` hinzufügen; als Typ **Dashboard** wählen (in älteren HACS-Versionen „Frontend“).
+1. HACS öffnen und nach **Family Calendar Card** suchen.
+2. Falls die Karte nicht gefunden wird: im Menü **benutzerdefinierte Repositories** die Adresse `https://github.com/Baeka89/family-calendar-card` hinzufügen; als Typ **Dashboard** wählen (in älteren HACS-Versionen „Frontend“).
 3. **Family Calendar Card** herunterladen.
 4. Unter den Dashboard-Ressourcen prüfen, ob `/hacsfiles/family-calendar-card/family-calendar-card.js` als **JavaScript-Modul** eingetragen ist; bei Bedarf ergänzen.
 5. Browser neu laden und die Karte zum Dashboard hinzufügen.
 
-**English:** Once this repository has been published on GitHub and is available to HACS:
+**English:**
 
-1. Open HACS **Custom repositories**.
-2. Add `https://github.com/Baeka89/family-calendar-card` with type **Dashboard** (called “Frontend” in older HACS versions).
+1. Open HACS and search for **Family Calendar Card**.
+2. If the card is not listed, add `https://github.com/Baeka89/family-calendar-card` under **Custom repositories**, with type **Dashboard** (called “Frontend” in older HACS versions).
 3. Download **Family Calendar Card**.
 4. Check dashboard resources for `/hacsfiles/family-calendar-card/family-calendar-card.js`, configured as a **JavaScript module**; add it if needed.
 5. Reload your browser and add the card to your dashboard.
@@ -149,7 +151,7 @@ Weitere Einstellungen sind im visuellen Editor verfügbar. / More settings are a
 
 ## Documentation / Dokumentation
 
-Die ausführliche Dokumentation liegt im Repository unter [`docs/`](docs). Die Seiten sind als englische MDX-Quelldateien verfügbar; für diesen Fork ist keine eigene Dokumentationswebsite eingerichtet. / Detailed documentation is available as English MDX source files in [`docs/`](docs); this fork has no separately hosted documentation site.
+Die ausführliche Dokumentation liegt im Repository unter [`docs/`](docs). Die Seiten sind als englische MDX-Quelldateien verfügbar; eine separate Dokumentationswebsite ist nicht eingerichtet. / Detailed documentation is available as English MDX source files in [`docs/`](docs); there is no separately hosted documentation site.
 
 - [Basic configuration / Grundkonfiguration](docs/configuration/basic.mdx)
 - [Display options / Anzeigeoptionen](docs/configuration/display.mdx)
@@ -181,6 +183,6 @@ Entwicklung und Prüfung: [DEVELOPMENT.md](DEVELOPMENT.md). Änderungen: [CHANGE
 
 ### Thanks / Danke
 
-Danke an das ursprüngliche **Daylight Calendar Card**-Projekt und die Home-Assistant-Community. / Thanks to the original **Daylight Calendar Card** project and the Home Assistant community.
+Danke an die Home-Assistant-Community für Feedback, Ideen und Tests. / Thanks to the Home Assistant community for feedback, ideas and testing.
 
-Dieser Fork wird von **[Baeka89](https://github.com/Baeka89)** gepflegt. Lizenz: [MIT](LICENSE). / This fork is maintained by **[Baeka89](https://github.com/Baeka89)**. License: [MIT](LICENSE).
+Family Calendar Card wird von **[Baeka89](https://github.com/Baeka89)** gepflegt. Lizenz: [MIT](LICENSE). / Family Calendar Card is maintained by **[Baeka89](https://github.com/Baeka89)**. License: [MIT](LICENSE).

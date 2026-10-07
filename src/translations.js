@@ -11,6 +11,9 @@ export const TRANSLATIONS = {
   en: {
     locale: 'en-US',
     strings: {
+      displayCalendarsTitle: "Also concerns these calendars",
+      displayCalendarsHelp: "Display only in this card and browser. The original event is unchanged. For recurring events, this applies only to this occurrence.",
+      displayCalendarSource: "Original calendar",
       partialUpdateDeleteError: "The replacement is saved but the original could not be deleted. Retry with the same values and destination to finish deletion without creating another event.",
       partialBatchUpdateError: "Some calendars were already saved. Retry with the same values to finish the remaining calendars, then reopen the editor for further changes.",
       defaultTitle: 'Family Calendar',
@@ -135,6 +138,9 @@ export const TRANSLATIONS = {
   fr: {
     locale: 'fr-FR',
     strings: {
+      displayCalendarsTitle: "Concerne aussi ces calendriers",
+      displayCalendarsHelp: "Affichage uniquement dans cette carte et ce navigateur. L’événement original reste inchangé. Pour les récurrences, uniquement cette occurrence.",
+      displayCalendarSource: "Calendrier source",
       partialUpdateDeleteError: "Le nouveau rendez-vous est enregistré, mais l’original n’a pas pu être supprimé. Réessayez avec les mêmes valeurs et le même calendrier pour terminer la suppression sans créer de doublon.",
       partialBatchUpdateError: "Certains calendriers ont déjà été enregistrés. Réessayez avec les mêmes valeurs pour terminer les autres, puis rouvrez l’éditeur pour modifier à nouveau.",
       defaultTitle: 'Calendrier familial',
@@ -259,6 +265,9 @@ export const TRANSLATIONS = {
   de: {
     locale: 'de-DE',
     strings: {
+      displayCalendarsTitle: "Betrifft auch diese Kalender",
+      displayCalendarsHelp: "Nur Anzeige in dieser Karte und diesem Browser. Der Originaltermin bleibt unverändert. Bei Wiederholungen gilt die Auswahl nur für dieses Vorkommen.",
+      displayCalendarSource: "Quellkalender",
       partialUpdateDeleteError: "Der neue Termin ist gespeichert, aber das Original konnte nicht gelöscht werden. Wiederhole das Speichern mit denselben Werten und demselben Zielkalender, um nur das Löschen abzuschließen.",
       partialBatchUpdateError: "Einige Kalender wurden bereits gespeichert. Wiederhole das Speichern mit denselben Werten, um die übrigen Kalender abzuschließen. Öffne danach den Editor neu für weitere Änderungen.",
       defaultTitle: 'Familienkalender',
@@ -383,6 +392,9 @@ export const TRANSLATIONS = {
   nl: {
     locale: 'nl-NL',
     strings: {
+      displayCalendarsTitle: "Betreft ook deze kalenders",
+      displayCalendarsHelp: "Alleen weergave in deze kaart en browser. De oorspronkelijke afspraak blijft ongewijzigd. Bij herhaling alleen deze afspraak.",
+      displayCalendarSource: "Bronkalender",
       partialUpdateDeleteError: "De nieuwe afspraak is opgeslagen, maar het origineel kon niet worden verwijderd. Probeer opnieuw met dezelfde waarden en doelagenda om alleen de verwijdering af te ronden.",
       partialBatchUpdateError: "Sommige agenda’s zijn al opgeslagen. Probeer opnieuw met dezelfde waarden om de overige agenda’s af te ronden. Open daarna de editor opnieuw voor verdere wijzigingen.",
       defaultTitle: 'Familie agenda',
@@ -506,6 +518,9 @@ export const TRANSLATIONS = {
   es: {
     locale: 'es-ES',
     strings: {
+      displayCalendarsTitle: "También afecta a estos calendarios",
+      displayCalendarsHelp: "Solo visualización en esta tarjeta y navegador. El evento original no cambia. Para eventos recurrentes, solo esta ocurrencia.",
+      displayCalendarSource: "Calendario original",
       partialUpdateDeleteError: "El evento nuevo se guardó, pero no se pudo eliminar el original. Reintenta con los mismos valores y calendario de destino para terminar la eliminación sin crear otro evento.",
       partialBatchUpdateError: "Algunos calendarios ya se guardaron. Reintenta con los mismos valores para completar los restantes y vuelve a abrir el editor para realizar más cambios.",
       defaultTitle: 'Calendario Familiar',
@@ -630,6 +645,9 @@ export const TRANSLATIONS = {
   et: {
     locale: 'et-EE',
     strings: {
+      displayCalendarsTitle: "Puudutab ka neid kalendreid",
+      displayCalendarsHelp: "Ainult kuva selles kaardis ja brauseris. Algne sündmus ei muutu. Korduvate sündmuste puhul ainult see kord.",
+      displayCalendarSource: "Algne kalender",
       partialUpdateDeleteError: "Uus sündmus on salvestatud, kuid algset ei saanud kustutada. Proovi samade väärtuste ja sihtkalendriga uuesti, et lõpetada kustutamine uut sündmust loomata.",
       partialBatchUpdateError: "Mõned kalendrid on juba salvestatud. Proovi samade väärtustega uuesti, et lõpetada ülejäänud, ning ava seejärel redaktor uute muudatuste jaoks.",
       defaultTitle: 'Perekalender',
@@ -754,6 +772,9 @@ export const TRANSLATIONS = {
   ca: {
     locale: 'ca-ES',
     strings: {
+      displayCalendarsTitle: "També afecta aquests calendaris",
+      displayCalendarsHelp: "Només visualització en aquesta targeta i navegador. L’esdeveniment original no canvia. En recurrències, només aquesta ocurrència.",
+      displayCalendarSource: "Calendari original",
       partialUpdateDeleteError: "L’esdeveniment nou s’ha desat, però no s’ha pogut eliminar l’original. Torna-ho a provar amb els mateixos valors i calendari de destinació per acabar l’eliminació sense crear-ne un altre.",
       partialBatchUpdateError: "Alguns calendaris ja s’han desat. Torna-ho a provar amb els mateixos valors per completar els restants i torna a obrir l’editor per fer més canvis.",
       defaultTitle: 'Calendari Familiar',
@@ -878,6 +899,9 @@ export const TRANSLATIONS = {
   da: {
     locale: 'da-DK',
     strings: {
+      displayCalendarsTitle: "Vedrører også disse kalendere",
+      displayCalendarsHelp: "Kun visning i dette kort og denne browser. Den oprindelige begivenhed ændres ikke. Ved gentagelser kun denne forekomst.",
+      displayCalendarSource: "Oprindelig kalender",
       partialUpdateDeleteError: "Den nye aftale er gemt, men originalen kunne ikke slettes. Prøv igen med de samme værdier og den samme målkalender for at afslutte sletningen uden at oprette endnu en aftale.",
       partialBatchUpdateError: "Nogle kalendere er allerede gemt. Prøv igen med de samme værdier for at afslutte de resterende, og åbn derefter editoren igen for flere ændringer.",
       defaultTitle: 'Familiekalender',
@@ -1002,6 +1026,9 @@ export const TRANSLATIONS = {
   sv: {
     locale: 'sv-SE',
     strings: {
+      displayCalendarsTitle: "Berör också dessa kalendrar",
+      displayCalendarsHelp: "Endast visning i detta kort och denna webbläsare. Originalhändelsen ändras inte. Vid upprepningar endast denna förekomst.",
+      displayCalendarSource: "Ursprunglig kalender",
       partialUpdateDeleteError: "Den nya händelsen är sparad, men originalet kunde inte tas bort. Försök igen med samma värden och målkalender för att slutföra borttagningen utan att skapa en ny händelse.",
       partialBatchUpdateError: "Vissa kalendrar har redan sparats. Försök igen med samma värden för att slutföra de återstående och öppna sedan redigeraren igen för fler ändringar.",
       defaultTitle: 'Familjekalender',

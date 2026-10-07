@@ -1,4 +1,243 @@
 // This file is generated from src/ by npm run build. Do not edit directly.
+const serializeRecurrenceValue = (value, seen = new WeakSet()) => {
+  if (value === null) return 'null';
+  if (typeof value !== 'object') return JSON.stringify(value);
+  if (seen.has(value)) return '"[Circular]"';
+  seen.add(value);
+  const serialized = Array.isArray(value)
+    ? `[${value.map(item => serializeRecurrenceValue(item, seen)).join(',')}]`
+    : `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${serializeRecurrenceValue(value[key], seen)}`).join(',')}}`;
+  seen.delete(value);
+  return serialized;
+};
+
+const normalizeRecurrenceId = (value) => {
+  if (value === undefined || value === null) return '';
+  if (typeof value !== 'object') return String(value);
+  if (value.dateTime !== undefined && value.dateTime !== null) return normalizeRecurrenceId(value.dateTime);
+  if (value.date !== undefined && value.date !== null) return normalizeRecurrenceId(value.date);
+  return serializeRecurrenceValue(value);
+};
+
+const getEventIdentityKey = (entityId, event) => {
+  const uid = event?.uid;
+  const recurrenceId = normalizeRecurrenceId(event?.recurrence_id || event?.recurring_event_id);
+  const start = event?.start?.dateTime || event?.start?.date || event?.start || '';
+  const end = event?.end?.dateTime || event?.end?.date || event?.end || '';
+  if (uid && recurrenceId) return `${entityId}|${uid}|${recurrenceId}`;
+  if (uid) return `${entityId}|${uid}|${start}|${end}`;
+  return `${entityId}|${recurrenceId || ''}|${start}|${end}|${event?.summary || ''}`;
+};
+
+const normalizeCalendarEvent = (event, { entityId, color }) => ({
+  ...event,
+  entityId,
+  color
+});
+
+const getEventStartDate = (event, { parseLocalDate } = {}) => {
+  if (event.start?.dateTime) return new Date(event.start.dateTime);
+  if (event.start?.date) return parseLocalDate(event.start.date);
+  return new Date(event.start);
+};
+
+const getEventDateTimeInfo = (event, { parseCalendarDate } = {}) => {
+  if (event.start.dateTime) {
+    return {
+      eventStart: new Date(event.start.dateTime),
+      eventEnd: new Date(event.end.dateTime),
+      isAllDay: false
+    };
+  }
+
+  if (event.start.date) {
+    return {
+      eventStart: parseCalendarDate(event.start.date),
+      eventEnd: parseCalendarDate(event.end.date),
+      isAllDay: true
+    };
+  }
+
+  const isAllDay = !event.start.includes('T');
+  return {
+    eventStart: new Date(event.start),
+    eventEnd: new Date(event.end),
+    isAllDay
+  };
+};
+
+const CUSTOM_EVENT_COLORS_VERSION = 1;
+
+function createEmptyCustomEventColors() {
+  return { version: CUSTOM_EVENT_COLORS_VERSION, occurrences: {}, series: {}, future: {} };
+}
+
+function normalizeHexColor(value) {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  const short = trimmed.match(/^#?([0-9a-fA-F]{3})$/);
+  if (short) return `#${short[1].split('').map((char) => char + char).join('').toUpperCase()}`;
+  const full = trimmed.match(/^#?([0-9a-fA-F]{6})$/);
+  return full ? `#${full[1].toUpperCase()}` : null;
+}
+
+function stablePart(value) {
+  return value === undefined || value === null ? '' : String(value).trim();
+}
+
+function getOccurrenceStartToken(event) {
+  return normalizeRecurrenceId(event?.recurrence_id) || stablePart(event?.start?.dateTime) || stablePart(event?.start?.date) || stablePart(event?.start);
+}
+
+function getCustomEventColorKeys(event, { getEventIdentityKey } = {}) {
+  if (!event) return null;
+  const entityId = stablePart(event.entityId);
+  const uid = stablePart(event.uid) || stablePart(event.ical_uid) || stablePart(event.iCalUID);
+  const recurringId = stablePart(event.recurring_event_id) || stablePart(event.recurringEventId) || stablePart(event.series_uid) || stablePart(event.seriesId);
+  const rrule = stablePart(event.rrule);
+  const isRecurring = !!(event.recurrence_id || recurringId || rrule);
+  const seriesIdentity = recurringId || (isRecurring ? uid : '');
+  const seriesKey = entityId && seriesIdentity ? `${entityId}|series|${seriesIdentity}` : null;
+  const occurrenceToken = normalizeRecurrenceId(event.recurrence_id) || getOccurrenceStartToken(event);
+  let occurrenceKey = null;
+  if (seriesKey && occurrenceToken) {
+    occurrenceKey = `${seriesKey}|occurrence|${occurrenceToken}`;
+  } else if (!isRecurring && entityId && uid) {
+    occurrenceKey = `${entityId}|uid|${uid}`;
+  } else {
+    const fallback = getEventIdentityKey?.(entityId, event);
+    occurrenceKey = fallback ? `${entityId}|identity|${fallback}` : null;
+  }
+  return { isRecurring, occurrenceKey, seriesKey, occurrenceToken, supportsSeries: !!seriesKey, supportsFuture: !!(seriesKey && occurrenceToken) };
+}
+
+function normalizeColorOrNull(value, allowNull = false) {
+  if (value === null && allowNull) return null;
+  return normalizeHexColor(value);
+}
+
+function normalizeCustomEventColors(value) {
+  const next = createEmptyCustomEventColors();
+  if (!value || typeof value !== 'object') return next;
+  if (value.version !== CUSTOM_EVENT_COLORS_VERSION) return next;
+  if (value.occurrences && typeof value.occurrences === 'object') {
+    Object.entries(value.occurrences).forEach(([key, color]) => {
+      const normalized = normalizeColorOrNull(color, true);
+      if (key && (normalized || color === null)) next.occurrences[key] = normalized;
+    });
+  }
+  if (value.series && typeof value.series === 'object') {
+    Object.entries(value.series).forEach(([key, color]) => {
+      const normalized = normalizeHexColor(color);
+      if (key && normalized) next.series[key] = normalized;
+    });
+  }
+  if (value.future && typeof value.future === 'object') {
+    Object.entries(value.future).forEach(([key, rules]) => {
+      if (!key || !Array.isArray(rules)) return;
+      const normalizedRules = rules
+        .map((rule) => {
+          if (!rule || typeof rule !== 'object' || !stablePart(rule.from)) return null;
+          const normalized = normalizeColorOrNull(rule.color, true);
+          if (!normalized && rule.color !== null) return null;
+          return { from: stablePart(rule.from), color: normalized };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.from.localeCompare(b.from));
+      if (normalizedRules.length) next.future[key] = normalizedRules;
+    });
+  }
+  return next;
+}
+
+function resolveCustomEventColor(event, state, { getEventIdentityKey } = {}) {
+  const colors = state || createEmptyCustomEventColors();
+  const keys = getCustomEventColorKeys(event, { getEventIdentityKey });
+  if (!keys?.occurrenceKey) return null;
+  if (Object.prototype.hasOwnProperty.call(colors.occurrences, keys.occurrenceKey)) {
+    return colors.occurrences[keys.occurrenceKey];
+  }
+  if (keys.seriesKey && keys.occurrenceToken) {
+    const applicable = (colors.future[keys.seriesKey] || []).filter((rule) => rule.from <= keys.occurrenceToken).pop();
+    if (applicable) return applicable.color;
+    if (Object.prototype.hasOwnProperty.call(colors.series, keys.seriesKey)) return colors.series[keys.seriesKey];
+  }
+  return null;
+}
+
+function applyCustomEventColor(state, event, scope, color, { getEventIdentityKey } = {}) {
+  const next = normalizeCustomEventColors(state);
+  const keys = getCustomEventColorKeys(event, { getEventIdentityKey });
+  const normalized = color === null ? null : normalizeHexColor(color);
+  if (color !== null && !normalized) return next;
+  if (scope === 'all' && keys?.seriesKey) {
+    if (normalized === null) delete next.series[keys.seriesKey]; else next.series[keys.seriesKey] = normalized;
+    delete next.future[keys.seriesKey];
+    Object.keys(next.occurrences).forEach((key) => { if (key.startsWith(`${keys.seriesKey}|occurrence|`)) delete next.occurrences[key]; });
+  } else if (scope === 'future' && keys?.seriesKey && keys?.occurrenceToken) {
+    const rules = (next.future[keys.seriesKey] || []).filter((rule) => rule.from < keys.occurrenceToken);
+    rules.push({ from: keys.occurrenceToken, color: normalized });
+    next.future[keys.seriesKey] = rules.sort((a, b) => a.from.localeCompare(b.from));
+  } else if (keys?.occurrenceKey) {
+    if (normalized === null) next.occurrences[keys.occurrenceKey] = null;
+    else next.occurrences[keys.occurrenceKey] = normalized;
+  }
+  return next;
+}
+
+function removeCustomEventColor(state, event, scope, options = {}) {
+  const keys = getCustomEventColorKeys(event, options);
+  if (scope === 'all' && keys?.seriesKey) return applyCustomEventColor(state, event, 'all', null, options);
+  if (scope === 'future' && keys?.supportsFuture) return applyCustomEventColor(state, event, 'future', null, options);
+  const next = normalizeCustomEventColors(state);
+  if (keys?.occurrenceKey) {
+    if (keys.seriesKey) next.occurrences[keys.occurrenceKey] = null;
+    else delete next.occurrences[keys.occurrenceKey];
+  }
+  return next;
+}
+
+function normalizeEventDisplayCalendars(value) {
+  const result = {};
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return result;
+  Object.entries(value).forEach(([key, calendars]) => {
+    if (!key || !Array.isArray(calendars)) return;
+    const ids = [...new Set(calendars.filter(id => typeof id === 'string' && /^calendar\.[\w]+$/.test(id)))];
+    if (ids.length) Object.defineProperty(result, key, {value:ids, enumerable:true, configurable:true, writable:true});
+  });
+  return result;
+}
+
+function getEventDisplayKeys(event, context) {
+  const original = event?.displayOriginalEvent || event;
+  const sources = original?.sourceEvents?.length ? original.sourceEvents : [original];
+  return [...new Set(sources.map(source => {
+    const key = getCustomEventColorKeys(source, context)?.occurrenceKey;
+    const start = getOccurrenceStartToken(source);
+    // Some integrations expand series without returning recurrence metadata.
+    // Include the occurrence start even when the UID appears non-recurring.
+    return key && start ? JSON.stringify([key, start]) : null;
+  }).filter(Boolean))];
+}
+
+function getAssignedDisplayCalendars(event, state, context) {
+  return [...new Set(getEventDisplayKeys(event, context).flatMap(key => state?.[key] || []))];
+}
+
+function applyEventDisplayCalendars(event, state, {entities = [], getCalendarColor, ...context} = {}) {
+  const original = event?.displayOriginalEvent || event;
+  const selected = getAssignedDisplayCalendars(original, state, context).filter(id => entities.includes(id));
+  if (!selected.length) return original;
+  const sources = original.sourceEvents?.length ? original.sourceEvents : [original];
+  const calendars = new Map((original.sourceCalendars || [{entityId:original.entityId,color:original.color}]).map(item => [item.entityId,item]));
+  selected.forEach(entityId => {
+    if (!calendars.has(entityId)) calendars.set(entityId, {entityId,color:getCalendarColor(entityId,entities.indexOf(entityId))});
+  });
+  return {...original, isCombinedCalendarEvent:true, isSyntheticFamilyEvent:true, isDisplayAssignedEvent:true,
+    displayOriginalEvent:original, sourceCalendars:[...calendars.values()],
+    sourceEntityIds:[...new Set(sources.map(source=>source.entityId))], sourceEvents:sources};
+}
+
 const COMMON_NAMED_COLORS = {
   black: '#000000',
   white: '#FFFFFF',
@@ -1026,13 +1265,13 @@ const EDITOR_TRANSLATION_ROWS = [
   ['Select at least one real calendar above to include calendars here.', 'Sélectionnez ci-dessus au moins un calendrier réel à inclure ici.', 'Wählen Sie oben mindestens einen echten Kalender zur Aufnahme aus.', 'Selecteer hierboven minstens één echte agenda om hier op te nemen.', 'Selecciona arriba al menos un calendario real para incluirlo aquí.', 'Vali ülal vähemalt üks päriskalender, mida siia lisada.', 'Selecciona a dalt almenys un calendari real per incloure’l aquí.', 'Vælg mindst én rigtig kalender ovenfor, der skal medtages her.', 'Välj minst en riktig kalender ovan som ska ingå här.'],,
   ['1 (browser picker)', '1 (sélecteur du navigateur)', '1 (Browser-Auswahl)', '1 (browserkiezer)', '1 (selector del navegador)', '1 (brauseri valik)', '1 (selector del navegador)', '1 (browservælger)', '1 (webbläsarens val)'],
   ['{count} minutes', '{count} minutes', '{count} Minuten', '{count} minuten', '{count} minutos', '{count} minutit', '{count} minuts', '{count} minutter', '{count} minuter'],
-  ['Daylight Calendar Card', 'Daylight Calendar Card', 'Daylight Calendar Card', 'Daylight Calendar Card', 'Daylight Calendar Card', 'Daylight Calendar Card', 'Daylight Calendar Card', 'Daylight Calendar Card', 'Daylight Calendar Card'],
+  ['Family Calendar Card', 'Family Calendar Card', 'Family Calendar Card', 'Family Calendar Card', 'Family Calendar Card', 'Family Calendar Card', 'Family Calendar Card', 'Family Calendar Card', 'Family Calendar Card'],
   ['Loaded version: {version}', 'Version chargée : {version}', 'Geladene Version: {version}', 'Geladen versie: {version}', 'Versión cargada: {version}', 'Laaditud versioon: {version}', 'Versió carregada: {version}', 'Indlæst version: {version}', 'Inläst version: {version}'],
-  ['Resource file: skylight-calendar-card.js', 'Fichier de ressource : skylight-calendar-card.js', 'Ressourcendatei: skylight-calendar-card.js', 'Bronbestand: skylight-calendar-card.js', 'Archivo de recurso: skylight-calendar-card.js', 'Ressursifail: skylight-calendar-card.js', 'Fitxer de recurs: skylight-calendar-card.js', 'Ressourcefil: skylight-calendar-card.js', 'Resursfil: skylight-calendar-card.js'],
+  ['Resource file: family-calendar-card.js', 'Fichier de ressource : family-calendar-card.js', 'Ressourcendatei: family-calendar-card.js', 'Bronbestand: family-calendar-card.js', 'Archivo de recurso: family-calendar-card.js', 'Ressursifail: family-calendar-card.js', 'Fitxer de recurs: family-calendar-card.js', 'Ressourcefil: family-calendar-card.js', 'Resursfil: family-calendar-card.js'],
   ['If this version does not match the version shown in HACS, Home Assistant may be loading a cached or stale resource.', 'Si cette version diffère de celle affichée dans HACS, Home Assistant charge peut-être une ressource en cache ou obsolète.', 'Wenn diese Version nicht der in HACS angezeigten entspricht, lädt Home Assistant möglicherweise eine veraltete Ressource aus dem Cache.', 'Als deze versie afwijkt van HACS, laadt Home Assistant mogelijk een verouderde resource uit de cache.', 'Si esta versión no coincide con HACS, Home Assistant podría estar cargando un recurso antiguo o en caché.', 'Kui versioon erineb HACS-is kuvatust, võib Home Assistant laadida vahemällu jäänud või aegunud ressursi.', 'Si aquesta versió no coincideix amb HACS, Home Assistant pot estar carregant un recurs antic o de la memòria cau.', 'Hvis versionen ikke stemmer med HACS, indlæser Home Assistant muligvis en forældet ressource fra cachen.', 'Om versionen inte stämmer med HACS kan Home Assistant läsa in en gammal resurs från cache.'],
-  ['Clears persistent Daylight calendar event snapshots only. Hidden calendars and custom event colors are not changed.', 'Efface uniquement les instantanés persistants des événements. Les calendriers masqués et les couleurs personnalisées restent inchangés.', 'Löscht nur gespeicherte Daylight-Termin-Snapshots. Ausgeblendete Kalender und eigene Farben bleiben unverändert.', 'Wist alleen opgeslagen Daylight-afspraaksnapshots. Verborgen agenda’s en aangepaste kleuren blijven ongewijzigd.', 'Borra solo instantáneas persistentes de eventos. No cambia calendarios ocultos ni colores personalizados.', 'Kustutab ainult püsivad sündmuste vahemälupildid. Peidetud kalendreid ja värve ei muudeta.', 'Esborra només les instantànies persistents d’esdeveniments. No canvia calendaris ocults ni colors personalitzats.', 'Rydder kun vedvarende hændelsessnapshots. Skjulte kalendere og brugerdefinerede farver ændres ikke.', 'Rensar endast sparade händelseögonblicksbilder. Dolda kalendrar och egna färger ändras inte.'],
-  ['Old Skylight resource detected:', 'Ancienne ressource Skylight détectée :', 'Alte Skylight-Ressource erkannt:', 'Oude Skylight-resource gevonden:', 'Recurso antiguo de Skylight detectado:', 'Leiti vana Skylighti ressurss:', 'S’ha detectat un recurs antic de Skylight:', 'Gammel Skylight-ressource fundet:', 'Gammal Skylight-resurs upptäckt:'],
-  ['Remove the old resource from Settings → Dashboards → Resources and keep /hacsfiles/daylight-calendar-card/skylight-calendar-card.js. HACS showing the latest version confirms the file is installed, but not that this dashboard loaded the current frontend resource.', 'Supprimez l’ancienne ressource dans Paramètres → Tableaux de bord → Ressources et conservez /hacsfiles/daylight-calendar-card/skylight-calendar-card.js. HACS confirme l’installation du fichier, pas son chargement par ce tableau de bord.', 'Entfernen Sie die alte Ressource unter Einstellungen → Dashboards → Ressourcen und behalten Sie /hacsfiles/daylight-calendar-card/skylight-calendar-card.js. HACS bestätigt nur die Installation, nicht das Laden durch dieses Dashboard.', 'Verwijder de oude resource via Instellingen → Dashboards → Resources en behoud /hacsfiles/daylight-calendar-card/skylight-calendar-card.js. HACS bevestigt installatie, niet dat dit dashboard de actuele resource heeft geladen.', 'Elimina el recurso antiguo en Ajustes → Paneles → Recursos y conserva /hacsfiles/daylight-calendar-card/skylight-calendar-card.js. HACS confirma la instalación, no que este panel haya cargado el recurso actual.', 'Eemalda vana ressurss menüüst Seaded → Juhtpaneelid → Ressursid ning jäta alles /hacsfiles/daylight-calendar-card/skylight-calendar-card.js. HACS kinnitab paigaldust, mitte selle juhtpaneeli laadimist.', 'Elimina el recurs antic a Configuració → Taulers → Recursos i conserva /hacsfiles/daylight-calendar-card/skylight-calendar-card.js. HACS confirma la instal·lació, no que aquest tauler l’hagi carregat.', 'Fjern den gamle ressource under Indstillinger → Dashboards → Ressourcer, og behold /hacsfiles/daylight-calendar-card/skylight-calendar-card.js. HACS bekræfter installation, ikke indlæsning på dette dashboard.', 'Ta bort den gamla resursen under Inställningar → Instrumentpaneler → Resurser och behåll /hacsfiles/daylight-calendar-card/skylight-calendar-card.js. HACS bekräftar installation, inte att panelen läst in resursen.'],
+  ['Clears persistent calendar event snapshots only. Hidden calendars and custom event colors are not changed.', 'Efface uniquement les instantanés persistants des événements. Les calendriers masqués et les couleurs personnalisées restent inchangés.', 'Löscht nur gespeicherte Termin-Snapshots. Ausgeblendete Kalender und eigene Farben bleiben unverändert.', 'Wist alleen opgeslagen afspraaksnapshots. Verborgen agenda’s en aangepaste kleuren blijven ongewijzigd.', 'Borra solo instantáneas persistentes de eventos. No cambia calendarios ocultos ni colores personalizados.', 'Kustutab ainult püsivad sündmuste vahemälupildid. Peidetud kalendreid ja värve ei muudeta.', 'Esborra només les instantànies persistents d’esdeveniments. No canvia calendaris ocults ni colors personalitzats.', 'Rydder kun vedvarende hændelsessnapshots. Skjulte kalendere og brugerdefinerede farver ændres ikke.', 'Rensar endast sparade händelseögonblicksbilder. Dolda kalendrar och egna färger ändras inte.'],
+  ['Old resource detected:', 'Ancienne ressource détectée :', 'Alte Ressource erkannt:', 'Oude resource gevonden:', 'Recurso antiguo detectado:', 'Leiti vana ressurss:', 'S’ha detectat un recurs antic:', 'Gammel ressource fundet:', 'Gammal resurs upptäckt:'],
+  ['Remove the old resource from Settings → Dashboards → Resources and keep /hacsfiles/family-calendar-card/family-calendar-card.js. HACS showing the latest version confirms the file is installed, but not that this dashboard loaded the current frontend resource.', 'Supprimez l’ancienne ressource dans Paramètres → Tableaux de bord → Ressources et conservez /hacsfiles/family-calendar-card/family-calendar-card.js. HACS confirme l’installation du fichier, pas son chargement par ce tableau de bord.', 'Entfernen Sie die alte Ressource unter Einstellungen → Dashboards → Ressourcen und behalten Sie /hacsfiles/family-calendar-card/family-calendar-card.js. HACS bestätigt nur die Installation, nicht das Laden durch dieses Dashboard.', 'Verwijder de oude resource via Instellingen → Dashboards → Resources en behoud /hacsfiles/family-calendar-card/family-calendar-card.js. HACS bevestigt installatie, niet dat dit dashboard de actuele resource heeft geladen.', 'Elimina el recurso antiguo en Ajustes → Paneles → Recursos y conserva /hacsfiles/family-calendar-card/family-calendar-card.js. HACS confirma la instalación, no que este panel haya cargado el recurso actual.', 'Eemalda vana ressurss menüüst Seaded → Juhtpaneelid → Ressursid ning jäta alles /hacsfiles/family-calendar-card/family-calendar-card.js. HACS kinnitab paigaldust, mitte selle juhtpaneeli laadimist.', 'Elimina el recurs antic a Configuració → Taulers → Recursos i conserva /hacsfiles/family-calendar-card/family-calendar-card.js. HACS confirma la instal·lació, no que aquest tauler l’hagi carregat.', 'Fjern den gamle ressource under Indstillinger → Dashboards → Ressourcer, og behold /hacsfiles/family-calendar-card/family-calendar-card.js. HACS bekræfter installation, ikke indlæsning på dette dashboard.', 'Ta bort den gamla resursen under Inställningar → Instrumentpaneler → Resurser och behåll /hacsfiles/family-calendar-card/family-calendar-card.js. HACS bekräftar installation, inte att panelen läst in resursen.'],
   ['Troubleshooting guide', 'Guide de dépannage', 'Fehlerbehebung', 'Probleemoplossing', 'Guía de solución de problemas', 'Tõrkeotsingu juhend', 'Guia de resolució de problemes', 'Fejlfindingsvejledning', 'Felsökningsguide'],
   ['Select at least one calendar to configure {label}.', 'Sélectionnez au moins un calendrier pour configurer {label}.', 'Wählen Sie mindestens einen Kalender aus, um {label} zu konfigurieren.', 'Selecteer ten minste één agenda om {label} in te stellen.', 'Selecciona al menos un calendario para configurar {label}.', 'Vali vähemalt üks kalender, et seadistada: {label}.', 'Selecciona almenys un calendari per configurar {label}.', 'Vælg mindst én kalender for at konfigurere {label}.', 'Välj minst en kalender för att konfigurera {label}.'],
   ['None', 'Aucun', 'Keine', 'Geen', 'Ninguno', 'Puudub', 'Cap', 'Ingen', 'Ingen'],
@@ -7983,6 +8222,9 @@ const TRANSLATIONS = {
   en: {
     locale: 'en-US',
     strings: {
+      displayCalendarsTitle: "Also concerns these calendars",
+      displayCalendarsHelp: "Display only in this card and browser. The original event is unchanged. For recurring events, this applies only to this occurrence.",
+      displayCalendarSource: "Original calendar",
       partialUpdateDeleteError: "The replacement is saved but the original could not be deleted. Retry with the same values and destination to finish deletion without creating another event.",
       partialBatchUpdateError: "Some calendars were already saved. Retry with the same values to finish the remaining calendars, then reopen the editor for further changes.",
       defaultTitle: 'Family Calendar',
@@ -8107,6 +8349,9 @@ const TRANSLATIONS = {
   fr: {
     locale: 'fr-FR',
     strings: {
+      displayCalendarsTitle: "Concerne aussi ces calendriers",
+      displayCalendarsHelp: "Affichage uniquement dans cette carte et ce navigateur. L’événement original reste inchangé. Pour les récurrences, uniquement cette occurrence.",
+      displayCalendarSource: "Calendrier source",
       partialUpdateDeleteError: "Le nouveau rendez-vous est enregistré, mais l’original n’a pas pu être supprimé. Réessayez avec les mêmes valeurs et le même calendrier pour terminer la suppression sans créer de doublon.",
       partialBatchUpdateError: "Certains calendriers ont déjà été enregistrés. Réessayez avec les mêmes valeurs pour terminer les autres, puis rouvrez l’éditeur pour modifier à nouveau.",
       defaultTitle: 'Calendrier familial',
@@ -8231,6 +8476,9 @@ const TRANSLATIONS = {
   de: {
     locale: 'de-DE',
     strings: {
+      displayCalendarsTitle: "Betrifft auch diese Kalender",
+      displayCalendarsHelp: "Nur Anzeige in dieser Karte und diesem Browser. Der Originaltermin bleibt unverändert. Bei Wiederholungen gilt die Auswahl nur für dieses Vorkommen.",
+      displayCalendarSource: "Quellkalender",
       partialUpdateDeleteError: "Der neue Termin ist gespeichert, aber das Original konnte nicht gelöscht werden. Wiederhole das Speichern mit denselben Werten und demselben Zielkalender, um nur das Löschen abzuschließen.",
       partialBatchUpdateError: "Einige Kalender wurden bereits gespeichert. Wiederhole das Speichern mit denselben Werten, um die übrigen Kalender abzuschließen. Öffne danach den Editor neu für weitere Änderungen.",
       defaultTitle: 'Familienkalender',
@@ -8355,6 +8603,9 @@ const TRANSLATIONS = {
   nl: {
     locale: 'nl-NL',
     strings: {
+      displayCalendarsTitle: "Betreft ook deze kalenders",
+      displayCalendarsHelp: "Alleen weergave in deze kaart en browser. De oorspronkelijke afspraak blijft ongewijzigd. Bij herhaling alleen deze afspraak.",
+      displayCalendarSource: "Bronkalender",
       partialUpdateDeleteError: "De nieuwe afspraak is opgeslagen, maar het origineel kon niet worden verwijderd. Probeer opnieuw met dezelfde waarden en doelagenda om alleen de verwijdering af te ronden.",
       partialBatchUpdateError: "Sommige agenda’s zijn al opgeslagen. Probeer opnieuw met dezelfde waarden om de overige agenda’s af te ronden. Open daarna de editor opnieuw voor verdere wijzigingen.",
       defaultTitle: 'Familie agenda',
@@ -8478,6 +8729,9 @@ const TRANSLATIONS = {
   es: {
     locale: 'es-ES',
     strings: {
+      displayCalendarsTitle: "También afecta a estos calendarios",
+      displayCalendarsHelp: "Solo visualización en esta tarjeta y navegador. El evento original no cambia. Para eventos recurrentes, solo esta ocurrencia.",
+      displayCalendarSource: "Calendario original",
       partialUpdateDeleteError: "El evento nuevo se guardó, pero no se pudo eliminar el original. Reintenta con los mismos valores y calendario de destino para terminar la eliminación sin crear otro evento.",
       partialBatchUpdateError: "Algunos calendarios ya se guardaron. Reintenta con los mismos valores para completar los restantes y vuelve a abrir el editor para realizar más cambios.",
       defaultTitle: 'Calendario Familiar',
@@ -8602,6 +8856,9 @@ const TRANSLATIONS = {
   et: {
     locale: 'et-EE',
     strings: {
+      displayCalendarsTitle: "Puudutab ka neid kalendreid",
+      displayCalendarsHelp: "Ainult kuva selles kaardis ja brauseris. Algne sündmus ei muutu. Korduvate sündmuste puhul ainult see kord.",
+      displayCalendarSource: "Algne kalender",
       partialUpdateDeleteError: "Uus sündmus on salvestatud, kuid algset ei saanud kustutada. Proovi samade väärtuste ja sihtkalendriga uuesti, et lõpetada kustutamine uut sündmust loomata.",
       partialBatchUpdateError: "Mõned kalendrid on juba salvestatud. Proovi samade väärtustega uuesti, et lõpetada ülejäänud, ning ava seejärel redaktor uute muudatuste jaoks.",
       defaultTitle: 'Perekalender',
@@ -8726,6 +8983,9 @@ const TRANSLATIONS = {
   ca: {
     locale: 'ca-ES',
     strings: {
+      displayCalendarsTitle: "També afecta aquests calendaris",
+      displayCalendarsHelp: "Només visualització en aquesta targeta i navegador. L’esdeveniment original no canvia. En recurrències, només aquesta ocurrència.",
+      displayCalendarSource: "Calendari original",
       partialUpdateDeleteError: "L’esdeveniment nou s’ha desat, però no s’ha pogut eliminar l’original. Torna-ho a provar amb els mateixos valors i calendari de destinació per acabar l’eliminació sense crear-ne un altre.",
       partialBatchUpdateError: "Alguns calendaris ja s’han desat. Torna-ho a provar amb els mateixos valors per completar els restants i torna a obrir l’editor per fer més canvis.",
       defaultTitle: 'Calendari Familiar',
@@ -8850,6 +9110,9 @@ const TRANSLATIONS = {
   da: {
     locale: 'da-DK',
     strings: {
+      displayCalendarsTitle: "Vedrører også disse kalendere",
+      displayCalendarsHelp: "Kun visning i dette kort og denne browser. Den oprindelige begivenhed ændres ikke. Ved gentagelser kun denne forekomst.",
+      displayCalendarSource: "Oprindelig kalender",
       partialUpdateDeleteError: "Den nye aftale er gemt, men originalen kunne ikke slettes. Prøv igen med de samme værdier og den samme målkalender for at afslutte sletningen uden at oprette endnu en aftale.",
       partialBatchUpdateError: "Nogle kalendere er allerede gemt. Prøv igen med de samme værdier for at afslutte de resterende, og åbn derefter editoren igen for flere ændringer.",
       defaultTitle: 'Familiekalender',
@@ -8974,6 +9237,9 @@ const TRANSLATIONS = {
   sv: {
     locale: 'sv-SE',
     strings: {
+      displayCalendarsTitle: "Berör också dessa kalendrar",
+      displayCalendarsHelp: "Endast visning i detta kort och denna webbläsare. Originalhändelsen ändras inte. Vid upprepningar endast denna förekomst.",
+      displayCalendarSource: "Ursprunglig kalender",
       partialUpdateDeleteError: "Den nya händelsen är sparad, men originalet kunde inte tas bort. Försök igen med samma värden och målkalender för att slutföra borttagningen utan att skapa en ny händelse.",
       partialBatchUpdateError: "Vissa kalendrar har redan sparats. Försök igen med samma värden för att slutföra de återstående och öppna sedan redigeraren igen för fler ändringar.",
       defaultTitle: 'Familjekalender',
@@ -9672,73 +9938,6 @@ function resolveCalendarSelection(value, { knownEntities = [], getVirtualBadgeEn
   });
   return Array.from(resolved);
 }
-
-const serializeRecurrenceValue = (value, seen = new WeakSet()) => {
-  if (value === null) return 'null';
-  if (typeof value !== 'object') return JSON.stringify(value);
-  if (seen.has(value)) return '"[Circular]"';
-  seen.add(value);
-  const serialized = Array.isArray(value)
-    ? `[${value.map(item => serializeRecurrenceValue(item, seen)).join(',')}]`
-    : `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${serializeRecurrenceValue(value[key], seen)}`).join(',')}}`;
-  seen.delete(value);
-  return serialized;
-};
-
-const normalizeRecurrenceId = (value) => {
-  if (value === undefined || value === null) return '';
-  if (typeof value !== 'object') return String(value);
-  if (value.dateTime !== undefined && value.dateTime !== null) return normalizeRecurrenceId(value.dateTime);
-  if (value.date !== undefined && value.date !== null) return normalizeRecurrenceId(value.date);
-  return serializeRecurrenceValue(value);
-};
-
-const getEventIdentityKey = (entityId, event) => {
-  const uid = event?.uid;
-  const recurrenceId = normalizeRecurrenceId(event?.recurrence_id || event?.recurring_event_id);
-  const start = event?.start?.dateTime || event?.start?.date || event?.start || '';
-  const end = event?.end?.dateTime || event?.end?.date || event?.end || '';
-  if (uid && recurrenceId) return `${entityId}|${uid}|${recurrenceId}`;
-  if (uid) return `${entityId}|${uid}|${start}|${end}`;
-  return `${entityId}|${recurrenceId || ''}|${start}|${end}|${event?.summary || ''}`;
-};
-
-const normalizeCalendarEvent = (event, { entityId, color }) => ({
-  ...event,
-  entityId,
-  color
-});
-
-const getEventStartDate = (event, { parseLocalDate } = {}) => {
-  if (event.start?.dateTime) return new Date(event.start.dateTime);
-  if (event.start?.date) return parseLocalDate(event.start.date);
-  return new Date(event.start);
-};
-
-const getEventDateTimeInfo = (event, { parseCalendarDate } = {}) => {
-  if (event.start.dateTime) {
-    return {
-      eventStart: new Date(event.start.dateTime),
-      eventEnd: new Date(event.end.dateTime),
-      isAllDay: false
-    };
-  }
-
-  if (event.start.date) {
-    return {
-      eventStart: parseCalendarDate(event.start.date),
-      eventEnd: parseCalendarDate(event.end.date),
-      isAllDay: true
-    };
-  }
-
-  const isAllDay = !event.start.includes('T');
-  return {
-    eventStart: new Date(event.start),
-    eventEnd: new Date(event.end),
-    isAllDay
-  };
-};
 
 const matchPrimitiveCondition = (value, condition) => {
   if (typeof condition === 'boolean') {
@@ -10871,8 +11070,11 @@ function shouldShowEventTime(event, { styleOverrides = null, hiddenCalendars = n
   if (styleOverrides?.hide_time === true) return false;
   if (styleOverrides?.show_time === true) return true;
 
-  const visibleEntityIds = event.isCombinedCalendarEvent && Array.isArray(event.sourceEntityIds)
-    ? event.sourceEntityIds.filter(entityId => !hiddenCalendars.has(entityId))
+  const displayEntityIds = event.isDisplayAssignedEvent && Array.isArray(event.sourceCalendars)
+    ? event.sourceCalendars.map(calendar => calendar.entityId)
+    : event.sourceEntityIds;
+  const visibleEntityIds = event.isCombinedCalendarEvent && Array.isArray(displayEntityIds)
+    ? displayEntityIds.filter(entityId => !hiddenCalendars.has(entityId))
     : [event.entityId];
 
   if (visibleEntityIds.length === 0) {
@@ -10888,8 +11090,11 @@ function getEventBubbleFontColor(event, { styleOverrides = null, hiddenCalendars
     return styleOverrides.event_font_color;
   }
 
-  const visibleEntityIds = event.isCombinedCalendarEvent && Array.isArray(event.sourceEntityIds)
-    ? event.sourceEntityIds.filter(entityId => !hiddenCalendars.has(entityId))
+  const displayEntityIds = event.isDisplayAssignedEvent && Array.isArray(event.sourceCalendars)
+    ? event.sourceCalendars.map(calendar => calendar.entityId)
+    : event.sourceEntityIds;
+  const visibleEntityIds = event.isCombinedCalendarEvent && Array.isArray(displayEntityIds)
+    ? displayEntityIds.filter(entityId => !hiddenCalendars.has(entityId))
     : [event.entityId];
 
   const preferredEntityId = visibleEntityIds[0] || event.entityId;
@@ -11320,6 +11525,7 @@ function renderEventDetailsModal({
   canForward,
   canModify,
   customColor = null,
+  displayCalendarsMarkup = '',
   locationLinks = false,
   locationActionsExpanded = false,
   locationMapUrl = '',
@@ -11422,6 +11628,7 @@ function renderEventDetailsModal({
           </div>
         ` : ''}
 
+        ${displayCalendarsMarkup}
         <div class="modal-actions">
             <div class="modal-actions-left">
               ${canDelete ? `<button class="btn btn-danger" id="delete-event-btn">${t('delete')}</button>` : ''}
@@ -11434,137 +11641,6 @@ function renderEventDetailsModal({
           </div>
       </div>
     `;
-}
-
-const CUSTOM_EVENT_COLORS_VERSION = 1;
-
-function createEmptyCustomEventColors() {
-  return { version: CUSTOM_EVENT_COLORS_VERSION, occurrences: {}, series: {}, future: {} };
-}
-
-function normalizeHexColor(value) {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  const short = trimmed.match(/^#?([0-9a-fA-F]{3})$/);
-  if (short) return `#${short[1].split('').map((char) => char + char).join('').toUpperCase()}`;
-  const full = trimmed.match(/^#?([0-9a-fA-F]{6})$/);
-  return full ? `#${full[1].toUpperCase()}` : null;
-}
-
-function stablePart(value) {
-  return value === undefined || value === null ? '' : String(value).trim();
-}
-
-function getOccurrenceStartToken(event) {
-  return normalizeRecurrenceId(event?.recurrence_id) || stablePart(event?.start?.dateTime) || stablePart(event?.start?.date) || stablePart(event?.start);
-}
-
-function getCustomEventColorKeys(event, { getEventIdentityKey } = {}) {
-  if (!event) return null;
-  const entityId = stablePart(event.entityId);
-  const uid = stablePart(event.uid) || stablePart(event.ical_uid) || stablePart(event.iCalUID);
-  const recurringId = stablePart(event.recurring_event_id) || stablePart(event.recurringEventId) || stablePart(event.series_uid) || stablePart(event.seriesId);
-  const rrule = stablePart(event.rrule);
-  const isRecurring = !!(event.recurrence_id || recurringId || rrule);
-  const seriesIdentity = recurringId || (isRecurring ? uid : '');
-  const seriesKey = entityId && seriesIdentity ? `${entityId}|series|${seriesIdentity}` : null;
-  const occurrenceToken = normalizeRecurrenceId(event.recurrence_id) || getOccurrenceStartToken(event);
-  let occurrenceKey = null;
-  if (seriesKey && occurrenceToken) {
-    occurrenceKey = `${seriesKey}|occurrence|${occurrenceToken}`;
-  } else if (!isRecurring && entityId && uid) {
-    occurrenceKey = `${entityId}|uid|${uid}`;
-  } else {
-    const fallback = getEventIdentityKey?.(entityId, event);
-    occurrenceKey = fallback ? `${entityId}|identity|${fallback}` : null;
-  }
-  return { isRecurring, occurrenceKey, seriesKey, occurrenceToken, supportsSeries: !!seriesKey, supportsFuture: !!(seriesKey && occurrenceToken) };
-}
-
-function normalizeColorOrNull(value, allowNull = false) {
-  if (value === null && allowNull) return null;
-  return normalizeHexColor(value);
-}
-
-function normalizeCustomEventColors(value) {
-  const next = createEmptyCustomEventColors();
-  if (!value || typeof value !== 'object') return next;
-  if (value.version !== CUSTOM_EVENT_COLORS_VERSION) return next;
-  if (value.occurrences && typeof value.occurrences === 'object') {
-    Object.entries(value.occurrences).forEach(([key, color]) => {
-      const normalized = normalizeColorOrNull(color, true);
-      if (key && (normalized || color === null)) next.occurrences[key] = normalized;
-    });
-  }
-  if (value.series && typeof value.series === 'object') {
-    Object.entries(value.series).forEach(([key, color]) => {
-      const normalized = normalizeHexColor(color);
-      if (key && normalized) next.series[key] = normalized;
-    });
-  }
-  if (value.future && typeof value.future === 'object') {
-    Object.entries(value.future).forEach(([key, rules]) => {
-      if (!key || !Array.isArray(rules)) return;
-      const normalizedRules = rules
-        .map((rule) => {
-          if (!rule || typeof rule !== 'object' || !stablePart(rule.from)) return null;
-          const normalized = normalizeColorOrNull(rule.color, true);
-          if (!normalized && rule.color !== null) return null;
-          return { from: stablePart(rule.from), color: normalized };
-        })
-        .filter(Boolean)
-        .sort((a, b) => a.from.localeCompare(b.from));
-      if (normalizedRules.length) next.future[key] = normalizedRules;
-    });
-  }
-  return next;
-}
-
-function resolveCustomEventColor(event, state, { getEventIdentityKey } = {}) {
-  const colors = state || createEmptyCustomEventColors();
-  const keys = getCustomEventColorKeys(event, { getEventIdentityKey });
-  if (!keys?.occurrenceKey) return null;
-  if (Object.prototype.hasOwnProperty.call(colors.occurrences, keys.occurrenceKey)) {
-    return colors.occurrences[keys.occurrenceKey];
-  }
-  if (keys.seriesKey && keys.occurrenceToken) {
-    const applicable = (colors.future[keys.seriesKey] || []).filter((rule) => rule.from <= keys.occurrenceToken).pop();
-    if (applicable) return applicable.color;
-    if (Object.prototype.hasOwnProperty.call(colors.series, keys.seriesKey)) return colors.series[keys.seriesKey];
-  }
-  return null;
-}
-
-function applyCustomEventColor(state, event, scope, color, { getEventIdentityKey } = {}) {
-  const next = normalizeCustomEventColors(state);
-  const keys = getCustomEventColorKeys(event, { getEventIdentityKey });
-  const normalized = color === null ? null : normalizeHexColor(color);
-  if (color !== null && !normalized) return next;
-  if (scope === 'all' && keys?.seriesKey) {
-    if (normalized === null) delete next.series[keys.seriesKey]; else next.series[keys.seriesKey] = normalized;
-    delete next.future[keys.seriesKey];
-    Object.keys(next.occurrences).forEach((key) => { if (key.startsWith(`${keys.seriesKey}|occurrence|`)) delete next.occurrences[key]; });
-  } else if (scope === 'future' && keys?.seriesKey && keys?.occurrenceToken) {
-    const rules = (next.future[keys.seriesKey] || []).filter((rule) => rule.from < keys.occurrenceToken);
-    rules.push({ from: keys.occurrenceToken, color: normalized });
-    next.future[keys.seriesKey] = rules.sort((a, b) => a.from.localeCompare(b.from));
-  } else if (keys?.occurrenceKey) {
-    if (normalized === null) next.occurrences[keys.occurrenceKey] = null;
-    else next.occurrences[keys.occurrenceKey] = normalized;
-  }
-  return next;
-}
-
-function removeCustomEventColor(state, event, scope, options = {}) {
-  const keys = getCustomEventColorKeys(event, options);
-  if (scope === 'all' && keys?.seriesKey) return applyCustomEventColor(state, event, 'all', null, options);
-  if (scope === 'future' && keys?.supportsFuture) return applyCustomEventColor(state, event, 'future', null, options);
-  const next = normalizeCustomEventColors(state);
-  if (keys?.occurrenceKey) {
-    if (keys.seriesKey) next.occurrences[keys.occurrenceKey] = null;
-    else delete next.occurrences[keys.occurrenceKey];
-  }
-  return next;
 }
 
 function renderEventIcon(event, {
@@ -12915,6 +12991,7 @@ class FamilyCalendarCard extends HTMLElement {
     this._lastUnchangedDataRender = null; // Throttle unchanged-data UI refreshes
     this._hiddenCalendars = new Set(); // Track which calendars are hidden
     this._customEventColors = createEmptyCustomEventColors();
+    this._eventDisplayCalendars = {};
     this._calendarCapabilities = {}; // Track calendar capabilities
     this._activeLanguage = DEFAULT_LANGUAGE;
     this._hasCustomTitle = false;
@@ -13167,6 +13244,7 @@ class FamilyCalendarCard extends HTMLElement {
 
   loadPersistedPreferences() {
     this._customEventColors = createEmptyCustomEventColors();
+    this._eventDisplayCalendars = {};
     const storageKey = this.getPreferenceStorageKey();
     if (!storageKey) return false;
 
@@ -13186,6 +13264,10 @@ class FamilyCalendarCard extends HTMLElement {
         this._customEventColors = normalizeCustomEventColors(parsed.customEventColors);
         loaded = true;
       }
+      if (parsed.eventDisplayCalendars !== undefined) {
+        this._eventDisplayCalendars = normalizeEventDisplayCalendars(parsed.eventDisplayCalendars);
+        loaded = true;
+      }
       if (loaded) return true;
     } catch (error) {
       console.warn('Failed to load persisted calendar preferences:', error);
@@ -13201,7 +13283,8 @@ class FamilyCalendarCard extends HTMLElement {
     try {
       const payload = {
         hiddenCalendars: Array.from(this._hiddenCalendars),
-        customEventColors: normalizeCustomEventColors(this._customEventColors)
+        customEventColors: normalizeCustomEventColors(this._customEventColors),
+        eventDisplayCalendars: normalizeEventDisplayCalendars(this._eventDisplayCalendars)
       };
       window.localStorage?.setItem(storageKey, JSON.stringify(payload));
     } catch (error) {
@@ -13574,6 +13657,7 @@ class FamilyCalendarCard extends HTMLElement {
     this.applyThemeMode(this._config.color_scheme);
     this._hiddenCalendars = this.getDefaultHiddenCalendarSet();
     this._customEventColors = createEmptyCustomEventColors();
+    this._eventDisplayCalendars = {};
     this.loadPersistedPreferences();
     this._loadedEventRange = null;
     this._eventsByCalendar = {};
@@ -18121,6 +18205,8 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   getVisibleSourceEntityIdsForEvent(event) {
+    if (event?.isDisplayAssignedEvent) return event.sourceCalendars.map(calendar => calendar.entityId)
+      .filter(id => !this._hiddenCalendars.has(id));
     if (!event) return [];
     if (event.isCombinedCalendarEvent && Array.isArray(event.sourceEvents)) {
       return event.sourceEvents
@@ -18585,7 +18671,8 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   getEventsForDay(date, { includeHiddenStyledEvents = false } = {}) {
-    const sourceEvents = this.combineDuplicateCalendarEvents(this.applyFamilyEventMarking(this._events));
+    const sourceEvents = this.combineDuplicateCalendarEvents(this.applyFamilyEventMarking(this._events))
+      .map(event => this.applyEventDisplayCalendars(event));
 
     return sourceEvents.filter(event => {
       if (this.getVisibleCalendarColorsForEvent(event).length === 0) {
@@ -20388,7 +20475,42 @@ class FamilyCalendarCard extends HTMLElement {
     }
   }
 
+  applyEventDisplayCalendars(event) {
+    return applyEventDisplayCalendars(event, this._eventDisplayCalendars, {
+      entities: this._config.entities || [],
+      getCalendarColor: this.getCalendarColor.bind(this),
+      getEventIdentityKey: this.getEventIdentityKey.bind(this)
+    });
+  }
+
+  saveEventDisplayCalendars(event, selected) {
+    const known = new Set(this._config.entities || []);
+    const ids = [...new Set(selected)].filter(id => known.has(id));
+    const next = {...this._eventDisplayCalendars};
+    getEventDisplayKeys(event, {getEventIdentityKey:this.getEventIdentityKey.bind(this)}).forEach(key => {
+      if (ids.length) Object.defineProperty(next,key,{value:ids,enumerable:true,configurable:true,writable:true});
+      else delete next[key];
+    });
+    this._eventDisplayCalendars = normalizeEventDisplayCalendars(next);
+    this.persistPreferences();
+  }
+
+  renderEventDisplayCalendarsSelection(event) {
+    const selected = new Set(getAssignedDisplayCalendars(event, this._eventDisplayCalendars, {getEventIdentityKey:this.getEventIdentityKey.bind(this)}));
+    const keys = getEventDisplayKeys(event, {getEventIdentityKey:this.getEventIdentityKey.bind(this)});
+    if (!keys.length) return '';
+    const sourceIds = new Set((event.displayOriginalEvent?.sourceEvents || event.sourceEvents || [event]).map(source=>source.entityId));
+    return `<details class="event-display-calendars"><summary>${this.t('displayCalendarsTitle')}</summary>
+      <p>${this.t('displayCalendarsHelp')}</p>
+      ${this._config.entities.map(id=>`<label class="recurring-option">
+        <input type="checkbox" data-display-calendar="${this.escapeHtmlAttribute(id)}" ${selected.has(id)||sourceIds.has(id)?'checked':''} ${sourceIds.has(id)?'disabled':''}>
+        <span><span aria-hidden="true" style="display:inline-block;width:0.8em;height:0.8em;border-radius:50%;background:${this.escapeHtmlAttribute(this.getCalendarColor(id,this._config.entities.indexOf(id)))};margin-right:0.4em;"></span>${this.escapeHtml(this.getCalendarName(id))}${sourceIds.has(id)?` (${this.t('displayCalendarSource')})`:''}</span></label>`).join('')}
+      <button type="button" class="btn btn-primary" id="save-display-calendars">${this.t('saveChanges')}</button>
+    </details>`;
+  }
+
   showEventModal(event, onCloseBack = null, options = {}) {
+    event = this.applyEventDisplayCalendars(event);
     const modal = this.getRootElementById('event-modal');
     const content = this.getRootElementById('modal-content');
     this.applyEventModalSizeClass(content);
@@ -20468,6 +20590,7 @@ class FamilyCalendarCard extends HTMLElement {
       canDelete,
       canForward,
       canModify,
+      displayCalendarsMarkup: this.renderEventDisplayCalendarsSelection(event),
       customColor: this.getCustomEventColor(event),
       locationLinks: this._config.location_links === true,
       locationActionsExpanded: this._eventLocationActionsExpanded,
@@ -20482,6 +20605,13 @@ class FamilyCalendarCard extends HTMLElement {
       }
     });
 
+    this.getRootElementById('save-display-calendars')?.addEventListener('click', () => {
+      const selected = Array.from(content.querySelectorAll('[data-display-calendar]:checked:not(:disabled)'))
+        .map(input => input.getAttribute('data-display-calendar'));
+      this.saveEventDisplayCalendars(event, selected);
+      this.render();
+      this.showEventModal(event, onCloseBack, options);
+    });
     modal.classList.add('show');
     this.setModalBackHandler(onCloseBack);
 

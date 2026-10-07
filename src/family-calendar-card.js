@@ -1,3 +1,4 @@
+import { normalizeEventDisplayCalendars, getEventDisplayKeys, getAssignedDisplayCalendars, applyEventDisplayCalendars } from './events/event-display-calendars.js';
 import { COMMON_NAMED_COLORS } from './constants.js';
 import { registerFamilyCalendarCardEditor } from './editor/family-calendar-card-editor.js';
 import './components/family-color-picker.js';
@@ -425,6 +426,7 @@ class FamilyCalendarCard extends HTMLElement {
     this._lastUnchangedDataRender = null; // Throttle unchanged-data UI refreshes
     this._hiddenCalendars = new Set(); // Track which calendars are hidden
     this._customEventColors = createEmptyCustomEventColors();
+    this._eventDisplayCalendars = {};
     this._calendarCapabilities = {}; // Track calendar capabilities
     this._activeLanguage = DEFAULT_LANGUAGE;
     this._hasCustomTitle = false;
@@ -677,6 +679,7 @@ class FamilyCalendarCard extends HTMLElement {
 
   loadPersistedPreferences() {
     this._customEventColors = createEmptyCustomEventColors();
+    this._eventDisplayCalendars = {};
     const storageKey = this.getPreferenceStorageKey();
     if (!storageKey) return false;
 
@@ -696,6 +699,10 @@ class FamilyCalendarCard extends HTMLElement {
         this._customEventColors = normalizeCustomEventColors(parsed.customEventColors);
         loaded = true;
       }
+      if (parsed.eventDisplayCalendars !== undefined) {
+        this._eventDisplayCalendars = normalizeEventDisplayCalendars(parsed.eventDisplayCalendars);
+        loaded = true;
+      }
       if (loaded) return true;
     } catch (error) {
       console.warn('Failed to load persisted calendar preferences:', error);
@@ -711,7 +718,8 @@ class FamilyCalendarCard extends HTMLElement {
     try {
       const payload = {
         hiddenCalendars: Array.from(this._hiddenCalendars),
-        customEventColors: normalizeCustomEventColors(this._customEventColors)
+        customEventColors: normalizeCustomEventColors(this._customEventColors),
+        eventDisplayCalendars: normalizeEventDisplayCalendars(this._eventDisplayCalendars)
       };
       window.localStorage?.setItem(storageKey, JSON.stringify(payload));
     } catch (error) {
@@ -1084,6 +1092,7 @@ class FamilyCalendarCard extends HTMLElement {
     this.applyThemeMode(this._config.color_scheme);
     this._hiddenCalendars = this.getDefaultHiddenCalendarSet();
     this._customEventColors = createEmptyCustomEventColors();
+    this._eventDisplayCalendars = {};
     this.loadPersistedPreferences();
     this._loadedEventRange = null;
     this._eventsByCalendar = {};
@@ -5631,6 +5640,8 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   getVisibleSourceEntityIdsForEvent(event) {
+    if (event?.isDisplayAssignedEvent) return event.sourceCalendars.map(calendar => calendar.entityId)
+      .filter(id => !this._hiddenCalendars.has(id));
     if (!event) return [];
     if (event.isCombinedCalendarEvent && Array.isArray(event.sourceEvents)) {
       return event.sourceEvents
@@ -6095,7 +6106,8 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   getEventsForDay(date, { includeHiddenStyledEvents = false } = {}) {
-    const sourceEvents = this.combineDuplicateCalendarEvents(this.applyFamilyEventMarking(this._events));
+    const sourceEvents = this.combineDuplicateCalendarEvents(this.applyFamilyEventMarking(this._events))
+      .map(event => this.applyEventDisplayCalendars(event));
 
     return sourceEvents.filter(event => {
       if (this.getVisibleCalendarColorsForEvent(event).length === 0) {
@@ -7898,7 +7910,42 @@ class FamilyCalendarCard extends HTMLElement {
     }
   }
 
+  applyEventDisplayCalendars(event) {
+    return applyEventDisplayCalendars(event, this._eventDisplayCalendars, {
+      entities: this._config.entities || [],
+      getCalendarColor: this.getCalendarColor.bind(this),
+      getEventIdentityKey: this.getEventIdentityKey.bind(this)
+    });
+  }
+
+  saveEventDisplayCalendars(event, selected) {
+    const known = new Set(this._config.entities || []);
+    const ids = [...new Set(selected)].filter(id => known.has(id));
+    const next = {...this._eventDisplayCalendars};
+    getEventDisplayKeys(event, {getEventIdentityKey:this.getEventIdentityKey.bind(this)}).forEach(key => {
+      if (ids.length) Object.defineProperty(next,key,{value:ids,enumerable:true,configurable:true,writable:true});
+      else delete next[key];
+    });
+    this._eventDisplayCalendars = normalizeEventDisplayCalendars(next);
+    this.persistPreferences();
+  }
+
+  renderEventDisplayCalendarsSelection(event) {
+    const selected = new Set(getAssignedDisplayCalendars(event, this._eventDisplayCalendars, {getEventIdentityKey:this.getEventIdentityKey.bind(this)}));
+    const keys = getEventDisplayKeys(event, {getEventIdentityKey:this.getEventIdentityKey.bind(this)});
+    if (!keys.length) return '';
+    const sourceIds = new Set((event.displayOriginalEvent?.sourceEvents || event.sourceEvents || [event]).map(source=>source.entityId));
+    return `<details class="event-display-calendars"><summary>${this.t('displayCalendarsTitle')}</summary>
+      <p>${this.t('displayCalendarsHelp')}</p>
+      ${this._config.entities.map(id=>`<label class="recurring-option">
+        <input type="checkbox" data-display-calendar="${this.escapeHtmlAttribute(id)}" ${selected.has(id)||sourceIds.has(id)?'checked':''} ${sourceIds.has(id)?'disabled':''}>
+        <span><span aria-hidden="true" style="display:inline-block;width:0.8em;height:0.8em;border-radius:50%;background:${this.escapeHtmlAttribute(this.getCalendarColor(id,this._config.entities.indexOf(id)))};margin-right:0.4em;"></span>${this.escapeHtml(this.getCalendarName(id))}${sourceIds.has(id)?` (${this.t('displayCalendarSource')})`:''}</span></label>`).join('')}
+      <button type="button" class="btn btn-primary" id="save-display-calendars">${this.t('saveChanges')}</button>
+    </details>`;
+  }
+
   showEventModal(event, onCloseBack = null, options = {}) {
+    event = this.applyEventDisplayCalendars(event);
     const modal = this.getRootElementById('event-modal');
     const content = this.getRootElementById('modal-content');
     this.applyEventModalSizeClass(content);
@@ -7978,6 +8025,7 @@ class FamilyCalendarCard extends HTMLElement {
       canDelete,
       canForward,
       canModify,
+      displayCalendarsMarkup: this.renderEventDisplayCalendarsSelection(event),
       customColor: this.getCustomEventColor(event),
       locationLinks: this._config.location_links === true,
       locationActionsExpanded: this._eventLocationActionsExpanded,
@@ -7992,6 +8040,13 @@ class FamilyCalendarCard extends HTMLElement {
       }
     });
 
+    this.getRootElementById('save-display-calendars')?.addEventListener('click', () => {
+      const selected = Array.from(content.querySelectorAll('[data-display-calendar]:checked:not(:disabled)'))
+        .map(input => input.getAttribute('data-display-calendar'));
+      this.saveEventDisplayCalendars(event, selected);
+      this.render();
+      this.showEventModal(event, onCloseBack, options);
+    });
     modal.classList.add('show');
     this.setModalBackHandler(onCloseBack);
 

@@ -5,6 +5,40 @@ Alle wesentlichen Änderungen an diesem Projekt werden hier dokumentiert.
 
 ## [Unreleased]
 
+### Fixed / Behoben
+- Display assignments remain limited to one occurrence even when a calendar integration omits recurrence metadata. / Anzeigezuordnungen bleiben auf ein Vorkommen begrenzt, auch ohne Wiederholungsmetadaten.
+- Time and font settings follow visible assigned calendars when the source calendar is hidden. / Uhrzeit und Schriftfarbe berücksichtigen sichtbare zugeordnete Kalender bei ausgeblendetem Ursprung.
+- Release asset uploads use the release tag and reject a mismatching bundle version. / Release-Dateien werden aus dem zugehörigen Tag geladen; abweichende Kartenversionen brechen den Upload ab.
+
+
+### English 🇺🇸
+
+#### Added
+
+- Assign additional display calendars to an existing event from its details, including read-only invitations. Calendar names and colors are displayed without editing or copying the original event. Assignments persist in this browser; recurring events apply to the selected occurrence only.
+
+### Deutsch 🇩🇪
+
+#### Hinzugefügt
+
+- Zusätzliche Anzeigekalender im Terminfenster auswählen, auch bei schreibgeschützten Einladungen. Kalendernamen und Farben erscheinen ohne Änderung oder Kopie des Originaltermins. Die Zuordnung bleibt in diesem Browser gespeichert; bei Serien gilt sie für das ausgewählte Vorkommen.
+
+
+### English 🇺🇸
+
+#### Changed
+
+- Project descriptions and editor diagnostics consistently use Family Calendar Card; translated resource instructions now point to the correct installation file.
+- README identifies Baeka89 as developer and maintainer and links to published versions.
+
+### Deutsch 🇩🇪
+
+#### Geändert
+
+- Projektbeschreibung und Editor-Diagnose verwenden einheitlich Family Calendar Card; übersetzte Ressourcenhinweise verweisen auf die richtige Installationsdatei.
+- README nennt Baeka89 als Entwickler und Maintainer und verlinkt veröffentlichte Versionen.
+
+
 ### English 🇺🇸
 
 #### Added

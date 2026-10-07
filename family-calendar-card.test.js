@@ -774,7 +774,8 @@ test('combined event detail modal badges use visible source effective custom col
 
   assert.match(content.innerHTML, /background: #000000; color: white;/);
   assert.match(content.innerHTML, /background: #FFFFFF; color: black;/);
-  assert.doesNotMatch(content.innerHTML, /calendar\.hidden/);
+  assert.doesNotMatch(content.innerHTML.split('<details class="event-display-calendars">')[0], /calendar\.hidden/);
+  assert.match(content.innerHTML, /data-display-calendar="calendar.hidden"/);
 });
 
 test('showEventModal Edit forwards onSaved to the edit flow', () => {
@@ -11666,4 +11667,93 @@ test('header gradient editor persists selections and preserves their order', () 
   const markup=editor.renderHeaderNavButtonRow(editor._config.header_nav_buttons[0],0);
   assert.match(markup, /data-header-button-gradient-calendar/);
   assert.match(markup, /value="gradient" selected/);
+});
+
+
+test('project descriptions and shipped code use Family Calendar Card branding', () => {
+  const fs = require('node:fs');
+  for (const file of ['README.md','AGENTS.md','src/editor/editor-translations.js','family-calendar-card.js']) {
+    assert.match(fs.readFileSync(file,'utf8'), /Family Calendar Card/, file);
+  }
+});
+
+test('editor diagnostic translations match current labels and resource path', async () => {
+  const { EDITOR_TRANSLATION_ROWS } = await import('./src/editor/editor-translations.js');
+  for (const key of ['Family Calendar Card','Resource file: family-calendar-card.js','Old resource detected:', 'Clears persistent calendar event snapshots only. Hidden calendars and custom event colors are not changed.']) {
+    assert.ok(EDITOR_TRANSLATION_ROWS.some(row=>row?.[0]===key), key);
+  }
+  const row = EDITOR_TRANSLATION_ROWS.find(row=>row?.[0]?.startsWith('Remove the old resource from Settings'));
+  assert.ok(row.every(text=>text.includes('/hacsfiles/family-calendar-card/family-calendar-card.js')));
+});
+
+
+test('display calendars preserve original sources and never write calendar services', () => {
+  const card=makeCard({entities:['calendar.family','calendar.work'],colors:{'calendar.family':'#ff0000','calendar.work':'#0000ff'}});
+  card._hass={callService(){throw new Error('Calendar service must not be called');},callWS(){throw new Error('WebSocket must not be called');}};
+  const event={entityId:'calendar.family',uid:'invite',summary:'Invitation',start:'2026-10-07T10:00:00Z',end:'2026-10-07T11:00:00Z',color:'#ff0000'};
+  const original=JSON.stringify(event);
+  card.saveEventDisplayCalendars(event,['calendar.work','calendar.unknown']);
+  const display=card.applyEventDisplayCalendars(event);
+  assert.deepEqual(display.sourceCalendars.map(item=>item.entityId),['calendar.family','calendar.work']);
+  assert.deepEqual(display.sourceEntityIds,['calendar.family']);
+  assert.deepEqual(display.sourceEvents,[event]);
+  assert.equal(JSON.stringify(event),original);
+  card._hiddenCalendars=new Set(['calendar.family']);
+  assert.deepEqual(card.getVisibleCalendarColorsForEvent(display),['#0000ff']);
+  card.saveEventDisplayCalendars(display,[]);
+  assert.equal(card.applyEventDisplayCalendars(display),event);
+});
+
+test('display calendar assignments persist separately from event colors and hidden calendars', () => {
+  withFakeStorage(() => {
+    const config={entities:['calendar.family','calendar.work'],preference_storage_key:'display-test'};
+    const event={entityId:'calendar.family',uid:'event',start:'2026-10-07T10:00:00Z'};
+    const card=makeCard(config);card._hiddenCalendars=new Set(['calendar.work']);
+    card.saveEventDisplayCalendars(event,['calendar.work']);
+    const reloaded=makeCard(config);reloaded.loadPersistedPreferences();
+    assert.deepEqual(reloaded.applyEventDisplayCalendars(event).sourceCalendars.map(item=>item.entityId),['calendar.family','calendar.work']);
+    assert.ok(reloaded._hiddenCalendars.has('calendar.work'));
+  });
+});
+
+test('display assignment scopes recurring events to one occurrence', () => {
+  const card=makeCard({entities:['calendar.family','calendar.work']});
+  const first={entityId:'calendar.family',uid:'series',rrule:'FREQ=DAILY',start:'2026-10-07T10:00:00Z',recurrence_id:'2026-10-07T10:00:00Z'};
+  const second={...first,start:'2026-10-08T10:00:00Z',recurrence_id:'2026-10-08T10:00:00Z'};
+  card.saveEventDisplayCalendars(first,['calendar.work']);
+  assert.equal(card.applyEventDisplayCalendars(first).isDisplayAssignedEvent,true);
+  assert.equal(card.applyEventDisplayCalendars(second),second);
+});
+
+test('read-only event selection includes every configured calendar with original source locked', () => {
+  const card=makeCard({entities:['calendar.family','calendar.work','calendar.school'],language:'de',enable_event_management:false});
+  const event={entityId:'calendar.family',uid:'invite',start:'2026-10-07T10:00:00Z'};
+  const html=card.renderEventDisplayCalendarsSelection(event);
+  assert.match(html,/Betrifft auch diese Kalender/);
+  assert.match(html,/data-display-calendar="calendar.family" checked disabled/);
+  assert.match(html,/data-display-calendar="calendar.work"/);
+  assert.match(html,/data-display-calendar="calendar.school"/);
+});
+
+
+test('display assignment isolates expanded series without recurrence metadata', () => {
+  const card = makeCard({entities:['calendar.family','calendar.work']});
+  const first = {entityId:'calendar.family',uid:'series-without-metadata',start:'2026-10-07T10:00:00Z'};
+  const second = {...first,start:'2026-10-08T10:00:00Z'};
+  card.saveEventDisplayCalendars(first,['calendar.work']);
+  assert.equal(card.applyEventDisplayCalendars(first).isDisplayAssignedEvent,true);
+  assert.equal(card.applyEventDisplayCalendars(second),second);
+});
+
+test('display-only visible calendar controls time and font when source is hidden', async () => {
+  const { shouldShowEventTime, getEventBubbleFontColor } = await import('./src/events/event-display.js');
+  const card = makeCard({entities:['calendar.family','calendar.work']});
+  const event = {entityId:'calendar.family',uid:'hidden-source',start:'2026-10-07T10:00:00Z'};
+  card.saveEventDisplayCalendars(event,['calendar.work']);
+  const display = card.applyEventDisplayCalendars(event);
+  const options = {hiddenCalendars:new Set(['calendar.family'])};
+  assert.equal(shouldShowEventTime(display,options),true);
+  assert.equal(shouldShowEventTime(display,{...options,hideTimesForCalendars:['calendar.work']}),false);
+  assert.equal(getEventBubbleFontColor(display,{...options,eventFontColors:{'calendar.work':'#123456'},normalizeSingleColor:color=>color}), '#123456');
+  assert.deepEqual(display.sourceEntityIds,['calendar.family']);
 });
