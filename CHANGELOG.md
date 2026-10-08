@@ -6,6 +6,12 @@ Alle wesentlichen Änderungen an diesem Projekt werden hier dokumentiert.
 ## [Unreleased]
 
 ### Fixed / Behoben
+- Keep the popup header and close button visible during scrolling. / Popup-Kopfzeile und Schließen-Schaltfläche bleiben beim Scrollen sichtbar.
+- Make additional calendar selections readable in light and dark mode with matching popup styling. / Zusätzliche Kalenderauswahl ist in heller und dunkler Ansicht lesbar und passend gestaltet.
+- Clicking the popup backdrop closes it without saving draft inputs or reopening a parent dialog. Dragging from inside does not dismiss it. / Ein Klick außerhalb schließt ohne Speichern oder Rückkehr zum übergeordneten Dialog; Ziehen von innen nach außen schließt nicht.
+
+
+### Fixed / Behoben
 - Display assignments remain limited to one occurrence even when a calendar integration omits recurrence metadata. / Anzeigezuordnungen bleiben auf ein Vorkommen begrenzt, auch ohne Wiederholungsmetadaten.
 - Time and font settings follow visible assigned calendars when the source calendar is hidden. / Uhrzeit und Schriftfarbe berücksichtigen sichtbare zugeordnete Kalender bei ausgeblendetem Ursprung.
 - Release asset uploads use the release tag and reject a mismatching bundle version. / Release-Dateien werden aus dem zugehörigen Tag geladen; abweichende Kartenversionen brechen den Upload ab.

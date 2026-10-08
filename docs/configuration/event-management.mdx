@@ -178,3 +178,10 @@ This retry state belongs to the active card instance. After reloading the dashbo
 Open an event (including a read-only invitation) and expand **Also concerns these calendars**. Select the configured calendars and save. The original calendar stays selected. Additional calendar names and colors appear in the card without copying or updating events in calendar services.
 
 Assignments are stored in this browser's local preferences, scoped to the card/dashboard. They are not synchronized to other devices. A recurring event assignment applies only to the selected occurrence. If an integration supplies no stable event identifier, changing its title or dates may require assigning it again. Clear the additional checkboxes and save to remove the assignment. Calendar visibility filters still apply.
+
+
+### Closing event popups
+
+The popup header stays visible while scrolling, keeping the close button accessible. Click the shaded backdrop outside the popup to close it and discard unsaved form values or display-calendar selections. Clicking inside the popup, or dragging a selection from inside to outside, does not dismiss it. Previously saved changes remain saved.
+
+The additional-calendar selection follows the popup text colors in both light and dark mode and has a bordered, keyboard-focusable disclosure header.

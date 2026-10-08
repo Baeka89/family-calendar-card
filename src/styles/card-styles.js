@@ -1889,7 +1889,9 @@ export function getCardStyles() {
       }
 
       .modal-content {
-        background: white;
+        --modal-surface: white;
+        --modal-text: #374151;
+        background: var(--modal-surface);
         border-radius: 12px;
         padding: 24px;
         max-width: 500px;
@@ -1950,6 +1952,12 @@ export function getCardStyles() {
       }
 
       .modal-header {
+        position: sticky;
+        top: -24px;
+        z-index: 3;
+        background: var(--modal-surface);
+        margin-top: -24px;
+        padding-top: 24px;
         display: flex;
         justify-content: space-between;
         align-items: start;
@@ -1964,11 +1972,12 @@ export function getCardStyles() {
       }
 
       .modal-close {
+        flex-shrink: 0;
         background: none;
         border: none;
         font-size: 24px;
         cursor: pointer;
-        color: #6b7280;
+        color: var(--modal-text);
         padding: 0;
         width: 32px;
         height: 32px;
@@ -1984,7 +1993,54 @@ export function getCardStyles() {
       }
 
       .modal-body {
-        color: #374151;
+        color: var(--modal-text);
+      }
+
+      .event-display-calendars {
+        color: var(--modal-text);
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 16px;
+      }
+
+      .event-display-calendars summary {
+        color: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .event-display-calendars summary:focus-visible {
+        outline: 2px solid var(--primary-color, #2563eb);
+        outline-offset: 4px;
+      }
+
+      .event-display-calendars p {
+        color: inherit;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .event-display-calendars .recurring-option:hover {
+        background: var(--display-calendar-hover, #f3f4f6);
+      }
+
+      @media (max-width: 480px) {
+        .modal-header {
+          top: -16px;
+          margin-top: -16px;
+          padding-top: 16px;
+        }
+      }
+
+      .calendar-container.dark-mode .modal-content {
+        --modal-surface: #3b434d;
+        --modal-text: #d6dee8;
+        --display-calendar-hover: #4b5563;
+      }
+
+      .calendar-container.dark-mode .event-display-calendars {
+        border-color: #606b7b;
       }
 
       .modal-row {
