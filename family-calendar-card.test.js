@@ -449,13 +449,13 @@ function attachListenersModalHarness() {
   card.getRootElementById = (id) => (id === 'event-modal' ? modal : null);
   card._root = { querySelector: () => null, querySelectorAll: () => [] };
   card.attachEventListeners();
-  return { modalHandlers, modalClassList, modal };
+  return { card, modalHandlers, modalClassList, modal };
 }
 
-test('event modal backdrop click does not close the modal', () => {
+test('event modal backdrop click closes the modal', () => {
   const { modalHandlers, modalClassList, modal } = attachListenersModalHarness();
   modalHandlers.click?.({ target: modal });
-  assert.equal(modalClassList.contains('show'), true);
+  assert.equal(modalClassList.contains('show'), false);
 });
 
 test('event modal inside-to-outside drag release does not close the modal', () => {
@@ -466,12 +466,12 @@ test('event modal inside-to-outside drag release does not close the modal', () =
   assert.equal(modalClassList.contains('show'), true);
 });
 
-test('event modal outside interactions do not close the modal', () => {
+test('event modal outside click closes the modal', () => {
   const { modalHandlers, modalClassList, modal } = attachListenersModalHarness();
   modalHandlers.pointerdown?.({ target: modal });
   modalHandlers.pointerup?.({ target: modal });
   modalHandlers.click?.({ target: modal });
-  assert.equal(modalClassList.contains('show'), true);
+  assert.equal(modalClassList.contains('show'), false);
 });
 
 test('showDayModal supplies an onSaved callback to showEventModal (fresh reopen)', () => {
@@ -11756,4 +11756,19 @@ test('display-only visible calendar controls time and font when source is hidden
   assert.equal(shouldShowEventTime(display,{...options,hideTimesForCalendars:['calendar.work']}),false);
   assert.equal(getEventBubbleFontColor(display,{...options,eventFontColors:{'calendar.work':'#123456'},normalizeSingleColor:color=>color}), '#123456');
   assert.deepEqual(display.sourceEntityIds,['calendar.family']);
+});
+
+
+test('backdrop dismissal discards draft content without save or back callback', () => {
+  const {card,modal,modalHandlers,modalClassList}=attachListenersModalHarness();
+  const content={innerHTML:'unsaved draft'};
+  card.getRootElementById=id=>id==='event-modal'?modal:id==='modal-content'?content:null;
+  card._activeModalBackHandler=()=>{throw new Error('Backdrop must fully close');};
+  card.persistPreferences=()=>{throw new Error('Draft must not save');};
+  card._eventLocationActionsExpanded=true;
+  modalHandlers.click({target:modal});
+  assert.equal(content.innerHTML,'');
+  assert.equal(modalClassList.contains('show'),false);
+  assert.equal(card._activeModalBackHandler,null);
+  assert.equal(card._eventLocationActionsExpanded,false);
 });

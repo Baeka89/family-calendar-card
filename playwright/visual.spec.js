@@ -2405,3 +2405,39 @@ for (const view of ['week', 'schedule', 'month', 'agenda']) {
     expect(data.sourceEntityIds).toEqual(['calendar.family']);
   });
 }
+
+for (const darkMode of [false, true]) {
+  test(`popup controls: readable assignment, sticky close and backdrop discard (${darkMode ? 'dark' : 'light'})`, async ({page}) => {
+    await page.goto(`file://${path.join(process.cwd(), 'playwright', 'ha-fixture.html')}`);
+    await page.evaluate(({darkMode}) => {
+      const card=document.createElement('family-calendar-card');
+      card.setConfig({entities:['calendar.family','calendar.work'],language:'de',color_scheme:darkMode?'dark':'light',enable_event_management:false});
+      card._hass={states:{},callService(){throw new Error('Unexpected save');},callWS(){throw new Error('Unexpected save');}};
+      document.body.appendChild(card);
+      window.popupTestEvent={entityId:'calendar.family',uid:'popup-test',summary:'Testtermin',description:Array(50).fill('Langer Beschreibungstext zum Scrollen.').join('\n\n'),start:'2026-10-08T10:00:00Z',end:'2026-10-08T11:00:00Z',color:'#ff0000'};
+      card.showEventModal(window.popupTestEvent);
+    }, {darkMode});
+    const card=page.locator('family-calendar-card');
+    const content=card.locator('#modal-content');
+    const summary=card.locator('.event-display-calendars summary');
+    await expect(summary).toHaveText('Betrifft auch diese Kalender');
+    const colors=await card.evaluate(el=>({summary:getComputedStyle(el.querySelector('.event-display-calendars summary')).color,detail:getComputedStyle(el.querySelector('.modal-value')).color}));
+    expect(colors.summary).toBe(colors.detail);
+    await content.evaluate(el=>el.scrollTop=el.scrollHeight);
+    const closeBox=await card.locator('#close-modal').boundingBox();
+    const contentBox=await content.boundingBox();
+    expect(closeBox.y).toBeGreaterThanOrEqual(contentBox.y);
+    expect(closeBox.y+closeBox.height).toBeLessThanOrEqual(contentBox.y+contentBox.height);
+    await summary.click();
+    await card.locator('[data-display-calendar="calendar.work"]').check();
+    const backdrop=await card.locator('#event-modal').boundingBox();
+    await page.mouse.click(backdrop.x+4,backdrop.y+4);
+    await expect(card.locator('#event-modal')).not.toBeVisible();
+    expect(await card.evaluate(el=>el._eventDisplayCalendars)).toEqual({});
+    await card.evaluate(el=>el.showEventModal(window.popupTestEvent));
+    await card.locator('.event-display-calendars summary').click();
+    await expect(card.locator('[data-display-calendar="calendar.work"]')).not.toBeChecked();
+    await card.locator('#close-modal').click();
+    await expect(card.locator('#event-modal')).not.toBeVisible();
+  });
+}

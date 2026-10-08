@@ -7077,7 +7077,9 @@ function getCardStyles() {
       }
 
       .modal-content {
-        background: white;
+        --modal-surface: white;
+        --modal-text: #374151;
+        background: var(--modal-surface);
         border-radius: 12px;
         padding: 24px;
         max-width: 500px;
@@ -7138,6 +7140,12 @@ function getCardStyles() {
       }
 
       .modal-header {
+        position: sticky;
+        top: -24px;
+        z-index: 3;
+        background: var(--modal-surface);
+        margin-top: -24px;
+        padding-top: 24px;
         display: flex;
         justify-content: space-between;
         align-items: start;
@@ -7152,11 +7160,12 @@ function getCardStyles() {
       }
 
       .modal-close {
+        flex-shrink: 0;
         background: none;
         border: none;
         font-size: 24px;
         cursor: pointer;
-        color: #6b7280;
+        color: var(--modal-text);
         padding: 0;
         width: 32px;
         height: 32px;
@@ -7172,7 +7181,54 @@ function getCardStyles() {
       }
 
       .modal-body {
-        color: #374151;
+        color: var(--modal-text);
+      }
+
+      .event-display-calendars {
+        color: var(--modal-text);
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 16px;
+      }
+
+      .event-display-calendars summary {
+        color: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .event-display-calendars summary:focus-visible {
+        outline: 2px solid var(--primary-color, #2563eb);
+        outline-offset: 4px;
+      }
+
+      .event-display-calendars p {
+        color: inherit;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .event-display-calendars .recurring-option:hover {
+        background: var(--display-calendar-hover, #f3f4f6);
+      }
+
+      @media (max-width: 480px) {
+        .modal-header {
+          top: -16px;
+          margin-top: -16px;
+          padding-top: 16px;
+        }
+      }
+
+      .calendar-container.dark-mode .modal-content {
+        --modal-surface: #3b434d;
+        --modal-text: #d6dee8;
+        --display-calendar-hover: #4b5563;
+      }
+
+      .calendar-container.dark-mode .event-display-calendars {
+        border-color: #606b7b;
       }
 
       .modal-row {
@@ -18720,6 +18776,14 @@ class FamilyCalendarCard extends HTMLElement {
     const modal = this.getRootElementById('event-modal');
     const agendaContainer = this.getRootElementById('agenda-container');
     this.observeModalVisibility(modal);
+    let modalPointerStartedInside = false;
+    modal?.addEventListener('pointerdown', (event) => {
+      modalPointerStartedInside = event.target !== modal;
+    });
+    modal?.addEventListener('click', (event) => {
+      if (event.target === modal && !modalPointerStartedInside) this.dismissEventModal();
+      modalPointerStartedInside = false;
+    });
 
     // View mode selector
     const viewModeSelect = this.getRootElementById('view-mode-select');
@@ -18949,6 +19013,17 @@ class FamilyCalendarCard extends HTMLElement {
       });
     });
 
+  }
+
+  dismissEventModal() {
+    const modal = this.getRootElementById('event-modal');
+    this._activeModalBackHandler = null;
+    this._eventLocationActionsExpanded = false;
+    // Closing the backdrop discards draft controls without invoking save/back actions.
+    const content = this.getRootElementById('modal-content');
+    if (content) content.innerHTML = '';
+    modal?.classList.remove('show');
+    this.updateEventModalOpenState(modal);
   }
 
   updateEventModalOpenState(modal = this.getRootElementById('event-modal')) {

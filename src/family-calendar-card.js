@@ -6155,6 +6155,14 @@ class FamilyCalendarCard extends HTMLElement {
     const modal = this.getRootElementById('event-modal');
     const agendaContainer = this.getRootElementById('agenda-container');
     this.observeModalVisibility(modal);
+    let modalPointerStartedInside = false;
+    modal?.addEventListener('pointerdown', (event) => {
+      modalPointerStartedInside = event.target !== modal;
+    });
+    modal?.addEventListener('click', (event) => {
+      if (event.target === modal && !modalPointerStartedInside) this.dismissEventModal();
+      modalPointerStartedInside = false;
+    });
 
     // View mode selector
     const viewModeSelect = this.getRootElementById('view-mode-select');
@@ -6384,6 +6392,17 @@ class FamilyCalendarCard extends HTMLElement {
       });
     });
 
+  }
+
+  dismissEventModal() {
+    const modal = this.getRootElementById('event-modal');
+    this._activeModalBackHandler = null;
+    this._eventLocationActionsExpanded = false;
+    // Closing the backdrop discards draft controls without invoking save/back actions.
+    const content = this.getRootElementById('modal-content');
+    if (content) content.innerHTML = '';
+    modal?.classList.remove('show');
+    this.updateEventModalOpenState(modal);
   }
 
   updateEventModalOpenState(modal = this.getRootElementById('event-modal')) {
