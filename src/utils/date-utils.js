@@ -1,4 +1,8 @@
 export function getDateRangeChunks(startDate, endDate, chunkDays = 30) {
+  const normalizedChunkDays = Number(chunkDays);
+  if (!Number.isSafeInteger(normalizedChunkDays) || normalizedChunkDays < 1) {
+    throw new RangeError('chunkDays must be a positive integer');
+  }
   const chunks = [];
   let cursor = new Date(startDate);
   cursor.setHours(0, 0, 0, 0);
@@ -6,7 +10,7 @@ export function getDateRangeChunks(startDate, endDate, chunkDays = 30) {
   while (cursor <= endDate) {
     const chunkStart = new Date(cursor);
     const chunkEnd = new Date(cursor);
-    chunkEnd.setDate(chunkEnd.getDate() + chunkDays - 1);
+    chunkEnd.setDate(chunkEnd.getDate() + normalizedChunkDays - 1);
     if (chunkEnd > endDate) {
       chunkEnd.setTime(endDate.getTime());
     }

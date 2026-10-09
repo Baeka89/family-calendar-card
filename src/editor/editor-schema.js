@@ -1,4 +1,3 @@
-import { normalizeHeaderItems } from '../header/header-items.js';
 import {
   DEFAULT_BACKGROUND_IMAGE_POSITION,
   DEFAULT_BACKGROUND_IMAGE_REPEAT,
@@ -8,7 +7,6 @@ import {
   DEFAULT_COMBINE_STYLE,
   DEFAULT_EVENT_COLOR_BAR_WIDTH,
   DEFAULT_EVENT_COLOR_MODE,
-  DEFAULT_EVENT_MODAL_SIZE,
   DEFAULT_EVENT_NEUTRAL_BACKGROUND,
   DEFAULT_EVENT_TINT_OPACITY,
   DEFAULT_VIEW
@@ -52,6 +50,7 @@ export function createConfigNormalizationSchema({
       { key: 'hide_the_past', defaultValue: ({ rawConfig }) => rawConfig.hide_the_past || DEFAULT_CONFIG_VALUES.hide_the_past, normalize: ({ rawConfig }) => rawConfig.hide_the_past || DEFAULT_CONFIG_VALUES.hide_the_past },
       { key: 'past_event_mode', defaultValue: ({ derived }) => derived.normalizedPastEventMode, normalize: ({ derived }) => derived.normalizedPastEventMode },
       { key: 'hide_empty_days', defaultValue: ({ rawConfig }) => rawConfig.hide_empty_days || DEFAULT_CONFIG_VALUES.hide_empty_days },
+      { key: 'agenda_text_alignment', defaultValue: () => 'auto', normalize: ({ rawConfig }) => ['auto','left','center','right'].includes(rawConfig.agenda_text_alignment) ? rawConfig.agenda_text_alignment : 'auto' },
       { key: 'agenda_compact_events', defaultValue: ({ rawConfig }) => rawConfig.agenda_compact_events ?? DEFAULT_CONFIG_VALUES.agenda_compact_events, normalize: ({ rawConfig }) => rawConfig.agenda_compact_events ?? DEFAULT_CONFIG_VALUES.agenda_compact_events },
       { key: 'display_full_weekday_names', defaultValue: ({ rawConfig }) => rawConfig.display_full_weekday_names ?? DEFAULT_CONFIG_VALUES.display_full_weekday_names },
       { key: 'shorten_event_times', defaultValue: ({ rawConfig }) => rawConfig.shorten_event_times ?? DEFAULT_CONFIG_VALUES.shorten_event_times },

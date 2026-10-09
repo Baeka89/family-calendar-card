@@ -19,8 +19,11 @@ jobs:
         with:
           node-version: 20
 
-      - name: Check source JS syntax
-        run: node --check src/family-calendar-card.js
+      - name: Install dependencies
+        run: npm ci --no-audit --fund=false
+
+      - name: Check all source JS syntax and duplicate class methods
+        run: node test/check-sources.cjs
 
       - name: Check generated JS syntax
         run: node --check family-calendar-card.js

@@ -3,6 +3,15 @@ import { normalizeEventTextValue } from '../utils/string-utils.js';
 export function getVisibleCalendarBadgesForEvent(event, { hiddenCalendars = new Set(), getVirtualBadgeForEvent, normalizeSingleColor, configColors = {} } = {}) {
   const virtualCalendar = getVirtualBadgeForEvent?.(event);
   if (virtualCalendar) {
+    if (event?.isDisplayAssignedEvent && Array.isArray(event.sourceCalendars)) {
+      const visibleCalendars = event.sourceCalendars.filter(calendar => !hiddenCalendars.has(calendar.entityId));
+      const groupCalendars = visibleCalendars.filter(calendar => virtualCalendar.entities.includes(calendar.entityId));
+      const otherCalendars = visibleCalendars.filter(calendar => !virtualCalendar.entities.includes(calendar.entityId));
+      const groupBadges = groupCalendars.length
+        ? [{entityId: `virtual:${virtualCalendar.id}`, color: virtualCalendar.color || groupCalendars[0].color || event.color}]
+        : [];
+      return [...groupBadges, ...otherCalendars];
+    }
     const visibleSourceEntityIds = virtualCalendar.entities.filter((entityId) => !hiddenCalendars.has(entityId));
     if (visibleSourceEntityIds.length === 0) return [];
     const fallbackColor = event?.color || normalizeSingleColor?.(configColors[virtualCalendar.entities[0]]);
@@ -26,6 +35,8 @@ export function isCombinedEventWithinSingleVirtualCalendar(event, { hiddenCalend
   for (const sourceEvent of visibleSources) {
     const virtualCalendar = getVirtualBadgeForEntity?.(sourceEvent.entityId);
     if (!virtualCalendar) return false;
+    if (event.isDisplayAssignedEvent && event.sourceCalendars?.some(calendar =>
+      !hiddenCalendars.has(calendar.entityId) && !virtualCalendar.entities.includes(calendar.entityId))) return false;
     virtualIds.add(virtualCalendar.id);
     if (virtualIds.size > 1) return false;
   }

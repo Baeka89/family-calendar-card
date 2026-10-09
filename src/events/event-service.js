@@ -43,7 +43,7 @@ export const buildCreateEventWebSocketPayload = (calendarId, eventData) => ({
 });
 
 export const getRecurringUpdateControls = (originalEvent, eventData, editScope = 'this') => {
-  const isRecurringUpdate = !!eventData.rrule || !!originalEvent.rrule;
+  const isRecurringUpdate = !!eventData.rrule || !!originalEvent.rrule || !!normalizeRecurrenceId(originalEvent.recurrence_id);
   return {
     isRecurringUpdate,
     recurrenceId: (isRecurringUpdate && editScope !== 'all') ? normalizeRecurrenceId(originalEvent.recurrence_id) : null,

@@ -1,18 +1,11 @@
 import { escapeHtmlAttribute } from '../utils/string-utils.js';
 import {
   COMBINE_BACKGROUND_MODE_OPTIONS,
-  COMBINE_STYLE_OPTIONS,
   createDefaultStubConfig,
   DAY_BADGE_LAYOUT_WEEK_OPTIONS,
-  DEFAULT_BACKGROUND_IMAGE_POSITION,
-  DEFAULT_BACKGROUND_IMAGE_REPEAT,
-  DEFAULT_BACKGROUND_IMAGE_SIZE,
   DEFAULT_COMBINE_BACKGROUND,
-  DEFAULT_COMBINE_STYLE,
-  DEFAULT_CONFIG_VALUES,
   DEFAULT_DAY_BADGE_LAYOUT_WEEK,
   DEFAULT_EVENT_COLOR_BAR_WIDTH,
-  DEFAULT_EVENT_COLOR_MODE,
   DEFAULT_EVENT_MODAL_SIZE,
   DEFAULT_EVENT_NEUTRAL_BACKGROUND,
   DEFAULT_EVENT_TINT_OPACITY,
@@ -20,13 +13,11 @@ import {
   DEFAULT_PAST_EVENT_MODE,
   DEFAULT_THEME_MODE,
   DEFAULT_VIEW,
-  EVENT_COLOR_MODE_OPTIONS,
   EVENT_MODAL_SIZE_OPTIONS,
   PAST_EVENT_MODE_OPTIONS,
   THEME_MODE_OPTIONS
 } from '../defaults.js';
 import {
-  createConfigNormalizationSchema,
   getEditorDefaultValue as getEditorDefaultValueFromSchema,
   getEventCalendarBubbleMode as getEventCalendarBubbleModeFromConfig,
   normalizeDefaultViewForEditor as normalizeDefaultViewForEditorValue
@@ -39,7 +30,7 @@ import {
 } from '../renderers/editor-renderer.js';
 import { getEntityFriendlyName as getEntityFriendlyNameHelper } from '../ha/ha-state-helpers.js';
 import { EDITOR_TRANSLATION_LOCALES, EDITOR_TRANSLATION_ROWS } from './editor-translations.js';
-import { MAX_HEADER_NAV_BUTTONS, normalizeHeaderNavButtons } from '../header/header-nav-buttons.js';
+import { MAX_HEADER_NAV_BUTTONS } from '../header/header-nav-buttons.js';
 import { getFamilyCalendarCardVersion } from '../version.js';
 import { clearAllEventCacheSnapshots } from '../events/event-cache.js';
 import { normalizeDashboardPath, normalizeEnumValue } from '../utils/normalization-utils.js';
@@ -1573,6 +1564,11 @@ export class FamilyCalendarCardEditor extends HTMLElement {
           </select>
         </label>
         <label><input type="checkbox" data-field="hide_empty_days" ${this._config.hide_empty_days ? 'checked' : ''}> Agenda view: hide empty days</label>
+        <label class="field-inline">Agenda view: text alignment
+          <select data-field="agenda_text_alignment">
+            ${['auto','left','center','right'].map(value => `<option value="${value}" ${this._config.agenda_text_alignment === value ? 'selected' : ''}>${{auto:'Default',left:'Left',center:'Center',right:'Right'}[value]}</option>`).join('')}
+          </select>
+        </label>
         <label><input type="checkbox" data-field="agenda_compact_events" ${this._config.agenda_compact_events ? 'checked' : ''}> Agenda view: compact events</label>
         <label><input type="checkbox" data-field="disable_swipe_controls" ${this._config.disable_swipe_controls ? 'checked' : ''}> Disable swipe period controls</label>
       </div>
@@ -2449,7 +2445,7 @@ export class FamilyCalendarCardEditor extends HTMLElement {
 
     this.refreshCalendarEntities();
 
-    this.querySelectorAll('[data-field]').forEach((input) => {
+    this.querySelectorAll('[data-field]:not([data-field="entity"])').forEach((input) => {
       const eventName = input.type === 'text' ? 'input' : 'change';
       input.addEventListener(eventName, (event) => this.handleChange(event));
     });
@@ -2502,7 +2498,8 @@ export class FamilyCalendarCardEditor extends HTMLElement {
       button.addEventListener('click', (event) => this.handleFamilyRuleAction(event));
     });
     this.querySelectorAll('[data-family-rule-field]').forEach((input) => {
-      input.addEventListener(input.type === 'text' || input.type === 'number' || input.type === 'color' ? 'input' : 'change', (event) => this.handleFamilyRuleInput(event));
+      const hasLiveInput = ['text', 'number', 'color'].includes(input.type);
+      if (hasLiveInput) input.addEventListener('input', (event) => this.handleFamilyRuleInput(event));
       input.addEventListener('change', (event) => this.handleFamilyRuleInput(event));
     });
     this.querySelectorAll('[data-family-rule-calendar]').forEach((input) => {

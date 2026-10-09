@@ -1,14 +1,37 @@
 import { formatLocalDate, parseLocalDate, parsePossiblyLocalDateTime } from '../utils/date-utils.js';
 
+function parseEventDateTime(value) {
+  if (typeof value === 'string') {
+    const parts = value.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(?:[zZ]|[+-]\d{2}:?\d{2})?$/);
+    if (parts) {
+      const [year, month, day, hour, minute, second] = parts.slice(1).map(part => Number(part ?? 0));
+      const calendarDate = new Date(0);
+      calendarDate.setUTCFullYear(year, month - 1, day);
+      if (calendarDate.getUTCFullYear() !== year || calendarDate.getUTCMonth() !== month - 1 ||
+          calendarDate.getUTCDate() !== day || hour > 23 || minute > 59 || second > 59) return new Date(NaN);
+      if (!/(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(value)) {
+        const parsed = parsePossiblyLocalDateTime(value);
+        if (parsed.getFullYear() !== year || parsed.getMonth() !== month - 1 || parsed.getDate() !== day ||
+            parsed.getHours() !== hour || parsed.getMinutes() !== minute || parsed.getSeconds() !== second) return new Date(NaN);
+        return parsed;
+      }
+    }
+  }
+  return parsePossiblyLocalDateTime(value);
+}
+
 export const resolveTimedEventRange = (startValue, endValue, fallbackDurationMs = 60 * 60 * 1000) => {
-  const start = parsePossiblyLocalDateTime(startValue);
+  const start = parseEventDateTime(startValue);
   if (!(start instanceof Date) || Number.isNaN(start.getTime())) {
     return { start: null, end: null };
   }
 
-  const parsedEnd = endValue ? parsePossiblyLocalDateTime(endValue) : null;
-  if (parsedEnd instanceof Date && !Number.isNaN(parsedEnd.getTime())) {
-    return { start, end: parsedEnd };
+  const parsedEnd = endValue ? parseEventDateTime(endValue) : null;
+  if (endValue) {
+    return {
+      start,
+      end: parsedEnd instanceof Date && Number.isFinite(parsedEnd.getTime()) ? parsedEnd : null
+    };
   }
 
   return {
@@ -108,6 +131,20 @@ export const normalizeEventFormData = ({
   }
 
   if (recurrence?.enabled) {
+    if (recurrence.endMode === 'after') {
+      const count = String(recurrence.count ?? '');
+      if (!/^[1-9]\d*$/.test(count) || !Number.isSafeInteger(Number(count))) {
+        return { valid: false, errorKey: 'recurrenceEndRequired' };
+      }
+    }
+    if (recurrence.endMode === 'on') {
+      const untilDate = recurrence.untilDate;
+      const until = parseLocalDate(untilDate);
+      const firstDate = isAllDay ? startDate : String(startDateTime).slice(0, 10);
+      if (!untilDate || !Number.isFinite(until.getTime()) || formatLocalDate(until) !== untilDate || untilDate < firstDate) {
+        return { valid: false, errorKey: 'recurrenceEndRequired' };
+      }
+    }
     if (recurrence.frequency === 'WEEKLY' && (!Array.isArray(recurrence.byDay) || recurrence.byDay.length === 0)) {
       return { valid: false, errorKey: 'recurrenceSelectWeekday' };
     }

@@ -1,3 +1,4 @@
+import { createSharedDisplayStore } from './events/shared-display-store.js';
 import { normalizeEventDisplayCalendars, getEventDisplayKeys, getAssignedDisplayCalendars, applyEventDisplayCalendars } from './events/event-display-calendars.js';
 import { COMMON_NAMED_COLORS } from './constants.js';
 import { registerFamilyCalendarCardEditor } from './editor/family-calendar-card-editor.js';
@@ -427,6 +428,13 @@ class FamilyCalendarCard extends HTMLElement {
     this._hiddenCalendars = new Set(); // Track which calendars are hidden
     this._customEventColors = createEmptyCustomEventColors();
     this._eventDisplayCalendars = {};
+    this._sharedDisplayStore ||= createSharedDisplayStore(state => {
+      this._eventDisplayCalendars = state;
+      this.persistPreferences();
+      if (this.getRootElementById('event-modal')?.classList.contains('show')) {
+        this._sharedDisplayNeedsRender = true;
+      } else if (this.isConnected && this._config) this.renderPreservingAgendaScroll();
+    });
     this._calendarCapabilities = {}; // Track calendar capabilities
     this._activeLanguage = DEFAULT_LANGUAGE;
     this._hasCustomTitle = false;
@@ -680,6 +688,7 @@ class FamilyCalendarCard extends HTMLElement {
   loadPersistedPreferences() {
     this._customEventColors = createEmptyCustomEventColors();
     this._eventDisplayCalendars = {};
+
     const storageKey = this.getPreferenceStorageKey();
     if (!storageKey) return false;
 
@@ -1093,7 +1102,9 @@ class FamilyCalendarCard extends HTMLElement {
     this._hiddenCalendars = this.getDefaultHiddenCalendarSet();
     this._customEventColors = createEmptyCustomEventColors();
     this._eventDisplayCalendars = {};
+
     this.loadPersistedPreferences();
+    if (this._sharedDisplayStore.state) this._eventDisplayCalendars = this._sharedDisplayStore.state;
     this._loadedEventRange = null;
     this._eventsByCalendar = {};
     this._eventCacheGeneration += 1;
@@ -1129,6 +1140,7 @@ class FamilyCalendarCard extends HTMLElement {
   set hass(hass) {
     const oldHass = this._hass;
     this._hass = hass;
+    if (this.isConnected) this._sharedDisplayStore?.connect(hass?.connection);
     let shouldRender = false;
 
     if (this.advanceAgendaWindowToCurrentDay()) {
@@ -2876,6 +2888,7 @@ class FamilyCalendarCard extends HTMLElement {
 
   connectedCallback() {
     checkAndShowStaleResourceWarning();
+    this._sharedDisplayStore?.connect(this._hass?.connection);
     window.addEventListener('resize', this._handleViewportResize);
     window.addEventListener('family-calendar-card-flush-event-cache', this._handleEventCacheFlush);
     window.addEventListener(RESET_EVENT_NAME, this._handleExternalResetEvent);
@@ -2903,6 +2916,7 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this._sharedDisplayStore?.disconnect();
     window.removeEventListener('resize', this._handleViewportResize);
     window.removeEventListener('family-calendar-card-flush-event-cache', this._handleEventCacheFlush);
     window.removeEventListener(RESET_EVENT_NAME, this._handleExternalResetEvent);
@@ -3907,6 +3921,7 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   render() {
+    this._sharedDisplayNeedsRender = false;
     this._dayBadgeActions = new Map();
     this._dayBadgeActionSequence = 0;
     const shouldRestoreAgendaScrollPosition = this._viewMode === 'agenda' && Number.isFinite(this._agendaPendingScrollTop);
@@ -5671,7 +5686,14 @@ class FamilyCalendarCard extends HTMLElement {
     const virtualCalendar = this.getVirtualBadgeForEvent(event);
     if (virtualCalendar) {
       const hasVisibleVirtualSource = visibleSourceEntityIds.some((entityId) => virtualCalendar.entities.includes(entityId));
-      if (!hasVisibleVirtualSource) return [];
+      if (!hasVisibleVirtualSource) {
+        if (event.isDisplayAssignedEvent) {
+          return event.sourceCalendars
+            .filter(calendar => !virtualCalendar.entities.includes(calendar.entityId) && !this._hiddenCalendars.has(calendar.entityId))
+            .map(calendar => calendar.color).filter(Boolean);
+        }
+        return [];
+      }
 
       const virtualColor = this.getVirtualCalendarColor(virtualCalendar, event);
 
@@ -6409,6 +6431,10 @@ class FamilyCalendarCard extends HTMLElement {
     const isOpen = !!modal && modal.classList.contains('show');
     this.classList?.toggle('event-modal-open', isOpen);
     if (!isOpen) {
+      if (this._sharedDisplayNeedsRender && this.isConnected) {
+        this._sharedDisplayNeedsRender = false;
+        this.renderPreservingAgendaScroll();
+      }
       this.flushPendingHostResizeRender();
     }
   }
@@ -7013,6 +7039,7 @@ class FamilyCalendarCard extends HTMLElement {
           endDateTime: this.getRootElementById('event-end').value,
           recurrence: {
             enabled: true,
+            endMode: recurrenceEndMode,
             frequency,
             interval,
             untilDate,
@@ -7209,6 +7236,7 @@ class FamilyCalendarCard extends HTMLElement {
           fallbackDurationMs: Math.max(endDate.getTime() - startDate.getTime(), 60 * 1000),
           recurrence: {
             enabled: true,
+            endMode: recurrenceEndMode,
             frequency,
             interval,
             untilDate,
@@ -7455,13 +7483,6 @@ class FamilyCalendarCard extends HTMLElement {
     }
   }
 
-  showFormError(errorDiv, message) {
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
-    setTimeout(() => {
-      errorDiv.style.display = 'none';
-    }, 5000);
-  }
 
 
   getForwardExistingCalendarIds(event) {
@@ -7880,11 +7901,17 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   showFormError(errorDiv, message) {
+    this._formErrorTimers ||= new WeakMap();
+    const previousTimer = this._formErrorTimers.get(errorDiv);
+    if (previousTimer !== undefined) clearTimeout(previousTimer);
     errorDiv.textContent = message;
     errorDiv.style.display = 'block';
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      if (this._formErrorTimers.get(errorDiv) !== timer) return;
       errorDiv.style.display = 'none';
+      this._formErrorTimers.delete(errorDiv);
     }, 5000);
+    this._formErrorTimers.set(errorDiv, timer);
   }
 
   showError(message) {
@@ -7937,16 +7964,11 @@ class FamilyCalendarCard extends HTMLElement {
     });
   }
 
-  saveEventDisplayCalendars(event, selected) {
+  async saveEventDisplayCalendars(event, selected) {
     const known = new Set(this._config.entities || []);
     const ids = [...new Set(selected)].filter(id => known.has(id));
-    const next = {...this._eventDisplayCalendars};
-    getEventDisplayKeys(event, {getEventIdentityKey:this.getEventIdentityKey.bind(this)}).forEach(key => {
-      if (ids.length) Object.defineProperty(next,key,{value:ids,enumerable:true,configurable:true,writable:true});
-      else delete next[key];
-    });
-    this._eventDisplayCalendars = normalizeEventDisplayCalendars(next);
-    this.persistPreferences();
+    const keys = getEventDisplayKeys(event, {getEventIdentityKey:this.getEventIdentityKey.bind(this)});
+    return this._sharedDisplayStore.save(this._hass, keys, ids, [...known]);
   }
 
   renderEventDisplayCalendarsSelection(event) {
@@ -8059,12 +8081,31 @@ class FamilyCalendarCard extends HTMLElement {
       }
     });
 
-    this.getRootElementById('save-display-calendars')?.addEventListener('click', () => {
+    this.getRootElementById('save-display-calendars')?.addEventListener('click', async () => {
       const selected = Array.from(content.querySelectorAll('[data-display-calendar]:checked:not(:disabled)'))
         .map(input => input.getAttribute('data-display-calendar'));
-      this.saveEventDisplayCalendars(event, selected);
-      this.render();
-      this.showEventModal(event, onCloseBack, options);
+      const button = this.getRootElementById('save-display-calendars');
+      button.disabled = true;
+      try {
+        await this.saveEventDisplayCalendars(event, selected);
+        // Do not reopen a dialog dismissed while the server was saving.
+        if (modal.classList.contains('show') && button.isConnected) {
+          this.renderPreservingAgendaScroll();
+          this.showEventModal(event, onCloseBack, options);
+        }
+      } catch (error) {
+        if (button.isConnected) {
+          button.disabled = false;
+          let status = content.querySelector('.display-save-error');
+          if (!status) {
+            status = document.createElement('p');
+            status.className = 'display-save-error';
+            status.setAttribute('role', 'alert');
+            button.after(status);
+          }
+          status.textContent = this.t('displayCalendarsSaveError');
+        }
+      }
     });
     modal.classList.add('show');
     this.setModalBackHandler(onCloseBack);

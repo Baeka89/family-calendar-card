@@ -11,6 +11,7 @@ export function renderAgendaView({
   monthFormatter,
   helpers
 }) {
+  const textAlignment = ['left','center','right'].includes(config.agenda_text_alignment) ? config.agenda_text_alignment : null;
   const containerStyle = helpers.getCompactContainerStyle(compactMaxHeight);
   const agendaRows = [];
   const shouldHideEmptyDays = !!config.hide_empty_days;
@@ -55,7 +56,7 @@ export function renderAgendaView({
                 : agendaEventMinHeight;
 
               return `
-                <div class="agenda-event" style="${eventStyle} --agenda-event-min-height: ${eventAgendaMinHeight}; --event-bubble-font-size: ${helpers.getEventBubbleFontSize(event)}; --event-time-font-size: ${helpers.getEventTimeFontSize(event)}; --event-location-font-size: ${helpers.getEventLocationFontSize(event)}; --event-bubble-text-color: ${helpers.getEventBubbleFontColor(event)};" data-event='${escapeHtmlAttribute(JSON.stringify(event))}'>
+                <div class="agenda-event${textAlignment ? ' agenda-text-aligned' : ''}" style="${eventStyle} ${textAlignment ? `text-align: ${textAlignment};` : ''} --agenda-event-min-height: ${eventAgendaMinHeight}; --event-bubble-font-size: ${helpers.getEventBubbleFontSize(event)}; --event-time-font-size: ${helpers.getEventTimeFontSize(event)}; --event-location-font-size: ${helpers.getEventLocationFontSize(event)}; --event-bubble-text-color: ${helpers.getEventBubbleFontColor(event)};" data-event='${escapeHtmlAttribute(JSON.stringify(event))}'>
                   <div class="agenda-event-title">${helpers.renderEventTitleWithPrefix(event, helpers.getEventDisplayTitle(event))}</div>
                   ${helpers.shouldShowEventTime(event) ? `<div class="agenda-event-time">${timeLabel}</div>` : ''}
                   ${helpers.shouldShowEventLocation(event) ? `<div class="agenda-event-location">📍 ${helpers.escapeHtml(helpers.getDisplayLocation(event.location, event))}</div>` : ''}

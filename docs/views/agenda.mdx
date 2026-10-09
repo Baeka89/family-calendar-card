@@ -15,6 +15,16 @@ type: custom:family-calendar-card
 default_view: agenda
 ```
 
+## Text alignment
+
+Choose the alignment in the visual editor or YAML:
+
+```yaml
+agenda_text_alignment: left
+```
+
+Accepted values are `left`, `center`, `right`, and `auto` (default, preserving the existing layout). The setting applies to event title, time, and location in standard and compact Agenda layouts. Calendar initials occupy their own wrapping row below the content, so they do not overlap the time.
+
 ## Configuration Options
 
 <ParamField path="rolling_days_agenda" default="null" type="number">

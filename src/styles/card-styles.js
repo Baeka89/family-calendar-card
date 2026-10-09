@@ -1263,6 +1263,17 @@ export function getCardStyles() {
         padding-bottom: calc(10px + (var(--combined-corner-bubbles, 0) * 16px));
       }
 
+      .agenda-event .combined-corner-bubbles {
+        position: static;
+        display: flex;
+        flex: 0 0 100%;
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 4px;
+        margin-top: 6px;
+      }
+
       .agenda-event-time {
         font-size: var(--event-time-font-size, 10px);
         font-weight: 600;
@@ -1321,7 +1332,13 @@ export function getCardStyles() {
         min-height: unset;
         margin-bottom: 0;
         opacity: 0.9;
-        white-space: nowrap;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+
+      .calendar-container.agenda-compact-events .agenda-text-aligned .agenda-event-title,
+      .calendar-container.agenda-compact-events .agenda-text-aligned .agenda-event-time {
+        flex: 0 0 100%;
       }
 
       .calendar-container.agenda-compact-events .agenda-event-location {

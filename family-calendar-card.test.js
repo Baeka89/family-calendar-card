@@ -65,6 +65,7 @@ require('./family-calendar-card.js');
 const Card = customElements.get('family-calendar-card-legacy');
 const PrimaryCard = customElements.get('family-calendar-card');
 const originalCardRender = Card.prototype.render;
+const originalRenderPreservingAgendaScroll = Card.prototype.renderPreservingAgendaScroll;
 const originalEnsureEventsForCurrentRange = Card.prototype.ensureEventsForCurrentRange;
 Card.prototype.render = function() {};
 Card.prototype.renderPreservingAgendaScroll = function() {};
@@ -98,6 +99,7 @@ const CONFIG_COVERAGE_INVENTORY = {
   past_event_mode: 'past_event_mode muted leaves ended events visible and applies muted style',
   hide_empty_days: 'agenda hide_empty_days removes empty day rows',
   agenda_compact_events: 'agenda compact events use compact class and sizing',
+  agenda_text_alignment: 'agenda text alignment normalizes supported values',
   display_full_weekday_names: 'display_full_weekday_names renders localized long weekday labels',
   shorten_event_times: 'shorten_event_times removes minutes from whole-hour 12-hour event times',
   time_zone: 'time_zone normalizes optional IANA zones and drives formatting and grouping',
@@ -889,6 +891,7 @@ test('getStubConfig and normalized defaults include key configuration defaults',
     month_day_tap_action: 'create',
     hide_empty_days: false,
     agenda_compact_events: false,
+    agenda_text_alignment: 'auto',
     shorten_event_times: false,
     time_zone: '',
     display_full_weekday_names: false,
@@ -6713,8 +6716,7 @@ for (const calendarType of [
       const originalEvent = {
         entityId: calendarType.id,
         uid: 'uid-1',
-        recurrence_id: '20260501T100000Z',
-        ...(recurrence.rrule ? { rrule: recurrence.rrule } : {})
+        ...(recurrence.rrule ? { recurrence_id: '20260501T100000Z', rrule: recurrence.rrule } : {})
       };
       const eventData = {
         summary: 'Updated',
@@ -11687,12 +11689,24 @@ test('editor diagnostic translations match current labels and resource path', as
 });
 
 
-test('display calendars preserve original sources and never write calendar services', () => {
+function sharedDisplayMock() {
+  const assignments = {};
+  return async msg => {
+    assert.equal(msg.type, 'family_calendar_card/set');
+    for (const key of msg.keys) {
+      if (msg.calendars.length) assignments[key]=msg.calendars;
+      else delete assignments[key];
+    }
+    return {assignments: {...assignments}};
+  };
+}
+
+test('display calendars preserve original sources and never write calendar services', async () => {
   const card=makeCard({entities:['calendar.family','calendar.work'],colors:{'calendar.family':'#ff0000','calendar.work':'#0000ff'}});
-  card._hass={callService(){throw new Error('Calendar service must not be called');},callWS(){throw new Error('WebSocket must not be called');}};
+  card._hass={callService(){throw new Error('Calendar service must not be called');},callWS: sharedDisplayMock()};
   const event={entityId:'calendar.family',uid:'invite',summary:'Invitation',start:'2026-10-07T10:00:00Z',end:'2026-10-07T11:00:00Z',color:'#ff0000'};
   const original=JSON.stringify(event);
-  card.saveEventDisplayCalendars(event,['calendar.work','calendar.unknown']);
+  await card.saveEventDisplayCalendars(event,['calendar.work','calendar.unknown']);
   const display=card.applyEventDisplayCalendars(event);
   assert.deepEqual(display.sourceCalendars.map(item=>item.entityId),['calendar.family','calendar.work']);
   assert.deepEqual(display.sourceEntityIds,['calendar.family']);
@@ -11700,27 +11714,32 @@ test('display calendars preserve original sources and never write calendar servi
   assert.equal(JSON.stringify(event),original);
   card._hiddenCalendars=new Set(['calendar.family']);
   assert.deepEqual(card.getVisibleCalendarColorsForEvent(display),['#0000ff']);
-  card.saveEventDisplayCalendars(display,[]);
+  await card.saveEventDisplayCalendars(display,[]);
   assert.equal(card.applyEventDisplayCalendars(display),event);
 });
 
-test('display calendar assignments persist separately from event colors and hidden calendars', () => {
-  withFakeStorage(() => {
-    const config={entities:['calendar.family','calendar.work'],preference_storage_key:'display-test'};
-    const event={entityId:'calendar.family',uid:'event',start:'2026-10-07T10:00:00Z'};
-    const card=makeCard(config);card._hiddenCalendars=new Set(['calendar.work']);
-    card.saveEventDisplayCalendars(event,['calendar.work']);
+test('display calendar assignments cache separately from event colors and hidden calendars', async () => {
+  const config={entities:['calendar.family','calendar.work'],preference_storage_key:'display-test'};
+  const event={entityId:'calendar.family',uid:'event',start:'2026-10-07T10:00:00Z'};
+  const card=makeCard(config);card._hiddenCalendars=new Set(['calendar.work']);
+  card._hass={callWS:sharedDisplayMock()};
+  let payload;
+  const original=window.localStorage;
+  window.localStorage={getItem:()=>payload,setItem:(key,value)=>{payload=value;}};
+  try {
+    await card.saveEventDisplayCalendars(event,['calendar.work']);
     const reloaded=makeCard(config);reloaded.loadPersistedPreferences();
     assert.deepEqual(reloaded.applyEventDisplayCalendars(event).sourceCalendars.map(item=>item.entityId),['calendar.family','calendar.work']);
     assert.ok(reloaded._hiddenCalendars.has('calendar.work'));
-  });
+  } finally { window.localStorage=original; }
 });
 
-test('display assignment scopes recurring events to one occurrence', () => {
+test('display assignment scopes recurring events to one occurrence', async () => {
   const card=makeCard({entities:['calendar.family','calendar.work']});
+  card._hass={callWS:sharedDisplayMock()};
   const first={entityId:'calendar.family',uid:'series',rrule:'FREQ=DAILY',start:'2026-10-07T10:00:00Z',recurrence_id:'2026-10-07T10:00:00Z'};
   const second={...first,start:'2026-10-08T10:00:00Z',recurrence_id:'2026-10-08T10:00:00Z'};
-  card.saveEventDisplayCalendars(first,['calendar.work']);
+  await card.saveEventDisplayCalendars(first,['calendar.work']);
   assert.equal(card.applyEventDisplayCalendars(first).isDisplayAssignedEvent,true);
   assert.equal(card.applyEventDisplayCalendars(second),second);
 });
@@ -11736,11 +11755,12 @@ test('read-only event selection includes every configured calendar with original
 });
 
 
-test('display assignment isolates expanded series without recurrence metadata', () => {
+test('display assignment isolates expanded series without recurrence metadata', async () => {
   const card = makeCard({entities:['calendar.family','calendar.work']});
+  card._hass={callWS:sharedDisplayMock()};
   const first = {entityId:'calendar.family',uid:'series-without-metadata',start:'2026-10-07T10:00:00Z'};
   const second = {...first,start:'2026-10-08T10:00:00Z'};
-  card.saveEventDisplayCalendars(first,['calendar.work']);
+  await card.saveEventDisplayCalendars(first,['calendar.work']);
   assert.equal(card.applyEventDisplayCalendars(first).isDisplayAssignedEvent,true);
   assert.equal(card.applyEventDisplayCalendars(second),second);
 });
@@ -11748,8 +11768,9 @@ test('display assignment isolates expanded series without recurrence metadata', 
 test('display-only visible calendar controls time and font when source is hidden', async () => {
   const { shouldShowEventTime, getEventBubbleFontColor } = await import('./src/events/event-display.js');
   const card = makeCard({entities:['calendar.family','calendar.work']});
+  card._hass={callWS:sharedDisplayMock()};
   const event = {entityId:'calendar.family',uid:'hidden-source',start:'2026-10-07T10:00:00Z'};
-  card.saveEventDisplayCalendars(event,['calendar.work']);
+  await card.saveEventDisplayCalendars(event,['calendar.work']);
   const display = card.applyEventDisplayCalendars(event);
   const options = {hiddenCalendars:new Set(['calendar.family'])};
   assert.equal(shouldShowEventTime(display,options),true);
@@ -11771,4 +11792,275 @@ test('backdrop dismissal discards draft content without save or back callback', 
   assert.equal(modalClassList.contains('show'),false);
   assert.equal(card._activeModalBackHandler,null);
   assert.equal(card._eventLocationActionsExpanded,false);
+});
+
+
+test('agenda text alignment normalizes supported values', () => {
+  for (const value of ['auto','left','center','right']) assert.equal(makeCard({entities:['calendar.family'],agenda_text_alignment:value})._config.agenda_text_alignment,value);
+  assert.equal(makeCard({entities:['calendar.family'],agenda_text_alignment:'invalid'})._config.agenda_text_alignment,'auto');
+});
+
+test('shared display save failure leaves previous state and cache untouched', async () => {
+  const card=makeCard({entities:['calendar.family','calendar.work']});
+  const before={old:['calendar.work']};card._eventDisplayCalendars=before;
+  card._hass={callWS:async()=>{throw new Error('offline');}};
+  card.persistPreferences=()=>{throw new Error('Must not write failed save');};
+  await assert.rejects(card.saveEventDisplayCalendars({entityId:'calendar.family',uid:'invite',start:'2026-10-07T10:00:00Z'},['calendar.work']),/offline/);
+  assert.equal(card._eventDisplayCalendars,before);
+});
+
+test('shared display subscriptions replace browser cache, synchronize and clean up', async () => {
+  const {createSharedDisplayStore}=await import('./src/events/shared-display-store.js');
+  let listener,stopped=0,received;
+  const store=createSharedDisplayStore(state=>{received=state;});
+  const connection={subscribeMessage:async(cb,msg)=>{assert.equal(msg.type,'family_calendar_card/subscribe');listener=cb;cb({assignments:{central:['calendar.work']}});return ()=>{stopped++;};}};
+  await store.connect(connection);
+  assert.deepEqual(received,{central:['calendar.work']});
+  listener({assignments:{}});assert.deepEqual(received,{});
+  store.disconnect();assert.equal(stopped,1);
+  listener({assignments:{late:['calendar.work']}});assert.deepEqual(received,{});
+});
+
+
+test('shared display ignores malformed replies without clearing valid assignments', async () => {
+  const {createSharedDisplayStore}=await import('./src/events/shared-display-store.js');
+  let callback,received;
+  const store=createSharedDisplayStore(state=>{received=state;});
+  await store.connect({subscribeMessage:async cb=>{callback=cb;cb({assignments:{event:['calendar.work']}});return ()=>{};}});
+  for(const message of [null,{}, {assignments:null}, {assignments:[]}]) callback(message);
+  assert.deepEqual(received,{event:['calendar.work']});
+  await assert.rejects(store.save({callWS:async()=>({})},['event'],[]),/Invalid shared calendar storage response/);
+  assert.deepEqual(received,{event:['calendar.work']});
+});
+
+test('shared display discards late save response after connection changes', async () => {
+  const {createSharedDisplayStore}=await import('./src/events/shared-display-store.js');
+  let resolveSave,received;
+  const store=createSharedDisplayStore(state=>{received=state;});
+  const saving=store.save({callWS:()=>new Promise(resolve=>{resolveSave=resolve;})},['old'],['calendar.work']);
+  await store.connect({subscribeMessage:async cb=>{cb({assignments:{new:['calendar.school']}});return ()=>{};}});
+  resolveSave({assignments:{old:['calendar.work']}});await saving;
+  assert.deepEqual(received,{new:['calendar.school']});
+});
+
+test('shared display cooldown does not block a different connection', async () => {
+  const {createSharedDisplayStore}=await import('./src/events/shared-display-store.js');
+  let received,attempts=0;
+  const store=createSharedDisplayStore(state=>{received=state;});
+  const failed={subscribeMessage:async()=>{attempts++;throw new Error('missing integration');}};
+  await store.connect(failed);await store.connect(failed);assert.equal(attempts,1);
+  await store.connect({subscribeMessage:async cb=>{cb({assignments:{live:['calendar.work']}});return ()=>{};}});
+  assert.deepEqual(received,{live:['calendar.work']});
+});
+
+test('shared display cleans up subscriptions resolved after disconnect', async () => {
+  const {createSharedDisplayStore}=await import('./src/events/shared-display-store.js');
+  let resolve,callback,stopped=0,received;
+  const store=createSharedDisplayStore(state=>{received=state;});
+  const connecting=store.connect({subscribeMessage:cb=>{callback=cb;return new Promise(done=>{resolve=done;});}});
+  store.disconnect();resolve(()=>{stopped++;});await connecting;
+  callback({assignments:{old:['calendar.work']}});
+  assert.equal(stopped,1);assert.equal(received,undefined);
+});
+
+
+test('invalid explicit event end is rejected instead of replaced by a default duration', async () => {
+  const {normalizeEventFormData}=await import('./src/events/event-form.js');
+  assert.deepEqual(normalizeEventFormData({title:'Meeting',isAllDay:false,startDateTime:'2026-10-08T10:00',endDateTime:'invalid'}),{valid:false,errorKey:'startEndTimesRequired'});
+  const missingEnd=normalizeEventFormData({title:'Meeting',isAllDay:false,startDateTime:'2026-10-08T10:00',endDateTime:''});
+  assert.equal(missingEnd.valid,true);
+  assert.equal(new Date(missingEnd.eventData.end.dateTime)-new Date(missingEnd.eventData.start.dateTime),3600000);
+});
+
+test('date range chunks reject non-progressing sizes and handle numeric strings consistently', async () => {
+  const {getDateRangeChunks}=await import('./src/utils/date-utils.js');
+  const start=new Date('2026-10-01T00:00:00'),end=new Date('2026-10-08T23:59:59');
+  for(const size of [0,-1,0.5,NaN,Infinity,'invalid']) assert.throws(()=>getDateRangeChunks(start,end,size),RangeError);
+  assert.deepEqual(getDateRangeChunks(start,end,'3'),getDateRangeChunks(start,end,3));
+  assert.equal(getDateRangeChunks(start,end,3).length,3);
+});
+
+
+test('editor calendar and discrete family-rule changes are handled exactly once', () => {
+  const Editor=customElements.get('family-calendar-card-editor');
+  const editor=new Editor();editor.setConfig({entities:['calendar.family']});
+  function input(type) {return {type,handlers:{},addEventListener(name,callback){(this.handlers[name] ||= []).push(callback);}};}
+  const entity=input('checkbox'),checkbox=input('checkbox'),select=input('select-one'),text=input('text');
+  const container={childElementCount:0,innerHTML:'',querySelectorAll:()=>[entity]};
+  editor.getCalendarEntities=()=>['calendar.family'];
+  editor.localizeEditorMarkup=()=>{};
+  editor.querySelector=selector=>selector==='#entity-list'?container:null;
+  editor.querySelectorAll=selector=>selector==='[data-field]'?[entity]:selector==='[data-family-rule-field]'?[checkbox,select,text]:[];
+  let calendarChanges=0,familyChanges=0;
+  editor.handleChange=()=>{calendarChanges++;};editor.handleFamilyRuleInput=()=>{familyChanges++;};
+  editor.render();
+  for(const callback of entity.handlers.change)callback({target:entity});
+  assert.equal(calendarChanges,1);
+  for(const element of [checkbox,select])for(const callback of element.handlers.change)callback({target:element});
+  assert.equal(familyChanges,2);
+  assert.equal(text.handlers.input.length,1);assert.equal(text.handlers.change.length,1);
+});
+
+
+test('an older form error timeout cannot dismiss a newer error message', () => {
+  const card=makeCard(),errorDiv={textContent:'',style:{display:'none'}};
+  const originalSet=global.setTimeout,originalClear=global.clearTimeout;
+  const timers=new Map();let nextId=0;
+  global.setTimeout=(callback,delay)=>{assert.equal(delay,5000);const id=++nextId;timers.set(id,callback);return id;};
+  global.clearTimeout=id=>timers.delete(id);
+  try {
+    card.showFormError(errorDiv,'First error');const first=timers.get(1);
+    card.showFormError(errorDiv,'Second error');
+    assert.equal(timers.has(1),false);assert.equal(timers.size,1);
+    first();assert.equal(errorDiv.style.display,'block');assert.equal(errorDiv.textContent,'Second error');
+    timers.get(2)();assert.equal(errorDiv.style.display,'none');assert.equal(card._formErrorTimers.has(errorDiv),false);
+  } finally {global.setTimeout=originalSet;global.clearTimeout=originalClear;}
+});
+
+
+test('shared display rejects an older save reply after a newer server update', async () => {
+  const {createSharedDisplayStore}=await import('./src/events/shared-display-store.js');
+  let listener,resolveSave,received;
+  const store=createSharedDisplayStore(state=>{received=state;});
+  await store.connect({subscribeMessage:async cb=>{listener=cb;cb({assignments:{},epoch:'server-a',revision:0});return ()=>{};}});
+  const saving=store.save({callWS:()=>new Promise(resolve=>{resolveSave=resolve;})},['event'],['calendar.work']);
+  listener({assignments:{event:['calendar.school']},epoch:'server-a',revision:2});
+  resolveSave({assignments:{event:['calendar.work']},epoch:'server-a',revision:1});
+  await saving;
+  assert.deepEqual(received,{event:['calendar.school']});
+  listener({assignments:{restarted:['calendar.work']},epoch:'server-b',revision:0});
+  assert.deepEqual(received,{restarted:['calendar.work']});
+});
+
+
+test('future recurring colors compare ISO timestamps by instant across time zones', async () => {
+  const {applyCustomEventColor,resolveCustomEventColor}=await import('./src/events/custom-event-colors.js');
+  const event={entityId:'calendar.work',uid:'series',rrule:'FREQ=DAILY',start:{dateTime:'2026-10-08T09:00:00+02:00'}};
+  const at=dateTime=>({...event,start:{dateTime}});
+  let colors=applyCustomEventColor(null,event,'future','#abcdef');
+  assert.equal(resolveCustomEventColor(at('2026-10-08T08:00:00Z'),colors),'#ABCDEF');
+  assert.equal(resolveCustomEventColor(at('2026-10-08T06:59:59Z'),colors),null);
+  assert.equal(resolveCustomEventColor(at('2026-10-08T07:00:00Z'),colors),'#ABCDEF');
+  colors=applyCustomEventColor(colors,at('2026-10-08T07:00:00Z'),'future','#123456');
+  assert.equal(colors.future['calendar.work|series|series'].length,1);
+  assert.equal(resolveCustomEventColor(at('2026-10-08T09:00:00+02:00'),colors),'#123456');
+});
+
+
+test('shared calendar updates preserve Agenda scroll and defer rendering while a dialog is open', async () => {
+  const card=makeCard({entities:['calendar.family','calendar.work'],default_view:'agenda'});
+  card.renderPreservingAgendaScroll=originalRenderPreservingAgendaScroll.bind(card);
+  card.isConnected=true;
+  let listener,open=false;
+  const renderedScroll=[];
+  const modal={classList:{contains:()=>open}};
+  card.getRootElementById=id=>id==='agenda-container'?{scrollTop:355}:id==='event-modal'?modal:null;
+  card.persistPreferences=()=>{};
+  card.render=()=>{renderedScroll.push(card._agendaPendingScrollTop);card._agendaPendingScrollTop=null;card._sharedDisplayNeedsRender=false;};
+  await card._sharedDisplayStore.connect({subscribeMessage:async cb=>{listener=cb;return ()=>{};}});
+  listener({assignments:{event:['calendar.work']}});
+  assert.deepEqual(renderedScroll,[355]);
+  open=true;
+  listener({assignments:{event:['calendar.family']}});
+  assert.equal(renderedScroll.length,1);
+  assert.equal(card._sharedDisplayNeedsRender,true);
+  card.flushPendingHostResizeRender=()=>{};
+  open=false;
+  card.updateEventModalOpenState(modal);
+  assert.deepEqual(renderedScroll,[355,355]);
+});
+
+
+test('display assignments outside a virtual calendar remain visible as badges', async () => {
+  const {getVisibleCalendarBadgesForEvent,isCombinedEventWithinSingleVirtualCalendar}=await import('./src/events/event-display.js');
+  const virtual={id:'family',entities:['calendar.parent','calendar.child'],color:'#123456'};
+  const event={isCombinedCalendarEvent:true,isDisplayAssignedEvent:true,sourceEvents:[{entityId:'calendar.parent'},{entityId:'calendar.child'}],sourceCalendars:[{entityId:'calendar.parent',color:'#ff0000'},{entityId:'calendar.child',color:'#00ff00'},{entityId:'calendar.work',color:'#0000ff'}]};
+  const options={getVirtualBadgeForEvent:()=>virtual,getVirtualBadgeForEntity:id=>virtual.entities.includes(id)?virtual:null};
+  assert.deepEqual(getVisibleCalendarBadgesForEvent(event,options),[{entityId:'virtual:family',color:'#123456'},{entityId:'calendar.work',color:'#0000ff'}]);
+  assert.equal(isCombinedEventWithinSingleVirtualCalendar(event,options),false);
+  const hiddenCalendars=new Set(['calendar.parent','calendar.child']);
+  assert.deepEqual(getVisibleCalendarBadgesForEvent(event,{...options,hiddenCalendars}),[{entityId:'calendar.work',color:'#0000ff'}]);
+  assert.deepEqual(getVisibleCalendarBadgesForEvent(event,{...options,hiddenCalendars:new Set(['calendar.work'])}),[{entityId:'virtual:family',color:'#123456'}]);
+});
+
+
+test('an assigned calendar keeps an event visible when its original virtual group is hidden', async () => {
+  const card=makeCard({entities:['calendar.parent','calendar.child','calendar.work'],colors:{'calendar.parent':'#ff0000','calendar.child':'#00ff00','calendar.work':'#0000ff'},virtual_calendars:[{id:'family',entities:['calendar.parent','calendar.child'],color:'#123456'}]});
+  card._hass={callWS:sharedDisplayMock()};
+  const event={entityId:'calendar.parent',uid:'invite',color:'#ff0000',start:'2026-10-08T10:00:00Z',end:'2026-10-08T11:00:00Z'};
+  await card.saveEventDisplayCalendars(event,['calendar.work']);
+  const display=card.applyEventDisplayCalendars(event);
+  assert.deepEqual(card.getVisibleCalendarColorsForEvent(display),['#123456','#0000ff']);
+  card._hiddenCalendars=new Set(['calendar.parent','calendar.child']);
+  assert.deepEqual(card.getVisibleCalendarColorsForEvent(display),['#0000ff']);
+  card._hiddenCalendars.add('calendar.work');
+  assert.deepEqual(card.getVisibleCalendarColorsForEvent(display),[]);
+});
+
+
+test('recurring updates retain occurrence scope when the integration omits rrule', async () => {
+  const {getRecurringUpdateControls}=await import('./src/events/event-service.js');
+  const original={entityId:'calendar.family',uid:'series',recurrence_id:{dateTime:'2026-10-08T10:00:00Z'}};
+  const data={summary:'Updated invitation',start:{dateTime:'2026-10-08T10:00:00Z'},end:{dateTime:'2026-10-08T11:00:00Z'}};
+  assert.deepEqual(getRecurringUpdateControls(original,data,'this'),{isRecurringUpdate:true,recurrenceId:'2026-10-08T10:00:00Z',recurrenceRange:null});
+  assert.deepEqual(getRecurringUpdateControls(original,data,'future'),{isRecurringUpdate:true,recurrenceId:'2026-10-08T10:00:00Z',recurrenceRange:'THISANDFUTURE'});
+  assert.deepEqual(getRecurringUpdateControls(original,data,'all'),{isRecurringUpdate:true,recurrenceId:null,recurrenceRange:null});
+  const card=makeCard({entities:['calendar.family','calendar.work']});
+  card._hass={services:{}};
+  card.createEvent=async()=>{};
+  let deleted;
+  card.deleteEvent=async(...args)=>{deleted=args;};
+  await card.updateEvent(original,'calendar.work',data,'this');
+  assert.deepEqual(deleted,['calendar.family','series','2026-10-08T10:00:00Z',null]);
+});
+
+
+test('recurrence end selection never silently becomes an unlimited series', async () => {
+  const {normalizeEventFormData}=await import('./src/events/event-form.js');
+  const input={title:'Bounded event',isAllDay:true,startDate:'2026-10-08',endDate:'2026-10-08'};
+  const normalize=recurrence=>normalizeEventFormData({...input,recurrence:{enabled:true,frequency:'DAILY',...recurrence}});
+  for(const count of ['', '0', '-1', '1.5', '2wrong']) assert.deepEqual(normalize({endMode:'after',count}),{valid:false,errorKey:'recurrenceEndRequired'});
+  for(const untilDate of ['', 'invalid', '2026-02-30', '2026-10-07']) assert.deepEqual(normalize({endMode:'on',untilDate}),{valid:false,errorKey:'recurrenceEndRequired'});
+  assert.equal(normalize({endMode:'after',count:'3'}).eventData.rrule,'FREQ=DAILY;COUNT=3');
+  assert.equal(normalize({endMode:'on',untilDate:'2026-10-08'}).eventData.rrule,'FREQ=DAILY;UNTIL=20261008');
+  assert.equal(normalize({endMode:'never'}).eventData.rrule,'FREQ=DAILY');
+});
+
+
+test('timed event inputs reject calendar and clock overflow instead of moving the appointment', async () => {
+  const {normalizeEventFormData}=await import('./src/events/event-form.js');
+  const normalize=(startDateTime,endDateTime='')=>normalizeEventFormData({title:'Meeting',isAllDay:false,startDateTime,endDateTime});
+  for(const value of ['2026-02-30T10:00','2026-13-01T10:00','2026-10-08T25:00','2026-10-08T10:61','2026-10-08T10:00:61','2026-02-30T10:00:00Z','2026-02-30T10:00:00+02:00']) {
+    assert.deepEqual(normalize(value),{valid:false,errorKey:'startEndTimesRequired'});
+    assert.deepEqual(normalize('2026-02-01T10:00',value),{valid:false,errorKey:'startEndTimesRequired'});
+  }
+  assert.equal(normalize('2028-02-29T10:00').valid,true);
+  assert.equal(normalize('2026-10-08T10:00:00+02:00','2026-10-08T11:00:00+02:00').eventData.start.dateTime,'2026-10-08T08:00:00.000Z');
+});
+
+
+test('nonexistent local times during the spring DST transition are not silently shifted', async () => {
+  const {normalizeEventFormData}=await import('./src/events/event-form.js');
+  const previous=process.env.TZ;
+  try {
+    process.env.TZ='Europe/Berlin';
+    const normalize=(startDateTime,endDateTime='')=>normalizeEventFormData({title:'Meeting',isAllDay:false,startDateTime,endDateTime});
+    assert.deepEqual(normalize('2026-03-29T02:30'),{valid:false,errorKey:'startEndTimesRequired'});
+    assert.deepEqual(normalize('2026-03-29T01:30','2026-03-29T02:30'),{valid:false,errorKey:'startEndTimesRequired'});
+    const valid=normalize('2026-03-29T01:30','2026-03-29T03:30');
+    assert.equal(valid.valid,true);
+    assert.equal(new Date(valid.eventData.end.dateTime)-new Date(valid.eventData.start.dateTime),3600000);
+    assert.equal(normalize('2026-03-29T02:30:00+01:00').valid,true);
+    assert.equal(normalize('2026-10-25T02:30').valid,true);
+  } finally { if(previous===undefined)delete process.env.TZ;else process.env.TZ=previous; }
+});
+
+
+test('display assignment save identifies the calendars controlled by this card', async () => {
+  const card=makeCard({entities:['calendar.family','calendar.work']});
+  let payload;
+  card._hass={callWS:async message=>{payload=message;return {assignments:{}};}};
+  await card.saveEventDisplayCalendars({entityId:'calendar.family',uid:'event',start:'2026-10-08T10:00:00Z'},['calendar.work','calendar.school']);
+  assert.deepEqual(payload.managed_calendars,['calendar.family','calendar.work']);
+  assert.deepEqual(payload.calendars,['calendar.work']);
 });

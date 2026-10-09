@@ -111,6 +111,18 @@ function getCustomEventColorKeys(event, { getEventIdentityKey } = {}) {
   return { isRecurring, occurrenceKey, seriesKey, occurrenceToken, supportsSeries: !!seriesKey, supportsFuture: !!(seriesKey && occurrenceToken) };
 }
 
+function compareOccurrenceTokens(first, second) {
+  // ISO timestamps with explicit offsets must be ordered by their actual instant.
+  // Preserve the existing ordering for date-only and opaque recurrence tokens.
+  const zonedTimestamp = /^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:?\d{2})$/i;
+  if (zonedTimestamp.test(first) && zonedTimestamp.test(second)) {
+    const firstTime = Date.parse(first);
+    const secondTime = Date.parse(second);
+    if (Number.isFinite(firstTime) && Number.isFinite(secondTime)) return firstTime - secondTime;
+  }
+  return first < second ? -1 : first > second ? 1 : 0;
+}
+
 function normalizeColorOrNull(value, allowNull = false) {
   if (value === null && allowNull) return null;
   return normalizeHexColor(value);
@@ -143,7 +155,7 @@ function normalizeCustomEventColors(value) {
           return { from: stablePart(rule.from), color: normalized };
         })
         .filter(Boolean)
-        .sort((a, b) => a.from.localeCompare(b.from));
+        .sort((a, b) => compareOccurrenceTokens(a.from, b.from));
       if (normalizedRules.length) next.future[key] = normalizedRules;
     });
   }
@@ -158,7 +170,7 @@ function resolveCustomEventColor(event, state, { getEventIdentityKey } = {}) {
     return colors.occurrences[keys.occurrenceKey];
   }
   if (keys.seriesKey && keys.occurrenceToken) {
-    const applicable = (colors.future[keys.seriesKey] || []).filter((rule) => rule.from <= keys.occurrenceToken).pop();
+    const applicable = (colors.future[keys.seriesKey] || []).filter((rule) => compareOccurrenceTokens(rule.from, keys.occurrenceToken) <= 0).pop();
     if (applicable) return applicable.color;
     if (Object.prototype.hasOwnProperty.call(colors.series, keys.seriesKey)) return colors.series[keys.seriesKey];
   }
@@ -175,9 +187,9 @@ function applyCustomEventColor(state, event, scope, color, { getEventIdentityKey
     delete next.future[keys.seriesKey];
     Object.keys(next.occurrences).forEach((key) => { if (key.startsWith(`${keys.seriesKey}|occurrence|`)) delete next.occurrences[key]; });
   } else if (scope === 'future' && keys?.seriesKey && keys?.occurrenceToken) {
-    const rules = (next.future[keys.seriesKey] || []).filter((rule) => rule.from < keys.occurrenceToken);
+    const rules = (next.future[keys.seriesKey] || []).filter((rule) => compareOccurrenceTokens(rule.from, keys.occurrenceToken) < 0);
     rules.push({ from: keys.occurrenceToken, color: normalized });
-    next.future[keys.seriesKey] = rules.sort((a, b) => a.from.localeCompare(b.from));
+    next.future[keys.seriesKey] = rules.sort((a, b) => compareOccurrenceTokens(a.from, b.from));
   } else if (keys?.occurrenceKey) {
     if (normalized === null) next.occurrences[keys.occurrenceKey] = null;
     else next.occurrences[keys.occurrenceKey] = normalized;
@@ -236,6 +248,101 @@ function applyEventDisplayCalendars(event, state, {entities = [], getCalendarCol
   return {...original, isCombinedCalendarEvent:true, isSyntheticFamilyEvent:true, isDisplayAssignedEvent:true,
     displayOriginalEvent:original, sourceCalendars:[...calendars.values()],
     sourceEntityIds:[...new Set(sources.map(source=>source.entityId))], sourceEvents:sources};
+}
+
+const RETRY_DELAY_MS = 30000;
+
+function readAssignments(response) {
+  const assignments = response?.assignments;
+  if (!assignments || typeof assignments !== 'object' || Array.isArray(assignments)) {
+    throw new Error('Invalid shared calendar storage response');
+  }
+  return normalizeEventDisplayCalendars(assignments);
+}
+
+// HA owns the authoritative state. Local preferences are only a display cache.
+function createSharedDisplayStore(onState) {
+  let connection;
+  let unsubscribe;
+  let generation = 0;
+  let retryAfter = 0;
+  let failedConnection;
+  let latestState;
+  let serverEpoch;
+  let serverRevision = -1;
+
+  function receive(state, message, fromSave = false) {
+    if (typeof message?.epoch === 'string' && Number.isSafeInteger(message.revision) && message.revision >= 0) {
+      if (fromSave && serverEpoch !== undefined && serverEpoch !== message.epoch) return;
+      if (serverEpoch === message.epoch && message.revision < serverRevision) return;
+      serverEpoch = message.epoch;
+      serverRevision = message.revision;
+    }
+
+    latestState = state;
+    onState(state);
+  }
+
+  return {
+    get state() { return latestState; },
+
+    async connect(nextConnection) {
+      if (!nextConnection?.subscribeMessage || connection === nextConnection) return;
+      if (nextConnection === failedConnection && Date.now() < retryAfter) return;
+      this.disconnect();
+      connection = nextConnection;
+      const current = generation;
+      try {
+        const stop = await connection.subscribeMessage(message => {
+          if (current !== generation) return;
+          let state;
+          try {
+            state = readAssignments(message);
+          } catch {
+            // Keep the last valid state when a subscription message is malformed.
+            return;
+          }
+          receive(state, message);
+        }, { type: 'family_calendar_card/subscribe' });
+        if (current !== generation) {
+          stop();
+        } else {
+          unsubscribe = stop;
+          failedConnection = null;
+          retryAfter = 0;
+        }
+      } catch {
+        if (current === generation) {
+          connection = null;
+          failedConnection = nextConnection;
+          retryAfter = Date.now() + RETRY_DELAY_MS;
+        }
+        // Missing companion integration does not prevent normal calendar rendering.
+      }
+    },
+
+    disconnect() {
+      generation += 1;
+      serverEpoch = undefined;
+      serverRevision = -1;
+      const stop = unsubscribe;
+      unsubscribe = null;
+      connection = null;
+      stop?.();
+    },
+
+    async save(hass, keys, calendars, managedCalendars) {
+      if (!hass?.callWS || !keys.length) throw new Error('Shared calendar storage unavailable');
+      const current = generation;
+      const message = {type:'family_calendar_card/set', keys, calendars};
+      if (managedCalendars !== undefined) message.managed_calendars = managedCalendars;
+      const response = await hass.callWS(message);
+      const state = readAssignments(response);
+      // A completed save still belongs to the old connection after a reconnect.
+      if (current === generation) receive(state, response, true);
+      return state;
+    }
+  };
 }
 
 const COMMON_NAMED_COLORS = {
@@ -350,6 +457,7 @@ const DEFAULT_CONFIG_VALUES = {
   hide_the_past: false,
   hide_empty_days: false,
   agenda_compact_events: false,
+  agenda_text_alignment: 'auto',
   display_full_weekday_names: false,
   shorten_event_times: false,
   disable_swipe_controls: false,
@@ -415,6 +523,7 @@ const DEFAULT_STUB_CONFIG = {
   month_day_tap_action: 'create',
   hide_empty_days: false,
   agenda_compact_events: false,
+  agenda_text_alignment: 'auto',
   shorten_event_times: false,
   time_zone: '',
   display_full_weekday_names: false,
@@ -480,181 +589,6 @@ const createDefaultStubConfig = () => ({
   family_event_rules: DEFAULT_STUB_CONFIG.family_event_rules.map((rule) => ({ ...rule, calendars: [...(rule.calendars || [])] })),
 });
 
-function getDateRangeChunks(startDate, endDate, chunkDays = 30) {
-  const chunks = [];
-  let cursor = new Date(startDate);
-  cursor.setHours(0, 0, 0, 0);
-
-  while (cursor <= endDate) {
-    const chunkStart = new Date(cursor);
-    const chunkEnd = new Date(cursor);
-    chunkEnd.setDate(chunkEnd.getDate() + chunkDays - 1);
-    if (chunkEnd > endDate) {
-      chunkEnd.setTime(endDate.getTime());
-    }
-    chunkEnd.setHours(23, 59, 59, 999);
-
-    chunks.push({ startDate: chunkStart, endDate: chunkEnd });
-
-    cursor = new Date(chunkEnd);
-    cursor.setDate(cursor.getDate() + 1);
-    cursor.setHours(0, 0, 0, 0);
-  }
-
-  return chunks;
-}
-
-function parseLocalDate(dateStr) {
-  if (!dateStr || typeof dateStr !== 'string') return new Date(dateStr);
-  const [year, month, day] = dateStr.split('-').map(Number);
-  if (![year, month, day].every(Number.isFinite)) return new Date(dateStr);
-  return new Date(year, month - 1, day);
-}
-
-function parsePossiblyLocalDateTime(value) {
-  if (!value || typeof value !== 'string') return new Date(value);
-
-  const hasTimezone = /(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(value);
-  if (hasTimezone) return new Date(value);
-
-  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?$/);
-  if (!match) return new Date(value);
-
-  const [, year, month, day, hour, minute, second = '0'] = match;
-  return new Date(
-    Number(year),
-    Number(month) - 1,
-    Number(day),
-    Number(hour),
-    Number(minute),
-    Number(second)
-  );
-}
-
-function formatLocalDate(date) {
-  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function getIsoWeekNumber(date) {
-  const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNumber = utcDate.getUTCDay() || 7;
-  utcDate.setUTCDate(utcDate.getUTCDate() + 4 - dayNumber);
-  const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
-  return Math.ceil((((utcDate - yearStart) / 86400000) + 1) / 7);
-}
-
-const HEADER_ITEM_FORMATS = new Set(['auto', 'raw', 'time', 'date', 'datetime']);
-const EMPTY_STATES = new Set(['', 'unknown', 'unavailable']);
-
-function normalizeOptionalString$1(value) {
-  if (value === undefined || value === null) return null;
-  const normalized = String(value).trim();
-  return normalized || null;
-}
-
-function normalizeHeaderItems(items) {
-  if (!Array.isArray(items)) return [];
-  return items
-    .filter((item) => item && typeof item === 'object' && !Array.isArray(item))
-    .map((item) => ({
-      icon: normalizeOptionalString$1(item.icon),
-      entity: normalizeOptionalString$1(item.entity),
-      attribute: normalizeOptionalString$1(item.attribute),
-      text: normalizeOptionalString$1(item.text),
-      format: HEADER_ITEM_FORMATS.has(normalizeOptionalString$1(item.format)) ? normalizeOptionalString$1(item.format) : 'auto'
-    }))
-    .filter((item) => item.icon || item.entity || item.text);
-}
-
-function isEmptyResolvedValue(value) {
-  if (value === undefined || value === null) return true;
-  if (typeof value === 'string') return EMPTY_STATES.has(value.trim().toLowerCase());
-  return false;
-}
-
-function stringifyRawValue(value) {
-  if (value instanceof Date) return value.toISOString();
-  if (Array.isArray(value)) return value.join(', ');
-  if (typeof value === 'object' && value !== null) return JSON.stringify(value);
-  return String(value);
-}
-
-function parseDateValue(value, parseTimeValue) {
-  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
-  const raw = String(value ?? '').trim();
-  if (!raw) return null;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-    const parsedLocalDate = parseLocalDate(raw);
-    return parsedLocalDate instanceof Date && !Number.isNaN(parsedLocalDate.getTime()) ? parsedLocalDate : null;
-  }
-  if (typeof parseTimeValue === 'function') {
-    const parsedTime = parseTimeValue(value);
-    if (parsedTime) return parsedTime;
-  }
-  const parsed = parsePossiblyLocalDateTime(raw);
-  return parsed instanceof Date && !Number.isNaN(parsed.getTime()) ? parsed : null;
-}
-
-function formatDateValue(value, format, formatters = {}) {
-  const parsed = parseDateValue(value, formatters.parseTimeValue);
-  if (!parsed) return '';
-  if (format === 'time') return formatters.formatTime?.(parsed) || '';
-  if (format === 'date') return formatters.formatDate?.(parsed) || '';
-  return formatters.formatDateTime?.(parsed) || '';
-}
-
-function resolveHeaderItemValue(item, hass, formatters = {}) {
-  const entityState = item.entity ? hass?.states?.[item.entity] : null;
-  const hasEntityValue = !!entityState;
-  const rawEntityValue = hasEntityValue
-    ? (item.attribute ? entityState.attributes?.[item.attribute] : entityState.state)
-    : undefined;
-  const rawValue = !isEmptyResolvedValue(rawEntityValue) ? rawEntityValue : item.text;
-  if (isEmptyResolvedValue(rawValue)) return '';
-
-  const format = item.format || 'auto';
-  if (format === 'time' || format === 'date' || format === 'datetime') {
-    return formatDateValue(rawValue, format, formatters);
-  }
-
-  if (format === 'raw') return stringifyRawValue(rawValue);
-
-  const deviceClass = normalizeOptionalString$1(entityState?.attributes?.device_class);
-  if (deviceClass === 'timestamp') return formatDateValue(rawValue, 'time', formatters);
-  if (deviceClass === 'date') return formatDateValue(rawValue, 'date', formatters);
-
-  const rawText = stringifyRawValue(rawValue);
-  const unit = normalizeOptionalString$1(entityState?.attributes?.unit_of_measurement);
-  if (unit && hasEntityValue && !item.attribute) return `${rawText} ${unit}`;
-  return rawText;
-}
-
-function resolveHeaderItems(items, hass, formatters = {}) {
-  return normalizeHeaderItems(items).map((item) => ({
-    icon: item.icon,
-    value: resolveHeaderItemValue(item, hass, formatters)
-  })).filter((item) => !isEmptyResolvedValue(item.value));
-}
-
-function getHeaderItemsRenderSignature(items, hass) {
-  return JSON.stringify(normalizeHeaderItems(items).filter((item) => item.entity).map((item) => {
-    const state = hass?.states?.[item.entity];
-    return {
-      entity: item.entity,
-      attribute: item.attribute,
-      state: state?.state ?? null,
-      attributeValue: item.attribute ? state?.attributes?.[item.attribute] ?? null : null,
-      deviceClass: state?.attributes?.device_class ?? null,
-      unitOfMeasurement: state?.attributes?.unit_of_measurement ?? null,
-      icon: state?.attributes?.icon ?? null
-    };
-  }));
-}
-
 function createConfigNormalizationSchema({
   hasCustomTitle,
   normalizeDashboardPath,
@@ -694,6 +628,7 @@ function createConfigNormalizationSchema({
       { key: 'hide_the_past', defaultValue: ({ rawConfig }) => rawConfig.hide_the_past || DEFAULT_CONFIG_VALUES.hide_the_past, normalize: ({ rawConfig }) => rawConfig.hide_the_past || DEFAULT_CONFIG_VALUES.hide_the_past },
       { key: 'past_event_mode', defaultValue: ({ derived }) => derived.normalizedPastEventMode, normalize: ({ derived }) => derived.normalizedPastEventMode },
       { key: 'hide_empty_days', defaultValue: ({ rawConfig }) => rawConfig.hide_empty_days || DEFAULT_CONFIG_VALUES.hide_empty_days },
+      { key: 'agenda_text_alignment', defaultValue: () => 'auto', normalize: ({ rawConfig }) => ['auto','left','center','right'].includes(rawConfig.agenda_text_alignment) ? rawConfig.agenda_text_alignment : 'auto' },
       { key: 'agenda_compact_events', defaultValue: ({ rawConfig }) => rawConfig.agenda_compact_events ?? DEFAULT_CONFIG_VALUES.agenda_compact_events, normalize: ({ rawConfig }) => rawConfig.agenda_compact_events ?? DEFAULT_CONFIG_VALUES.agenda_compact_events },
       { key: 'display_full_weekday_names', defaultValue: ({ rawConfig }) => rawConfig.display_full_weekday_names ?? DEFAULT_CONFIG_VALUES.display_full_weekday_names },
       { key: 'shorten_event_times', defaultValue: ({ rawConfig }) => rawConfig.shorten_event_times ?? DEFAULT_CONFIG_VALUES.shorten_event_times },
@@ -1061,6 +996,10 @@ function getEntityRenderSignature(hass, entityIds = []) {
 const EDITOR_TRANSLATION_LOCALES = ['en', 'fr', 'de', 'nl', 'es', 'et', 'ca', 'da', 'sv'];
 
 const EDITOR_TRANSLATION_ROWS = [
+  ['Left','Gauche','Links','Links','Izquierda','Vasak','Esquerra','Venstre','Vänster'],
+  ['Center','Centre','Mitte','Midden','Centro','Keskel','Centre','Midten','Mitten'],
+  ['Right','Droite','Rechts','Rechts','Derecha','Parem','Dreta','Højre','Höger'],
+  ['Agenda view: text alignment', 'Agenda : alignement du texte', 'Agenda: Textausrichtung', 'Agenda: tekstuitlijning', 'Agenda: alineación del texto', 'Päevakava: teksti joondus', 'Agenda: alineació del text', 'Agenda: tekstjustering', 'Agenda: textjustering'],
   ['Calendar gradient', 'Dégradé de calendriers', 'Kalender-Farbverlauf', 'Kalenderverloop', 'Degradado de calendarios', 'Kalendrite värviüleminek', 'Degradat de calendaris', 'Kalenderfarveforløb', 'Kalendergradient'],
   ['Gradient calendars', 'Calendriers du dégradé', 'Kalender für den Farbverlauf', 'Kalenders voor het verloop', 'Calendarios del degradado', 'Värviülemineku kalendrid', 'Calendaris del degradat', 'Kalendere til farveforløb', 'Kalendrar för gradienten'],
   ['Select at least two calendars. Colors follow the selection order from left to right.', 'Sélectionnez au moins deux calendriers. Les couleurs suivent l’ordre de sélection de gauche à droite.', 'Mindestens zwei Kalender auswählen. Die Farben folgen der Auswahlreihenfolge von links nach rechts.', 'Selecteer minstens twee kalenders. Kleuren volgen de selectievolgorde van links naar rechts.', 'Selecciona al menos dos calendarios. Los colores siguen el orden de selección de izquierda a derecha.', 'Valige vähemalt kaks kalendrit. Värvid järgivad valiku järjekorda vasakult paremale.', 'Selecciona almenys dos calendaris. Els colors segueixen l’ordre de selecció d’esquerra a dreta.', 'Vælg mindst to kalendere. Farverne følger valgrækkefølgen fra venstre mod højre.', 'Välj minst två kalendrar. Färgerna följer valordningen från vänster till höger.'],
@@ -1392,7 +1331,7 @@ const CALENDAR_COLOR_PREFIX = 'calendar:';
 const VIRTUAL_CALENDAR_COLOR_PREFIX = 'virtual:';
 const TAP_ACTION_TYPES = ['navigate', 'url', 'call-service', 'fire-dom-event'];
 
-function normalizeOptionalString(value) {
+function normalizeOptionalString$1(value) {
   if (value === undefined || value === null) return null;
   const normalized = String(value).trim();
   return normalized || null;
@@ -1431,7 +1370,7 @@ function normalizeHeaderButtonColor(rawColor) {
       : [];
     return { mode: 'gradient', calendars };
   }
-  return normalizeOptionalString(rawColor);
+  return normalizeOptionalString$1(rawColor);
 }
 
 // A header button's `tap_action` follows the same shape Home Assistant uses
@@ -1456,17 +1395,17 @@ function normalizeHeaderButtonTapAction(rawTapAction) {
   }
 
   if (action === 'url') {
-    const url_path = normalizeOptionalString(raw.url_path);
+    const url_path = normalizeOptionalString$1(raw.url_path);
     return url_path ? { action: 'url', url_path } : null;
   }
 
   if (action === 'call-service') {
-    const service = normalizeOptionalString(raw.service);
+    const service = normalizeOptionalString$1(raw.service);
     if (!service || !service.includes('.')) return null;
     return { action: 'call-service', service, service_data: normalizeActionDataObject(raw.service_data) };
   }
 
-  const event_type = normalizeOptionalString(raw.event_type);
+  const event_type = normalizeOptionalString$1(raw.event_type);
   if (!event_type) return null;
   return { action: 'fire-dom-event', event_type, event_data: normalizeActionDataObject(raw.event_data) };
 }
@@ -1483,8 +1422,8 @@ function normalizeHeaderNavButtons(rawButtons) {
   return rawButtons
     .filter((button) => button && typeof button === 'object' && !Array.isArray(button))
     .map((button) => ({
-      icon: normalizeOptionalString(button.icon),
-      label: normalizeOptionalString(button.label ?? button.text),
+      icon: normalizeOptionalString$1(button.icon),
+      label: normalizeOptionalString$1(button.label ?? button.text),
       path: normalizeDashboardPath(button.path),
       color: normalizeHeaderButtonColor(button.color),
       tap_action: normalizeHeaderButtonTapAction(button.tap_action)
@@ -1539,7 +1478,7 @@ function resolveHeaderButtonColor(rawColor, {
   getVirtualBadgeById,
   normalizeSingleColor = (value) => value
 } = {}) {
-  const raw = normalizeOptionalString(rawColor);
+  const raw = normalizeOptionalString$1(rawColor);
   if (!raw) return null;
 
   if (raw.toLowerCase().startsWith(CALENDAR_COLOR_PREFIX)) {
@@ -1573,7 +1512,7 @@ function resolveHeaderButtonGradientColors(rawColor, context = {}) {
   return config.calendars.map(target => resolveHeaderButtonColor(`calendar:${target}`, context)).filter(Boolean);
 }
 
-const FAMILY_CALENDAR_CARD_VERSION = 'v0.1.3';
+const FAMILY_CALENDAR_CARD_VERSION = 'v0.1.4';
 
 function getFamilyCalendarCardVersion() {
   return FAMILY_CALENDAR_CARD_VERSION.includes('__')
@@ -3772,6 +3711,11 @@ class FamilyCalendarCardEditor extends HTMLElement {
           </select>
         </label>
         <label><input type="checkbox" data-field="hide_empty_days" ${this._config.hide_empty_days ? 'checked' : ''}> Agenda view: hide empty days</label>
+        <label class="field-inline">Agenda view: text alignment
+          <select data-field="agenda_text_alignment">
+            ${['auto','left','center','right'].map(value => `<option value="${value}" ${this._config.agenda_text_alignment === value ? 'selected' : ''}>${{auto:'Default',left:'Left',center:'Center',right:'Right'}[value]}</option>`).join('')}
+          </select>
+        </label>
         <label><input type="checkbox" data-field="agenda_compact_events" ${this._config.agenda_compact_events ? 'checked' : ''}> Agenda view: compact events</label>
         <label><input type="checkbox" data-field="disable_swipe_controls" ${this._config.disable_swipe_controls ? 'checked' : ''}> Disable swipe period controls</label>
       </div>
@@ -4648,7 +4592,7 @@ class FamilyCalendarCardEditor extends HTMLElement {
 
     this.refreshCalendarEntities();
 
-    this.querySelectorAll('[data-field]').forEach((input) => {
+    this.querySelectorAll('[data-field]:not([data-field="entity"])').forEach((input) => {
       const eventName = input.type === 'text' ? 'input' : 'change';
       input.addEventListener(eventName, (event) => this.handleChange(event));
     });
@@ -4701,7 +4645,8 @@ class FamilyCalendarCardEditor extends HTMLElement {
       button.addEventListener('click', (event) => this.handleFamilyRuleAction(event));
     });
     this.querySelectorAll('[data-family-rule-field]').forEach((input) => {
-      input.addEventListener(input.type === 'text' || input.type === 'number' || input.type === 'color' ? 'input' : 'change', (event) => this.handleFamilyRuleInput(event));
+      const hasLiveInput = ['text', 'number', 'color'].includes(input.type);
+      if (hasLiveInput) input.addEventListener('input', (event) => this.handleFamilyRuleInput(event));
       input.addEventListener('change', (event) => this.handleFamilyRuleInput(event));
     });
     this.querySelectorAll('[data-family-rule-calendar]').forEach((input) => {
@@ -6451,6 +6396,17 @@ function getCardStyles() {
         padding-bottom: calc(10px + (var(--combined-corner-bubbles, 0) * 16px));
       }
 
+      .agenda-event .combined-corner-bubbles {
+        position: static;
+        display: flex;
+        flex: 0 0 100%;
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 4px;
+        margin-top: 6px;
+      }
+
       .agenda-event-time {
         font-size: var(--event-time-font-size, 10px);
         font-weight: 600;
@@ -6509,7 +6465,13 @@ function getCardStyles() {
         min-height: unset;
         margin-bottom: 0;
         opacity: 0.9;
-        white-space: nowrap;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+
+      .calendar-container.agenda-compact-events .agenda-text-aligned .agenda-event-title,
+      .calendar-container.agenda-compact-events .agenda-text-aligned .agenda-event-time {
+        flex: 0 0 100%;
       }
 
       .calendar-container.agenda-compact-events .agenda-event-location {
@@ -8279,7 +8241,8 @@ const TRANSLATIONS = {
     locale: 'en-US',
     strings: {
       displayCalendarsTitle: "Also concerns these calendars",
-      displayCalendarsHelp: "Display only in this card and browser. The original event is unchanged. For recurring events, this applies only to this occurrence.",
+      displayCalendarsHelp: "Shared across this Home Assistant instance. The original event is unchanged. Recurring events: this occurrence only.",
+      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
       displayCalendarSource: "Original calendar",
       partialUpdateDeleteError: "The replacement is saved but the original could not be deleted. Retry with the same values and destination to finish deletion without creating another event.",
       partialBatchUpdateError: "Some calendars were already saved. Retry with the same values to finish the remaining calendars, then reopen the editor for further changes.",
@@ -8321,6 +8284,7 @@ const TRANSLATIONS = {
       recurrenceOn: 'On',
       recurrenceAfter: 'After',
       recurrenceOccurrences: 'occurrences',
+      recurrenceEndRequired: "Enter a positive whole-number occurrence count or a valid end date on or after the first occurrence.",
       recurrenceSelectWeekday: 'Select at least one weekday for weekly recurring events',
       start: 'Start',
       end: 'End',
@@ -8406,7 +8370,8 @@ const TRANSLATIONS = {
     locale: 'fr-FR',
     strings: {
       displayCalendarsTitle: "Concerne aussi ces calendriers",
-      displayCalendarsHelp: "Affichage uniquement dans cette carte et ce navigateur. L’événement original reste inchangé. Pour les récurrences, uniquement cette occurrence.",
+      displayCalendarsHelp: "Partagé dans cette instance Home Assistant. L’événement original reste inchangé. Récurrences : cette occurrence uniquement.",
+      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
       displayCalendarSource: "Calendrier source",
       partialUpdateDeleteError: "Le nouveau rendez-vous est enregistré, mais l’original n’a pas pu être supprimé. Réessayez avec les mêmes valeurs et le même calendrier pour terminer la suppression sans créer de doublon.",
       partialBatchUpdateError: "Certains calendriers ont déjà été enregistrés. Réessayez avec les mêmes valeurs pour terminer les autres, puis rouvrez l’éditeur pour modifier à nouveau.",
@@ -8448,6 +8413,7 @@ const TRANSLATIONS = {
       recurrenceOn: 'Le',
       recurrenceAfter: 'Après',
       recurrenceOccurrences: 'occurrences',
+      recurrenceEndRequired: "Indiquez un nombre entier positif ou une date de fin valide à partir du premier événement.",
       recurrenceSelectWeekday: 'Sélectionnez au moins un jour pour les événements hebdomadaires',
       start: 'Début',
       end: 'Fin',
@@ -8533,7 +8499,8 @@ const TRANSLATIONS = {
     locale: 'de-DE',
     strings: {
       displayCalendarsTitle: "Betrifft auch diese Kalender",
-      displayCalendarsHelp: "Nur Anzeige in dieser Karte und diesem Browser. Der Originaltermin bleibt unverändert. Bei Wiederholungen gilt die Auswahl nur für dieses Vorkommen.",
+      displayCalendarsHelp: "Für alle Geräte und Benutzer dieser Home-Assistant-Instanz. Der Originaltermin bleibt unverändert. Bei Wiederholungen gilt die Auswahl nur für dieses Vorkommen.",
+      displayCalendarsSaveError: "Nicht gespeichert. Prüfe, ob die Begleitintegration Family Calendar Card installiert und Home Assistant erreichbar ist.",
       displayCalendarSource: "Quellkalender",
       partialUpdateDeleteError: "Der neue Termin ist gespeichert, aber das Original konnte nicht gelöscht werden. Wiederhole das Speichern mit denselben Werten und demselben Zielkalender, um nur das Löschen abzuschließen.",
       partialBatchUpdateError: "Einige Kalender wurden bereits gespeichert. Wiederhole das Speichern mit denselben Werten, um die übrigen Kalender abzuschließen. Öffne danach den Editor neu für weitere Änderungen.",
@@ -8575,6 +8542,7 @@ const TRANSLATIONS = {
       recurrenceOn: 'Am',
       recurrenceAfter: 'Nach',
       recurrenceOccurrences: 'Vorkommen',
+      recurrenceEndRequired: "Geben Sie eine positive ganze Anzahl oder ein gültiges Enddatum ab dem ersten Termin an.",
       recurrenceSelectWeekday: 'Wählen Sie mindestens einen Wochentag für wöchentliche Termine aus',
       start: 'Beginn',
       end: 'Ende',
@@ -8660,7 +8628,8 @@ const TRANSLATIONS = {
     locale: 'nl-NL',
     strings: {
       displayCalendarsTitle: "Betreft ook deze kalenders",
-      displayCalendarsHelp: "Alleen weergave in deze kaart en browser. De oorspronkelijke afspraak blijft ongewijzigd. Bij herhaling alleen deze afspraak.",
+      displayCalendarsHelp: "Gedeeld binnen deze Home Assistant-installatie. De originele afspraak blijft ongewijzigd. Alleen deze herhaling.",
+      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
       displayCalendarSource: "Bronkalender",
       partialUpdateDeleteError: "De nieuwe afspraak is opgeslagen, maar het origineel kon niet worden verwijderd. Probeer opnieuw met dezelfde waarden en doelagenda om alleen de verwijdering af te ronden.",
       partialBatchUpdateError: "Sommige agenda’s zijn al opgeslagen. Probeer opnieuw met dezelfde waarden om de overige agenda’s af te ronden. Open daarna de editor opnieuw voor verdere wijzigingen.",
@@ -8702,6 +8671,7 @@ const TRANSLATIONS = {
       recurrenceOn: 'Op',
       recurrenceAfter: 'Na',
       recurrenceOccurrences: 'gebeurtenissen',
+      recurrenceEndRequired: "Vul een positief geheel aantal in of een geldige einddatum vanaf de eerste afspraak.",
       recurrenceSelectWeekday: 'Selecteer ten minste één dag voor wekelijks terugkerende afspraken',
       start: 'Start',
       end: 'Einde',
@@ -8786,7 +8756,8 @@ const TRANSLATIONS = {
     locale: 'es-ES',
     strings: {
       displayCalendarsTitle: "También afecta a estos calendarios",
-      displayCalendarsHelp: "Solo visualización en esta tarjeta y navegador. El evento original no cambia. Para eventos recurrentes, solo esta ocurrencia.",
+      displayCalendarsHelp: "Compartido en esta instancia de Home Assistant. El evento original no cambia. Solo esta ocurrencia.",
+      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
       displayCalendarSource: "Calendario original",
       partialUpdateDeleteError: "El evento nuevo se guardó, pero no se pudo eliminar el original. Reintenta con los mismos valores y calendario de destino para terminar la eliminación sin crear otro evento.",
       partialBatchUpdateError: "Algunos calendarios ya se guardaron. Reintenta con los mismos valores para completar los restantes y vuelve a abrir el editor para realizar más cambios.",
@@ -8828,6 +8799,7 @@ const TRANSLATIONS = {
       recurrenceOn: 'El',
       recurrenceAfter: 'Después de',
       recurrenceOccurrences: 'ocurrencias',
+      recurrenceEndRequired: "Introduce un número entero positivo o una fecha final válida a partir del primer evento.",
       recurrenceSelectWeekday: 'Selecciona al menos un día de la semana para los eventos recurrentes semanales',
       start: 'Inicio',
       end: 'Fin',
@@ -8913,7 +8885,8 @@ const TRANSLATIONS = {
     locale: 'et-EE',
     strings: {
       displayCalendarsTitle: "Puudutab ka neid kalendreid",
-      displayCalendarsHelp: "Ainult kuva selles kaardis ja brauseris. Algne sündmus ei muutu. Korduvate sündmuste puhul ainult see kord.",
+      displayCalendarsHelp: "Jagatud selles Home Assistanti eksemplaris. Algne sündmus ei muutu. Ainult see kord.",
+      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
       displayCalendarSource: "Algne kalender",
       partialUpdateDeleteError: "Uus sündmus on salvestatud, kuid algset ei saanud kustutada. Proovi samade väärtuste ja sihtkalendriga uuesti, et lõpetada kustutamine uut sündmust loomata.",
       partialBatchUpdateError: "Mõned kalendrid on juba salvestatud. Proovi samade väärtustega uuesti, et lõpetada ülejäänud, ning ava seejärel redaktor uute muudatuste jaoks.",
@@ -8955,6 +8928,7 @@ const TRANSLATIONS = {
       recurrenceOn: 'Kuupäeval',
       recurrenceAfter: 'Pärast',
       recurrenceOccurrences: 'kordust',
+      recurrenceEndRequired: "Sisesta positiivne täisarv või kehtiv lõppkuupäev, mis pole enne esimest sündmust.",
       recurrenceSelectWeekday: 'Vali iganädalase korduse jaoks vähemalt üks nädalapäev',
       start: 'Algus',
       end: 'Lõpp',
@@ -9040,7 +9014,8 @@ const TRANSLATIONS = {
     locale: 'ca-ES',
     strings: {
       displayCalendarsTitle: "També afecta aquests calendaris",
-      displayCalendarsHelp: "Només visualització en aquesta targeta i navegador. L’esdeveniment original no canvia. En recurrències, només aquesta ocurrència.",
+      displayCalendarsHelp: "Compartit en aquesta instància de Home Assistant. L’esdeveniment original no canvia. Només aquesta ocurrència.",
+      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
       displayCalendarSource: "Calendari original",
       partialUpdateDeleteError: "L’esdeveniment nou s’ha desat, però no s’ha pogut eliminar l’original. Torna-ho a provar amb els mateixos valors i calendari de destinació per acabar l’eliminació sense crear-ne un altre.",
       partialBatchUpdateError: "Alguns calendaris ja s’han desat. Torna-ho a provar amb els mateixos valors per completar els restants i torna a obrir l’editor per fer més canvis.",
@@ -9082,6 +9057,7 @@ const TRANSLATIONS = {
       recurrenceOn: 'El',
       recurrenceAfter: 'Després de',
       recurrenceOccurrences: 'ocurrències',
+      recurrenceEndRequired: "Introdueix un nombre enter positiu o una data final vàlida a partir del primer esdeveniment.",
       recurrenceSelectWeekday: "Selecciona almenys un dia de la setmana per als esdeveniments recurrents setmanals",
       start: 'Inici',
       end: 'Fi',
@@ -9167,7 +9143,8 @@ const TRANSLATIONS = {
     locale: 'da-DK',
     strings: {
       displayCalendarsTitle: "Vedrører også disse kalendere",
-      displayCalendarsHelp: "Kun visning i dette kort og denne browser. Den oprindelige begivenhed ændres ikke. Ved gentagelser kun denne forekomst.",
+      displayCalendarsHelp: "Delt i denne Home Assistant-instans. Originalen ændres ikke. Kun denne forekomst.",
+      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
       displayCalendarSource: "Oprindelig kalender",
       partialUpdateDeleteError: "Den nye aftale er gemt, men originalen kunne ikke slettes. Prøv igen med de samme værdier og den samme målkalender for at afslutte sletningen uden at oprette endnu en aftale.",
       partialBatchUpdateError: "Nogle kalendere er allerede gemt. Prøv igen med de samme værdier for at afslutte de resterende, og åbn derefter editoren igen for flere ændringer.",
@@ -9209,6 +9186,7 @@ const TRANSLATIONS = {
       recurrenceOn: 'Den',
       recurrenceAfter: 'Efter',
       recurrenceOccurrences: 'forekomster',
+      recurrenceEndRequired: "Angiv et positivt helt antal eller en gyldig slutdato fra den første begivenhed.",
       recurrenceSelectWeekday: 'Vælg mindst én ugedag for ugentligt gentagende begivenheder',
       start: 'Start',
       end: 'Slut',
@@ -9294,7 +9272,8 @@ const TRANSLATIONS = {
     locale: 'sv-SE',
     strings: {
       displayCalendarsTitle: "Berör också dessa kalendrar",
-      displayCalendarsHelp: "Endast visning i detta kort och denna webbläsare. Originalhändelsen ändras inte. Vid upprepningar endast denna förekomst.",
+      displayCalendarsHelp: "Delat i denna Home Assistant-instans. Originalet ändras inte. Endast denna förekomst.",
+      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
       displayCalendarSource: "Ursprunglig kalender",
       partialUpdateDeleteError: "Den nya händelsen är sparad, men originalet kunde inte tas bort. Försök igen med samma värden och målkalender för att slutföra borttagningen utan att skapa en ny händelse.",
       partialBatchUpdateError: "Vissa kalendrar har redan sparats. Försök igen med samma värden för att slutföra de återstående och öppna sedan redigeraren igen för fler ändringar.",
@@ -9336,6 +9315,7 @@ const TRANSLATIONS = {
       recurrenceOn: 'På',
       recurrenceAfter: 'Efter',
       recurrenceOccurrences: 'Upprepningar',
+      recurrenceEndRequired: "Ange ett positivt helt antal eller ett giltigt slutdatum från den första händelsen.",
       recurrenceSelectWeekday: 'Välj minst en veckodag för återkommande händelser.',
       start: 'Start',
       end: 'Slut',
@@ -9709,6 +9689,77 @@ function normalizeDayBadges(rawRules, {
     .filter(Boolean);
 }
 
+function getDateRangeChunks(startDate, endDate, chunkDays = 30) {
+  const normalizedChunkDays = Number(chunkDays);
+  if (!Number.isSafeInteger(normalizedChunkDays) || normalizedChunkDays < 1) {
+    throw new RangeError('chunkDays must be a positive integer');
+  }
+  const chunks = [];
+  let cursor = new Date(startDate);
+  cursor.setHours(0, 0, 0, 0);
+
+  while (cursor <= endDate) {
+    const chunkStart = new Date(cursor);
+    const chunkEnd = new Date(cursor);
+    chunkEnd.setDate(chunkEnd.getDate() + normalizedChunkDays - 1);
+    if (chunkEnd > endDate) {
+      chunkEnd.setTime(endDate.getTime());
+    }
+    chunkEnd.setHours(23, 59, 59, 999);
+
+    chunks.push({ startDate: chunkStart, endDate: chunkEnd });
+
+    cursor = new Date(chunkEnd);
+    cursor.setDate(cursor.getDate() + 1);
+    cursor.setHours(0, 0, 0, 0);
+  }
+
+  return chunks;
+}
+
+function parseLocalDate(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return new Date(dateStr);
+  const [year, month, day] = dateStr.split('-').map(Number);
+  if (![year, month, day].every(Number.isFinite)) return new Date(dateStr);
+  return new Date(year, month - 1, day);
+}
+
+function parsePossiblyLocalDateTime(value) {
+  if (!value || typeof value !== 'string') return new Date(value);
+
+  const hasTimezone = /(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(value);
+  if (hasTimezone) return new Date(value);
+
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if (!match) return new Date(value);
+
+  const [, year, month, day, hour, minute, second = '0'] = match;
+  return new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+    Number(second)
+  );
+}
+
+function formatLocalDate(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getIsoWeekNumber(date) {
+  const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNumber = utcDate.getUTCDay() || 7;
+  utcDate.setUTCDate(utcDate.getUTCDate() + 4 - dayNumber);
+  const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
+  return Math.ceil((((utcDate - yearStart) / 86400000) + 1) / 7);
+}
+
 function normalizeSingleColor(colorValue) {
   if (colorValue === undefined || colorValue === null) {
     return colorValue;
@@ -9993,6 +10044,114 @@ function resolveCalendarSelection(value, { knownEntities = [], getVirtualBadgeEn
     });
   });
   return Array.from(resolved);
+}
+
+const HEADER_ITEM_FORMATS = new Set(['auto', 'raw', 'time', 'date', 'datetime']);
+const EMPTY_STATES = new Set(['', 'unknown', 'unavailable']);
+
+function normalizeOptionalString(value) {
+  if (value === undefined || value === null) return null;
+  const normalized = String(value).trim();
+  return normalized || null;
+}
+
+function normalizeHeaderItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .filter((item) => item && typeof item === 'object' && !Array.isArray(item))
+    .map((item) => ({
+      icon: normalizeOptionalString(item.icon),
+      entity: normalizeOptionalString(item.entity),
+      attribute: normalizeOptionalString(item.attribute),
+      text: normalizeOptionalString(item.text),
+      format: HEADER_ITEM_FORMATS.has(normalizeOptionalString(item.format)) ? normalizeOptionalString(item.format) : 'auto'
+    }))
+    .filter((item) => item.icon || item.entity || item.text);
+}
+
+function isEmptyResolvedValue(value) {
+  if (value === undefined || value === null) return true;
+  if (typeof value === 'string') return EMPTY_STATES.has(value.trim().toLowerCase());
+  return false;
+}
+
+function stringifyRawValue(value) {
+  if (value instanceof Date) return value.toISOString();
+  if (Array.isArray(value)) return value.join(', ');
+  if (typeof value === 'object' && value !== null) return JSON.stringify(value);
+  return String(value);
+}
+
+function parseDateValue(value, parseTimeValue) {
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  const raw = String(value ?? '').trim();
+  if (!raw) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const parsedLocalDate = parseLocalDate(raw);
+    return parsedLocalDate instanceof Date && !Number.isNaN(parsedLocalDate.getTime()) ? parsedLocalDate : null;
+  }
+  if (typeof parseTimeValue === 'function') {
+    const parsedTime = parseTimeValue(value);
+    if (parsedTime) return parsedTime;
+  }
+  const parsed = parsePossiblyLocalDateTime(raw);
+  return parsed instanceof Date && !Number.isNaN(parsed.getTime()) ? parsed : null;
+}
+
+function formatDateValue(value, format, formatters = {}) {
+  const parsed = parseDateValue(value, formatters.parseTimeValue);
+  if (!parsed) return '';
+  if (format === 'time') return formatters.formatTime?.(parsed) || '';
+  if (format === 'date') return formatters.formatDate?.(parsed) || '';
+  return formatters.formatDateTime?.(parsed) || '';
+}
+
+function resolveHeaderItemValue(item, hass, formatters = {}) {
+  const entityState = item.entity ? hass?.states?.[item.entity] : null;
+  const hasEntityValue = !!entityState;
+  const rawEntityValue = hasEntityValue
+    ? (item.attribute ? entityState.attributes?.[item.attribute] : entityState.state)
+    : undefined;
+  const rawValue = !isEmptyResolvedValue(rawEntityValue) ? rawEntityValue : item.text;
+  if (isEmptyResolvedValue(rawValue)) return '';
+
+  const format = item.format || 'auto';
+  if (format === 'time' || format === 'date' || format === 'datetime') {
+    return formatDateValue(rawValue, format, formatters);
+  }
+
+  if (format === 'raw') return stringifyRawValue(rawValue);
+
+  const deviceClass = normalizeOptionalString(entityState?.attributes?.device_class);
+  if (deviceClass === 'timestamp') return formatDateValue(rawValue, 'time', formatters);
+  if (deviceClass === 'date') return formatDateValue(rawValue, 'date', formatters);
+
+  const rawText = stringifyRawValue(rawValue);
+  const unit = normalizeOptionalString(entityState?.attributes?.unit_of_measurement);
+  if (unit && hasEntityValue && !item.attribute) return `${rawText} ${unit}`;
+  return rawText;
+}
+
+function resolveHeaderItems(items, hass, formatters = {}) {
+  return normalizeHeaderItems(items).map((item) => ({
+    icon: item.icon,
+    value: resolveHeaderItemValue(item, hass, formatters)
+  })).filter((item) => !isEmptyResolvedValue(item.value));
+}
+
+function getHeaderItemsRenderSignature(items, hass) {
+  return JSON.stringify(normalizeHeaderItems(items).filter((item) => item.entity).map((item) => {
+    const state = hass?.states?.[item.entity];
+    return {
+      entity: item.entity,
+      attribute: item.attribute,
+      state: state?.state ?? null,
+      attributeValue: item.attribute ? state?.attributes?.[item.attribute] ?? null : null,
+      deviceClass: state?.attributes?.device_class ?? null,
+      unitOfMeasurement: state?.attributes?.unit_of_measurement ?? null,
+      icon: state?.attributes?.icon ?? null
+    };
+  }));
 }
 
 const matchPrimitiveCondition = (value, condition) => {
@@ -10744,15 +10903,38 @@ function createWeatherForecastController(dependencies) {
   return new WeatherForecastController(dependencies);
 }
 
+function parseEventDateTime(value) {
+  if (typeof value === 'string') {
+    const parts = value.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(?:[zZ]|[+-]\d{2}:?\d{2})?$/);
+    if (parts) {
+      const [year, month, day, hour, minute, second] = parts.slice(1).map(part => Number(part ?? 0));
+      const calendarDate = new Date(0);
+      calendarDate.setUTCFullYear(year, month - 1, day);
+      if (calendarDate.getUTCFullYear() !== year || calendarDate.getUTCMonth() !== month - 1 ||
+          calendarDate.getUTCDate() !== day || hour > 23 || minute > 59 || second > 59) return new Date(NaN);
+      if (!/(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(value)) {
+        const parsed = parsePossiblyLocalDateTime(value);
+        if (parsed.getFullYear() !== year || parsed.getMonth() !== month - 1 || parsed.getDate() !== day ||
+            parsed.getHours() !== hour || parsed.getMinutes() !== minute || parsed.getSeconds() !== second) return new Date(NaN);
+        return parsed;
+      }
+    }
+  }
+  return parsePossiblyLocalDateTime(value);
+}
+
 const resolveTimedEventRange = (startValue, endValue, fallbackDurationMs = 60 * 60 * 1000) => {
-  const start = parsePossiblyLocalDateTime(startValue);
+  const start = parseEventDateTime(startValue);
   if (!(start instanceof Date) || Number.isNaN(start.getTime())) {
     return { start: null, end: null };
   }
 
-  const parsedEnd = endValue ? parsePossiblyLocalDateTime(endValue) : null;
-  if (parsedEnd instanceof Date && !Number.isNaN(parsedEnd.getTime())) {
-    return { start, end: parsedEnd };
+  const parsedEnd = endValue ? parseEventDateTime(endValue) : null;
+  if (endValue) {
+    return {
+      start,
+      end: parsedEnd instanceof Date && Number.isFinite(parsedEnd.getTime()) ? parsedEnd : null
+    };
   }
 
   return {
@@ -10852,6 +11034,20 @@ const normalizeEventFormData = ({
   }
 
   if (recurrence?.enabled) {
+    if (recurrence.endMode === 'after') {
+      const count = String(recurrence.count ?? '');
+      if (!/^[1-9]\d*$/.test(count) || !Number.isSafeInteger(Number(count))) {
+        return { valid: false, errorKey: 'recurrenceEndRequired' };
+      }
+    }
+    if (recurrence.endMode === 'on') {
+      const untilDate = recurrence.untilDate;
+      const until = parseLocalDate(untilDate);
+      const firstDate = isAllDay ? startDate : String(startDateTime).slice(0, 10);
+      if (!untilDate || !Number.isFinite(until.getTime()) || formatLocalDate(until) !== untilDate || untilDate < firstDate) {
+        return { valid: false, errorKey: 'recurrenceEndRequired' };
+      }
+    }
     if (recurrence.frequency === 'WEEKLY' && (!Array.isArray(recurrence.byDay) || recurrence.byDay.length === 0)) {
       return { valid: false, errorKey: 'recurrenceSelectWeekday' };
     }
@@ -10912,7 +11108,7 @@ const buildCreateEventWebSocketPayload = (calendarId, eventData) => ({
 });
 
 const getRecurringUpdateControls = (originalEvent, eventData, editScope = 'this') => {
-  const isRecurringUpdate = !!eventData.rrule || !!originalEvent.rrule;
+  const isRecurringUpdate = !!eventData.rrule || !!originalEvent.rrule || !!normalizeRecurrenceId(originalEvent.recurrence_id);
   return {
     isRecurringUpdate,
     recurrenceId: (isRecurringUpdate && editScope !== 'all') ? normalizeRecurrenceId(originalEvent.recurrence_id) : null,
@@ -11005,6 +11201,15 @@ const buildDeleteEventWebSocketPayload = (calendarId, uid, recurrenceId = null, 
 function getVisibleCalendarBadgesForEvent(event, { hiddenCalendars = new Set(), getVirtualBadgeForEvent, normalizeSingleColor, configColors = {} } = {}) {
   const virtualCalendar = getVirtualBadgeForEvent?.(event);
   if (virtualCalendar) {
+    if (event?.isDisplayAssignedEvent && Array.isArray(event.sourceCalendars)) {
+      const visibleCalendars = event.sourceCalendars.filter(calendar => !hiddenCalendars.has(calendar.entityId));
+      const groupCalendars = visibleCalendars.filter(calendar => virtualCalendar.entities.includes(calendar.entityId));
+      const otherCalendars = visibleCalendars.filter(calendar => !virtualCalendar.entities.includes(calendar.entityId));
+      const groupBadges = groupCalendars.length
+        ? [{entityId: `virtual:${virtualCalendar.id}`, color: virtualCalendar.color || groupCalendars[0].color || event.color}]
+        : [];
+      return [...groupBadges, ...otherCalendars];
+    }
     const visibleSourceEntityIds = virtualCalendar.entities.filter((entityId) => !hiddenCalendars.has(entityId));
     if (visibleSourceEntityIds.length === 0) return [];
     const fallbackColor = event?.color || normalizeSingleColor?.(configColors[virtualCalendar.entities[0]]);
@@ -11028,6 +11233,8 @@ function isCombinedEventWithinSingleVirtualCalendar(event, { hiddenCalendars = n
   for (const sourceEvent of visibleSources) {
     const virtualCalendar = getVirtualBadgeForEntity?.(sourceEvent.entityId);
     if (!virtualCalendar) return false;
+    if (event.isDisplayAssignedEvent && event.sourceCalendars?.some(calendar =>
+      !hiddenCalendars.has(calendar.entityId) && !virtualCalendar.entities.includes(calendar.entityId))) return false;
     virtualIds.add(virtualCalendar.id);
     if (virtualIds.size > 1) return false;
   }
@@ -11497,6 +11704,7 @@ function renderAgendaView({
   monthFormatter,
   helpers
 }) {
+  const textAlignment = ['left','center','right'].includes(config.agenda_text_alignment) ? config.agenda_text_alignment : null;
   const containerStyle = helpers.getCompactContainerStyle(compactMaxHeight);
   const agendaRows = [];
   const shouldHideEmptyDays = !!config.hide_empty_days;
@@ -11541,7 +11749,7 @@ function renderAgendaView({
                 : agendaEventMinHeight;
 
               return `
-                <div class="agenda-event" style="${eventStyle} --agenda-event-min-height: ${eventAgendaMinHeight}; --event-bubble-font-size: ${helpers.getEventBubbleFontSize(event)}; --event-time-font-size: ${helpers.getEventTimeFontSize(event)}; --event-location-font-size: ${helpers.getEventLocationFontSize(event)}; --event-bubble-text-color: ${helpers.getEventBubbleFontColor(event)};" data-event='${escapeHtmlAttribute(JSON.stringify(event))}'>
+                <div class="agenda-event${textAlignment ? ' agenda-text-aligned' : ''}" style="${eventStyle} ${textAlignment ? `text-align: ${textAlignment};` : ''} --agenda-event-min-height: ${eventAgendaMinHeight}; --event-bubble-font-size: ${helpers.getEventBubbleFontSize(event)}; --event-time-font-size: ${helpers.getEventTimeFontSize(event)}; --event-location-font-size: ${helpers.getEventLocationFontSize(event)}; --event-bubble-text-color: ${helpers.getEventBubbleFontColor(event)};" data-event='${escapeHtmlAttribute(JSON.stringify(event))}'>
                   <div class="agenda-event-title">${helpers.renderEventTitleWithPrefix(event, helpers.getEventDisplayTitle(event))}</div>
                   ${helpers.shouldShowEventTime(event) ? `<div class="agenda-event-time">${timeLabel}</div>` : ''}
                   ${helpers.shouldShowEventLocation(event) ? `<div class="agenda-event-location">📍 ${helpers.escapeHtml(helpers.getDisplayLocation(event.location, event))}</div>` : ''}
@@ -13048,6 +13256,13 @@ class FamilyCalendarCard extends HTMLElement {
     this._hiddenCalendars = new Set(); // Track which calendars are hidden
     this._customEventColors = createEmptyCustomEventColors();
     this._eventDisplayCalendars = {};
+    this._sharedDisplayStore ||= createSharedDisplayStore(state => {
+      this._eventDisplayCalendars = state;
+      this.persistPreferences();
+      if (this.getRootElementById('event-modal')?.classList.contains('show')) {
+        this._sharedDisplayNeedsRender = true;
+      } else if (this.isConnected && this._config) this.renderPreservingAgendaScroll();
+    });
     this._calendarCapabilities = {}; // Track calendar capabilities
     this._activeLanguage = DEFAULT_LANGUAGE;
     this._hasCustomTitle = false;
@@ -13301,6 +13516,7 @@ class FamilyCalendarCard extends HTMLElement {
   loadPersistedPreferences() {
     this._customEventColors = createEmptyCustomEventColors();
     this._eventDisplayCalendars = {};
+
     const storageKey = this.getPreferenceStorageKey();
     if (!storageKey) return false;
 
@@ -13714,7 +13930,9 @@ class FamilyCalendarCard extends HTMLElement {
     this._hiddenCalendars = this.getDefaultHiddenCalendarSet();
     this._customEventColors = createEmptyCustomEventColors();
     this._eventDisplayCalendars = {};
+
     this.loadPersistedPreferences();
+    if (this._sharedDisplayStore.state) this._eventDisplayCalendars = this._sharedDisplayStore.state;
     this._loadedEventRange = null;
     this._eventsByCalendar = {};
     this._eventCacheGeneration += 1;
@@ -13750,6 +13968,7 @@ class FamilyCalendarCard extends HTMLElement {
   set hass(hass) {
     const oldHass = this._hass;
     this._hass = hass;
+    if (this.isConnected) this._sharedDisplayStore?.connect(hass?.connection);
     let shouldRender = false;
 
     if (this.advanceAgendaWindowToCurrentDay()) {
@@ -15497,6 +15716,7 @@ class FamilyCalendarCard extends HTMLElement {
 
   connectedCallback() {
     checkAndShowStaleResourceWarning();
+    this._sharedDisplayStore?.connect(this._hass?.connection);
     window.addEventListener('resize', this._handleViewportResize);
     window.addEventListener('family-calendar-card-flush-event-cache', this._handleEventCacheFlush);
     window.addEventListener(RESET_EVENT_NAME, this._handleExternalResetEvent);
@@ -15524,6 +15744,7 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this._sharedDisplayStore?.disconnect();
     window.removeEventListener('resize', this._handleViewportResize);
     window.removeEventListener('family-calendar-card-flush-event-cache', this._handleEventCacheFlush);
     window.removeEventListener(RESET_EVENT_NAME, this._handleExternalResetEvent);
@@ -16528,6 +16749,7 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   render() {
+    this._sharedDisplayNeedsRender = false;
     this._dayBadgeActions = new Map();
     this._dayBadgeActionSequence = 0;
     const shouldRestoreAgendaScrollPosition = this._viewMode === 'agenda' && Number.isFinite(this._agendaPendingScrollTop);
@@ -18292,7 +18514,14 @@ class FamilyCalendarCard extends HTMLElement {
     const virtualCalendar = this.getVirtualBadgeForEvent(event);
     if (virtualCalendar) {
       const hasVisibleVirtualSource = visibleSourceEntityIds.some((entityId) => virtualCalendar.entities.includes(entityId));
-      if (!hasVisibleVirtualSource) return [];
+      if (!hasVisibleVirtualSource) {
+        if (event.isDisplayAssignedEvent) {
+          return event.sourceCalendars
+            .filter(calendar => !virtualCalendar.entities.includes(calendar.entityId) && !this._hiddenCalendars.has(calendar.entityId))
+            .map(calendar => calendar.color).filter(Boolean);
+        }
+        return [];
+      }
 
       const virtualColor = this.getVirtualCalendarColor(virtualCalendar, event);
 
@@ -19030,6 +19259,10 @@ class FamilyCalendarCard extends HTMLElement {
     const isOpen = !!modal && modal.classList.contains('show');
     this.classList?.toggle('event-modal-open', isOpen);
     if (!isOpen) {
+      if (this._sharedDisplayNeedsRender && this.isConnected) {
+        this._sharedDisplayNeedsRender = false;
+        this.renderPreservingAgendaScroll();
+      }
       this.flushPendingHostResizeRender();
     }
   }
@@ -19634,6 +19867,7 @@ class FamilyCalendarCard extends HTMLElement {
           endDateTime: this.getRootElementById('event-end').value,
           recurrence: {
             enabled: true,
+            endMode: recurrenceEndMode,
             frequency,
             interval,
             untilDate,
@@ -19830,6 +20064,7 @@ class FamilyCalendarCard extends HTMLElement {
           fallbackDurationMs: Math.max(endDate.getTime() - startDate.getTime(), 60 * 1000),
           recurrence: {
             enabled: true,
+            endMode: recurrenceEndMode,
             frequency,
             interval,
             untilDate,
@@ -20076,13 +20311,6 @@ class FamilyCalendarCard extends HTMLElement {
     }
   }
 
-  showFormError(errorDiv, message) {
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
-    setTimeout(() => {
-      errorDiv.style.display = 'none';
-    }, 5000);
-  }
 
 
   getForwardExistingCalendarIds(event) {
@@ -20501,11 +20729,17 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   showFormError(errorDiv, message) {
+    this._formErrorTimers ||= new WeakMap();
+    const previousTimer = this._formErrorTimers.get(errorDiv);
+    if (previousTimer !== undefined) clearTimeout(previousTimer);
     errorDiv.textContent = message;
     errorDiv.style.display = 'block';
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      if (this._formErrorTimers.get(errorDiv) !== timer) return;
       errorDiv.style.display = 'none';
+      this._formErrorTimers.delete(errorDiv);
     }, 5000);
+    this._formErrorTimers.set(errorDiv, timer);
   }
 
   showError(message) {
@@ -20558,16 +20792,11 @@ class FamilyCalendarCard extends HTMLElement {
     });
   }
 
-  saveEventDisplayCalendars(event, selected) {
+  async saveEventDisplayCalendars(event, selected) {
     const known = new Set(this._config.entities || []);
     const ids = [...new Set(selected)].filter(id => known.has(id));
-    const next = {...this._eventDisplayCalendars};
-    getEventDisplayKeys(event, {getEventIdentityKey:this.getEventIdentityKey.bind(this)}).forEach(key => {
-      if (ids.length) Object.defineProperty(next,key,{value:ids,enumerable:true,configurable:true,writable:true});
-      else delete next[key];
-    });
-    this._eventDisplayCalendars = normalizeEventDisplayCalendars(next);
-    this.persistPreferences();
+    const keys = getEventDisplayKeys(event, {getEventIdentityKey:this.getEventIdentityKey.bind(this)});
+    return this._sharedDisplayStore.save(this._hass, keys, ids, [...known]);
   }
 
   renderEventDisplayCalendarsSelection(event) {
@@ -20680,12 +20909,31 @@ class FamilyCalendarCard extends HTMLElement {
       }
     });
 
-    this.getRootElementById('save-display-calendars')?.addEventListener('click', () => {
+    this.getRootElementById('save-display-calendars')?.addEventListener('click', async () => {
       const selected = Array.from(content.querySelectorAll('[data-display-calendar]:checked:not(:disabled)'))
         .map(input => input.getAttribute('data-display-calendar'));
-      this.saveEventDisplayCalendars(event, selected);
-      this.render();
-      this.showEventModal(event, onCloseBack, options);
+      const button = this.getRootElementById('save-display-calendars');
+      button.disabled = true;
+      try {
+        await this.saveEventDisplayCalendars(event, selected);
+        // Do not reopen a dialog dismissed while the server was saving.
+        if (modal.classList.contains('show') && button.isConnected) {
+          this.renderPreservingAgendaScroll();
+          this.showEventModal(event, onCloseBack, options);
+        }
+      } catch (error) {
+        if (button.isConnected) {
+          button.disabled = false;
+          let status = content.querySelector('.display-save-error');
+          if (!status) {
+            status = document.createElement('p');
+            status.className = 'display-save-error';
+            status.setAttribute('role', 'alert');
+            button.after(status);
+          }
+          status.textContent = this.t('displayCalendarsSaveError');
+        }
+      }
     });
     modal.classList.add('show');
     this.setModalBackHandler(onCloseBack);

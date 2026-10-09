@@ -1,6 +1,10 @@
 export const EDITOR_TRANSLATION_LOCALES = ['en', 'fr', 'de', 'nl', 'es', 'et', 'ca', 'da', 'sv'];
 
 export const EDITOR_TRANSLATION_ROWS = [
+  ['Left','Gauche','Links','Links','Izquierda','Vasak','Esquerra','Venstre','Vänster'],
+  ['Center','Centre','Mitte','Midden','Centro','Keskel','Centre','Midten','Mitten'],
+  ['Right','Droite','Rechts','Rechts','Derecha','Parem','Dreta','Højre','Höger'],
+  ['Agenda view: text alignment', 'Agenda : alignement du texte', 'Agenda: Textausrichtung', 'Agenda: tekstuitlijning', 'Agenda: alineación del texto', 'Päevakava: teksti joondus', 'Agenda: alineació del text', 'Agenda: tekstjustering', 'Agenda: textjustering'],
   ['Calendar gradient', 'Dégradé de calendriers', 'Kalender-Farbverlauf', 'Kalenderverloop', 'Degradado de calendarios', 'Kalendrite värviüleminek', 'Degradat de calendaris', 'Kalenderfarveforløb', 'Kalendergradient'],
   ['Gradient calendars', 'Calendriers du dégradé', 'Kalender für den Farbverlauf', 'Kalenders voor het verloop', 'Calendarios del degradado', 'Värviülemineku kalendrid', 'Calendaris del degradat', 'Kalendere til farveforløb', 'Kalendrar för gradienten'],
   ['Select at least two calendars. Colors follow the selection order from left to right.', 'Sélectionnez au moins deux calendriers. Les couleurs suivent l’ordre de sélection de gauche à droite.', 'Mindestens zwei Kalender auswählen. Die Farben folgen der Auswahlreihenfolge von links nach rechts.', 'Selecteer minstens twee kalenders. Kleuren volgen de selectievolgorde van links naar rechts.', 'Selecciona al menos dos calendarios. Los colores siguen el orden de selección de izquierda a derecha.', 'Valige vähemalt kaks kalendrit. Värvid järgivad valiku järjekorda vasakult paremale.', 'Selecciona almenys dos calendaris. Els colors segueixen l’ordre de selecció d’esquerra a dreta.', 'Vælg mindst to kalendere. Farverne følger valgrækkefølgen fra venstre mod højre.', 'Välj minst två kalendrar. Färgerna följer valordningen från vänster till höger.'],

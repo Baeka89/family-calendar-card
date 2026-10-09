@@ -25,7 +25,7 @@ Das Projekt wird von **Baeka89** entwickelt und gepflegt. Die Karte lässt sich 
 
 - **Vier Ansichten:** Monat, Woche, Schedule und Agenda.
 - **Mehrere Kalender:** gemeinsame Darstellung, Kalenderfarben und zusammengeführte Termine.
-- **Zusätzliche Zuordnung:** In den Termindetails unter „Betrifft auch diese Kalender“ weitere konfigurierte Kalender auswählen. Auch bei schreibgeschützten Einladungen werden deren Namen und Farben angezeigt. Die Zuordnung bleibt lokal in diesem Browser gespeichert und ändert den Originaltermin nicht; bei Serien gilt sie nur für das ausgewählte Vorkommen.
+- **Zusätzliche Zuordnung:** In den Termindetails unter „Betrifft auch diese Kalender“ weitere konfigurierte Kalender auswählen. Auch bei schreibgeschützten Einladungen werden deren Namen und Farben angezeigt. Die Zuordnung wird mit der Begleitintegration für alle Geräte und Benutzer dieser Home-Assistant-Instanz gespeichert und ändert den Originaltermin nicht; bei Serien gilt sie nur für das ausgewählte Vorkommen.
 - **Terminverwaltung:** Termine erstellen und bearbeiten, einschließlich Wiederholungen; verfügbare Aktionen hängen von der Kalenderintegration und ihren Schreibrechten ab.
 - **Wetter:** Vorhersagen aus einer Home-Assistant-Wetterentität.
 - **Individuelle Darstellung:** Termin- und Tagesstile, Tages-Badges und virtuelle Kalender.
@@ -63,7 +63,7 @@ The project is developed and maintained by **Baeka89**. Configure the card using
 
 - **Four views:** Month, Week, Schedule and Agenda.
 - **Multiple calendars:** shared views, calendar colors and combined events.
-- **Additional assignments:** Open event details and select additional configured calendars under “Also concerns these calendars”. Their names and colors appear even for read-only invitations. Assignments are stored locally in this browser without changing the original event; recurring assignments apply only to the selected occurrence.
+- **Additional assignments:** Open event details and select additional configured calendars under “Also concerns these calendars”. Their names and colors appear even for read-only invitations. Assignments are shared across this Home Assistant instance using the companion integration without changing the original event; recurring assignments apply only to the selected occurrence.
 - **Event management:** create and edit events, including recurring events; available actions depend on the calendar integration and its write permissions.
 - **Weather:** forecasts from a Home Assistant weather entity.
 - **Customization:** event styles, day styles, day badges and virtual calendars.
@@ -186,3 +186,21 @@ Entwicklung und Prüfung: [DEVELOPMENT.md](DEVELOPMENT.md). Änderungen: [CHANGE
 Danke an die Home-Assistant-Community für Feedback, Ideen und Tests. / Thanks to the Home Assistant community for feedback, ideas and testing.
 
 Family Calendar Card wird von **[Baeka89](https://github.com/Baeka89)** gepflegt. Lizenz: [MIT](LICENSE). / Family Calendar Card is maintained by **[Baeka89](https://github.com/Baeka89)**. License: [MIT](LICENSE).
+
+### Gemeinsame Kalenderzuordnung / Shared calendar assignments
+
+Für „Betrifft auch diese Kalender“ auf allen Geräten den Ordner `custom_components/family_calendar_card` nach `/config/custom_components/family_calendar_card` kopieren und in `configuration.yaml` ergänzen:
+
+```yaml
+family_calendar_card:
+```
+
+Bei einem Update Karte und Begleitintegration aus demselben Paket aktualisieren. Das Speichern ändert nur Zuordnungen zu den in dieser Karte konfigurierten Kalendern; Zuordnungen zu anderen Kalendern bleiben erhalten.
+
+Home Assistant neu starten. HACS installiert das Karten-JavaScript; die Begleitintegration wird bei einer Installation als Dashboard-Karte nicht automatisch mitinstalliert. Authentifizierte Home-Assistant-Benutzer können die gemeinsame Zuordnung ändern. Originaltermine bleiben unverändert. Vorhandene lokale Zuordnungen werden nicht automatisch hochgeladen: nach der Installation die gewünschten Termine einmal neu zuordnen. Kalenderfarben und ausgeblendete Kalender bleiben bisherige lokale Einstellungen.
+
+When updating, update both the card and companion integration from the same package. Saving changes only assignments to calendars configured in the editing card; assignments to other calendars are preserved.
+
+For shared assignments, copy the companion folder to `/config/custom_components/family_calendar_card`, add the YAML entry above and restart Home Assistant. The HACS dashboard-card installation does not install the companion. Authenticated users can edit shared assignments; source events remain unchanged. Existing browser-only assignments must be selected and saved again. Custom event colors and hidden-calendar preferences remain local.
+
+Agenda-Textausrichtung / Agenda text alignment: `agenda_text_alignment: left` (auch `center` und `right`). Im Karteneditor unter **Anzeige und Layout** einstellen.

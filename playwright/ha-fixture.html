@@ -61,6 +61,15 @@
           }
           return [];
         },
+        callWS: async msg => {
+          if (msg.type !== 'family_calendar_card/set') throw new Error('Unexpected shared command');
+          window.fixtureDisplayAssignments ||= {};
+          for (const key of msg.keys) {
+            if (msg.calendars.length) window.fixtureDisplayAssignments[key] = msg.calendars;
+            else delete window.fixtureDisplayAssignments[key];
+          }
+          return {assignments: {...window.fixtureDisplayAssignments}};
+        },
         callService: async () => ({})
       };
       el.setConfig(config);

@@ -5,29 +5,71 @@ Alle wesentlichen Änderungen an diesem Projekt werden hier dokumentiert.
 
 ## [Unreleased]
 
+- Preserve shared assignments outside the editing card’s calendars and validate merged assignments before saving. / Gemeinsame Zuordnungen außerhalb der bearbeitenden Karte erhalten und zusammengeführte Zuordnungen vor dem Speichern prüfen.
+
+
+- Reject nonexistent local times during spring clock changes instead of shifting appointments by an hour. / Nicht existierende lokale Uhrzeiten bei der Zeitumstellung ablehnen, statt Termine um eine Stunde zu verschieben.
+
+
+- Reject impossible timed-event dates and overflowing clock values instead of silently moving appointments. / Unmögliche Datums- und Uhrzeitwerte bei Terminen ablehnen, statt sie stillschweigend zu verschieben.
+
+
+- Reject invalid selected recurrence limits instead of silently saving an unlimited series. / Ungültige ausgewählte Wiederholungsgrenzen ablehnen, statt unbegrenzte Serien zu speichern.
+
+
+- Preserve recurring occurrence scope on updates and moves when providers return a recurrence ID without an rrule. / Vorkommensbegrenzung beim Bearbeiten und Verschieben auch ohne gelieferte Wiederholungsregel erhalten.
+
+
+- Keep additional display-calendar badges and event visibility when the original calendar belongs to a virtual group. / Zusätzliche Anzeigekalender und Termine bleiben auch bei einer ausgeblendeten virtuellen Originalgruppe sichtbar.
+
+
+- Preserve the Agenda scroll position when shared calendar assignments update, including deferred refreshes after closing the event dialog. / Agenda-Scrollposition bei gemeinsamen Kalenderzuordnungen erhalten, auch nach dem Schließen eines Dialogs.
+
+
+- Prevent stale shared-calendar save replies from replacing newer updates; notify other devices even if the writer disconnects after saving.
+- Compare future recurring color rules chronologically across explicit time-zone offsets.
+
+
+### Added / Hinzugefügt
+- Share display-only calendar assignments across devices and users with the Home Assistant companion integration. / Anzeigezuordnungen mit der Home-Assistant-Begleitintegration auf allen Geräten und für alle Benutzer teilen.
+- Add Agenda text alignment in the visual editor and YAML (`auto`, `left`, `center`, `right`). / Textausrichtung der Agenda im Editor und YAML wählen.
+
+### Changed / Geändert
+- Saving display assignments requires the companion; failed saves show an error instead of silently remaining local. Existing local assignments must be selected and saved again. / Das Speichern benötigt die Begleitintegration; bei Fehlern erscheint eine Meldung. Bisherige lokale Zuordnungen einmal neu auswählen und speichern.
+
+
 ### Fixed / Behoben
+- Reset the form-error timeout when a new error appears, so an older timer cannot hide the new message early. / Bei einer neuen Formularfehlermeldung den Timer zurücksetzen, damit ein älterer Timer sie nicht vorzeitig ausblendet.
+- Register calendar and discrete family-rule change handlers only once in the editor. / Änderungen an Kalenderauswahl und Familienregel-Auswahlfeldern werden im Editor nur einmal verarbeitet.
+- Reject invalid explicit event end times instead of silently replacing them; validate chunk sizes to prevent non-progressing date-range loops. / Ungültige eingegebene Endzeiten nicht stillschweigend ersetzen; ungültige Abschnittsgrößen gegen Endlosschleifen absichern.
+- Ignore malformed or outdated shared-storage replies and isolate disconnected subscribers. / Fehlerhafte und verspätete Speicherantworten ignorieren; getrennte Abonnenten beeinträchtigen andere Geräte nicht mehr.
+
+- Give combined-calendar initials their own wrapping row below Agenda content, avoiding overlap with event times. / Kalenderkürzel erhalten in der Agenda eine eigene umbrechende Zeile unter dem Termininhalt und überlagern die Uhrzeit nicht mehr.
 - Keep the popup header and close button visible during scrolling. / Popup-Kopfzeile und Schließen-Schaltfläche bleiben beim Scrollen sichtbar.
 - Make additional calendar selections readable in light and dark mode with matching popup styling. / Zusätzliche Kalenderauswahl ist in heller und dunkler Ansicht lesbar und passend gestaltet.
 - Clicking the popup backdrop closes it without saving draft inputs or reopening a parent dialog. Dragging from inside does not dismiss it. / Ein Klick außerhalb schließt ohne Speichern oder Rückkehr zum übergeordneten Dialog; Ziehen von innen nach außen schließt nicht.
 
 
-### Fixed / Behoben
 - Display assignments remain limited to one occurrence even when a calendar integration omits recurrence metadata. / Anzeigezuordnungen bleiben auf ein Vorkommen begrenzt, auch ohne Wiederholungsmetadaten.
 - Time and font settings follow visible assigned calendars when the source calendar is hidden. / Uhrzeit und Schriftfarbe berücksichtigen sichtbare zugeordnete Kalender bei ausgeblendetem Ursprung.
 - Release asset uploads use the release tag and reject a mismatching bundle version. / Release-Dateien werden aus dem zugehörigen Tag geladen; abweichende Kartenversionen brechen den Upload ab.
 
 
+### Maintenance / Wartung
+- Remove unused editor imports and the duplicate form-error method without changing layout. / Unbenutzte Editor-Imports und doppelte Formularfehler-Methode entfernen, ohne das Layout zu ändern.
+- Check all authored JavaScript files and duplicate class methods in CI. / Alle JavaScript-Quelldateien und doppelte Klassenmethoden in CI prüfen.
+
 ### English 🇺🇸
 
 #### Added
 
-- Assign additional display calendars to an existing event from its details, including read-only invitations. Calendar names and colors are displayed without editing or copying the original event. Assignments persist in this browser; recurring events apply to the selected occurrence only.
+- Assign additional display calendars to an existing event from its details, including read-only invitations. Calendar names and colors are displayed without editing or copying the original event. Assignments use the shared Home Assistant companion store; recurring events apply to the selected occurrence only.
 
 ### Deutsch 🇩🇪
 
 #### Hinzugefügt
 
-- Zusätzliche Anzeigekalender im Terminfenster auswählen, auch bei schreibgeschützten Einladungen. Kalendernamen und Farben erscheinen ohne Änderung oder Kopie des Originaltermins. Die Zuordnung bleibt in diesem Browser gespeichert; bei Serien gilt sie für das ausgewählte Vorkommen.
+- Zusätzliche Anzeigekalender im Terminfenster auswählen, auch bei schreibgeschützten Einladungen. Kalendernamen und Farben erscheinen ohne Änderung oder Kopie des Originaltermins. Die Zuordnung wird mit der Home-Assistant-Begleitintegration zentral gespeichert; bei Serien gilt sie für das ausgewählte Vorkommen.
 
 
 ### English 🇺🇸

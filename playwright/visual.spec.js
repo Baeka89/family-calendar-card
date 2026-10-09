@@ -2358,13 +2358,13 @@ test('header gradient: visual editor selections survive config round trip', asyn
 });
 
 
-test('display calendars: read-only invitation can be assigned and cleared without backend writes', async ({page}) => {
+test('display calendars: read-only invitation can be assigned and cleared without calendar service writes', async ({page}) => {
   await page.goto(`file://${path.join(process.cwd(), 'playwright', 'ha-fixture.html')}`);
   await page.evaluate(() => {
     const card=document.createElement('family-calendar-card');
     card.setConfig({entities:['calendar.family','calendar.work'],default_view:'week',language:'en',enable_event_management:false,
       preference_storage_key:'display-calendars-browser-test',colors:{'calendar.family':'#ff0000','calendar.work':'#0000ff'}});
-    card._hass={states:{},callService(){throw new Error('Unexpected backend write');},callWS(){throw new Error('Unexpected backend request');}};
+    card._hass={states:{},callService(){throw new Error('Unexpected backend write');},callWS:async msg=>{const assignments={};for(const key of msg.keys)if(msg.calendars.length)assignments[key]=msg.calendars;return {assignments};}};
     card._calendarCapabilities={'calendar.family':{isReadonly:true}};
     document.body.append(card);
     card.showEventModal({entityId:'calendar.family',uid:'invitation',summary:'Invitation',start:'2026-10-07T10:00:00Z',end:'2026-10-07T11:00:00Z',color:'#ff0000'});
@@ -2388,12 +2388,12 @@ test('display calendars: read-only invitation can be assigned and cleared withou
 for (const view of ['week', 'schedule', 'month', 'agenda']) {
   test(`display calendars: visual source colors in ${view}`, async ({page}) => {
     await page.goto(`file://${path.join(process.cwd(), 'playwright', 'ha-fixture.html')}`);
-    await page.evaluate(({view}) => {
+    await page.evaluate(async ({view}) => {
       const event={entityId:'calendar.family',uid:'display-view',summary:'Shared Invitation',start:'2026-03-17T10:00:00Z',end:'2026-03-17T11:00:00Z',color:'#ff0000'};
       window.renderCalendarCard({config:{entities:['calendar.family','calendar.work'],default_view:view,colors:{'calendar.family':'#ff0000','calendar.work':'#0000ff'},preference_storage_key:`display-view-${view}`,enable_event_management:false},events:{'calendar.family':[event],'calendar.work':[]},darkMode:false});
       const card=document.querySelector('family-calendar-card-legacy');
       // Set a display-only assignment using the same stable UID as the fetched event.
-      card.saveEventDisplayCalendars(event,['calendar.work']);
+      await card.saveEventDisplayCalendars(event,['calendar.work']);
       card.render();
     }, {view});
     const card=page.locator('family-calendar-card-legacy');

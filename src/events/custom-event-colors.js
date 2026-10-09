@@ -45,6 +45,18 @@ export function getCustomEventColorKeys(event, { getEventIdentityKey } = {}) {
   return { isRecurring, occurrenceKey, seriesKey, occurrenceToken, supportsSeries: !!seriesKey, supportsFuture: !!(seriesKey && occurrenceToken) };
 }
 
+function compareOccurrenceTokens(first, second) {
+  // ISO timestamps with explicit offsets must be ordered by their actual instant.
+  // Preserve the existing ordering for date-only and opaque recurrence tokens.
+  const zonedTimestamp = /^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:?\d{2})$/i;
+  if (zonedTimestamp.test(first) && zonedTimestamp.test(second)) {
+    const firstTime = Date.parse(first);
+    const secondTime = Date.parse(second);
+    if (Number.isFinite(firstTime) && Number.isFinite(secondTime)) return firstTime - secondTime;
+  }
+  return first < second ? -1 : first > second ? 1 : 0;
+}
+
 function normalizeColorOrNull(value, allowNull = false) {
   if (value === null && allowNull) return null;
   return normalizeHexColor(value);
@@ -77,7 +89,7 @@ export function normalizeCustomEventColors(value) {
           return { from: stablePart(rule.from), color: normalized };
         })
         .filter(Boolean)
-        .sort((a, b) => a.from.localeCompare(b.from));
+        .sort((a, b) => compareOccurrenceTokens(a.from, b.from));
       if (normalizedRules.length) next.future[key] = normalizedRules;
     });
   }
@@ -92,7 +104,7 @@ export function resolveCustomEventColor(event, state, { getEventIdentityKey } = 
     return colors.occurrences[keys.occurrenceKey];
   }
   if (keys.seriesKey && keys.occurrenceToken) {
-    const applicable = (colors.future[keys.seriesKey] || []).filter((rule) => rule.from <= keys.occurrenceToken).pop();
+    const applicable = (colors.future[keys.seriesKey] || []).filter((rule) => compareOccurrenceTokens(rule.from, keys.occurrenceToken) <= 0).pop();
     if (applicable) return applicable.color;
     if (Object.prototype.hasOwnProperty.call(colors.series, keys.seriesKey)) return colors.series[keys.seriesKey];
   }
@@ -109,9 +121,9 @@ export function applyCustomEventColor(state, event, scope, color, { getEventIden
     delete next.future[keys.seriesKey];
     Object.keys(next.occurrences).forEach((key) => { if (key.startsWith(`${keys.seriesKey}|occurrence|`)) delete next.occurrences[key]; });
   } else if (scope === 'future' && keys?.seriesKey && keys?.occurrenceToken) {
-    const rules = (next.future[keys.seriesKey] || []).filter((rule) => rule.from < keys.occurrenceToken);
+    const rules = (next.future[keys.seriesKey] || []).filter((rule) => compareOccurrenceTokens(rule.from, keys.occurrenceToken) < 0);
     rules.push({ from: keys.occurrenceToken, color: normalized });
-    next.future[keys.seriesKey] = rules.sort((a, b) => a.from.localeCompare(b.from));
+    next.future[keys.seriesKey] = rules.sort((a, b) => compareOccurrenceTokens(a.from, b.from));
   } else if (keys?.occurrenceKey) {
     if (normalized === null) next.occurrences[keys.occurrenceKey] = null;
     else next.occurrences[keys.occurrenceKey] = normalized;
