@@ -3,6 +3,15 @@
 All notable changes to this project are documented in this file.
 Alle wesentlichen Änderungen an diesem Projekt werden hier dokumentiert.
 
+## [Unreleased]
+
+## [v0.1.6]
+
+- EN: Apply hidden calendar badges to all views and event details, while preserving events, colors and calendar selection.
+- DE: Ausgeblendete Kalender-Badges gelten in allen Ansichten und Termindetails; Termine, Farben und Kalenderauswahl bleiben erhalten.
+
+- Let Agenda use its content height when compact height is disabled, removing stretched empty space. Fixed-height compact layouts keep their existing behavior. / Die Agenda verwendet bei deaktivierter kompakter Höhe ihre Inhaltshöhe und reserviert keinen gestreckten Leerraum. Kompakte Layouts mit vorgegebener Höhe behalten ihr Verhalten.
+
 ## [v0.1.5]
 
 - Include all 48 example screenshots, their configurations and the interactive gallery in the repository. / Alle 48 Beispielbilder einschließlich Konfigurationen und interaktiver Galerie ins Repository aufnehmen.

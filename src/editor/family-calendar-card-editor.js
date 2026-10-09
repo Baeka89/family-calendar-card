@@ -1907,7 +1907,7 @@ export class FamilyCalendarCardEditor extends HTMLElement {
         </div>
       </div>
       ${this.renderSubSection('Read-only calendars', `<div class="list-checkbox-grid">${this.renderCalendarListCheckboxes('readonly_calendars', { label: 'read-only calendars' })}</div>`)}
-      ${this.renderSubSection('Hide header badges for calendars', `<div class="list-checkbox-grid">${this.renderCalendarListCheckboxes('hide_badge_calendars', { label: 'hidden header badges calendars' })}</div>`)}
+      ${this.renderSubSection('Hide calendar badges in all views', `<div class="list-checkbox-grid">${this.renderCalendarListCheckboxes('hide_badge_calendars', { label: 'calendars with hidden badges' })}</div>`)}
       ${this.renderSubSection('Calendars hidden by default', `<div class="list-checkbox-grid">${this.renderCalendarListCheckboxes('default_hidden_calendars', { label: 'calendars hidden by default' })}</div>`)}
       ${this.renderSubSection('Virtual calendars', this.renderVirtualCalendarsEditor())}
     `);

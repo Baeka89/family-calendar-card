@@ -25,12 +25,28 @@ agenda_text_alignment: left
 
 Accepted values are `left`, `center`, `right`, and `auto` (default, preserving the existing layout). The setting applies to event title, time, and location in standard and compact Agenda layouts. Calendar initials occupy their own wrapping row below the content, so they do not overlap the time.
 
+## Fit the height to the events
+
+With `compact_height: false` (default), Agenda uses its content height rather than stretching to fill its parent. Enable `hide_empty_days` to omit days without visible events. An explicit height in the dashboard layout or custom CSS can still reserve space outside the card; remove that height or select automatic sizing in the dashboard editor.
+
+```yaml
+type: custom:family-calendar-card
+entities:
+  - calendar.family
+default_view: agenda
+rolling_days_agenda: 2  # Today plus two days: three calendar dates in total
+compact_height: false
+hide_empty_days: true
+```
+
+`compact_height: true` intentionally fills a fixed-height container or the available viewport and keeps internal scrolling. Changing the number of days does not change that allocated height.
+
 ## Configuration Options
 
 <ParamField path="rolling_days_agenda" default="null" type="number">
   Used by **Agenda** only.
 
-  The number of days ahead the Agenda view covers, counting from today. Set it to `7` for a one-week lookahead, or `30` for a rolling month. The list stops after this many days regardless of whether there are events remaining.
+  The number of days after today covered by Agenda; today is included in addition. For example, `2` displays three calendar dates in total, and `6` displays seven. The list stops at the end of this date range, regardless of whether more events exist.
 </ParamField>
 
 <ParamField path="agenda_compact_events" default="false" type="boolean">

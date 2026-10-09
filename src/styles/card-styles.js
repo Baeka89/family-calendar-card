@@ -1180,6 +1180,18 @@ export function getCardStyles() {
         min-height: 0;
       }
 
+      family-calendar-card.agenda-content-height,
+      family-calendar-card-legacy.agenda-content-height,
+      .calendar-container.agenda-content-height {
+        height: auto;
+        min-height: 0;
+      }
+
+      .calendar-container.agenda-content-height > .calendar-body,
+      .calendar-container.agenda-content-height > .calendar-body > .agenda-container {
+        flex: 0 0 auto;
+      }
+
       .agenda-day-row {
         display: grid;
         grid-template-columns: 88px minmax(0, 1fr);

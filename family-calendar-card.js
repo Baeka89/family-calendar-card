@@ -1162,7 +1162,7 @@ const EDITOR_TRANSLATION_ROWS = [
   ['Hide event actions', 'Masquer les actions d’événement', 'Terminaktionen ausblenden', 'Afspraakacties verbergen', 'Ocultar acciones del evento', 'Peida sündmuse toimingud', 'Amaga les accions de l’esdeveniment', 'Skjul begivenhedshandlinger', 'Dölj händelseåtgärder'],
   ['Hide selected actions from the event detail popup. This changes the UI only; use read-only calendars or disable event management to prevent modifications.', 'Masque les actions sélectionnées dans les détails. Cela ne modifie que l’interface ; utilisez des calendriers en lecture seule ou désactivez la gestion pour empêcher les modifications.', 'Blendet ausgewählte Aktionen im Terminfenster aus. Dies ändert nur die Oberfläche; für Schreibschutz Kalender auf nur lesen setzen oder Terminverwaltung deaktivieren.', 'Verbergt gekozen acties in afspraakdetails. Dit wijzigt alleen de interface; gebruik alleen-lezen agenda’s of schakel beheer uit om wijzigingen te voorkomen.', 'Oculta acciones seleccionadas en los detalles. Solo cambia la interfaz; usa calendarios de solo lectura o desactiva la gestión para impedir cambios.', 'Peidab valitud toimingud üksikasjades. See muudab ainult kasutajaliidest; muudatuste vältimiseks kasuta kirjutuskaitstud kalendreid või keela haldamine.', 'Amaga les accions seleccionades als detalls. Només canvia la interfície; usa calendaris de només lectura o desactiva la gestió per impedir canvis.', 'Skjuler valgte handlinger i detaljerne. Det ændrer kun brugerfladen; brug skrivebeskyttede kalendere eller slå styring fra for at forhindre ændringer.', 'Döljer valda åtgärder i detaljvyn. Det ändrar bara gränssnittet; använd skrivskyddade kalendrar eller inaktivera hantering för att förhindra ändringar.'],
   ['Read-only calendars', 'Calendriers en lecture seule', 'Schreibgeschützte Kalender', 'Alleen-lezen agenda’s', 'Calendarios de solo lectura', 'Kirjutuskaitstud kalendrid', 'Calendaris de només lectura', 'Skrivebeskyttede kalendere', 'Skrivskyddade kalendrar'],
-  ['Hide header badges for calendars', 'Masquer les badges des calendriers dans l’en-tête', 'Kalender-Badges im Kopf ausblenden', 'Agendab adges in kop verbergen', 'Ocultar insignias en cabecera', 'Peida päise kalendrimärgid', 'Amaga les insígnies a la capçalera', 'Skjul kalenderbadges i overskriften', 'Dölj kalenderbrickor i rubriken'],
+  ['Hide calendar badges in all views', 'Masquer les badges des calendriers dans toutes les vues', 'Kalender-Badges in allen Ansichten ausblenden', 'Kalenderbadges in alle weergaven verbergen', 'Ocultar insignias de calendario en todas las vistas', 'Peida kalendrimärgid kõigis vaadetes', 'Amaga les insígnies dels calendaris en totes les vistes', 'Skjul kalenderbadges i alle visninger', 'Dölj kalenderbrickor i alla vyer'],
   ['Calendars hidden by default', 'Calendriers masqués par défaut', 'Standardmäßig ausgeblendete Kalender', 'Agenda’s standaard verborgen', 'Calendarios ocultos por defecto', 'Vaikimisi peidetud kalendrid', 'Calendaris amagats per defecte', 'Kalendere skjult som standard', 'Kalendrar dolda som standard'],
   ['Virtual calendars', 'Calendriers virtuels', 'Virtuelle Kalender', 'Virtuele agenda’s', 'Calendarios virtuales', 'Virtuaalsed kalendrid', 'Calendaris virtuals', 'Virtuelle kalendere', 'Virtuella kalendrar'],
   ['Localization & preferences', 'Localisation et préférences', 'Sprache und Einstellungen', 'Taal en voorkeuren', 'Idioma y preferencias', 'Keel ja eelistused', 'Idioma i preferències', 'Sprog og indstillinger', 'Språk och inställningar'],
@@ -1225,7 +1225,7 @@ const EDITOR_TRANSLATION_ROWS = [
   ['Edit', 'Modifier', 'Bearbeiten', 'Bewerken', 'Editar', 'Muuda', 'Edita', 'Rediger', 'Redigera'],
   ['hidden times calendars', 'calendriers dont les heures sont masquées', 'Kalender mit ausgeblendeten Zeiten', 'agenda’s met verborgen tijden', 'calendarios con horas ocultas', 'peidetud kellaaegadega kalendrid', 'calendaris amb hores amagades', 'kalendere med skjulte tidspunkter', 'kalendrar med dolda tider'],
   ['read-only calendars', 'calendriers en lecture seule', 'schreibgeschützte Kalender', 'alleen-lezen agenda’s', 'calendarios de solo lectura', 'kirjutuskaitstud kalendrid', 'calendaris de només lectura', 'skrivebeskyttede kalendere', 'skrivskyddade kalendrar'],
-  ['hidden header badges calendars', 'calendriers dont les badges sont masqués', 'Kalender mit ausgeblendeten Kopf-Badges', 'agenda’s met verborgen kopbadges', 'calendarios con insignias ocultas', 'peidetud päisemärkidega kalendrid', 'calendaris amb insígnies amagades', 'kalendere med skjulte badges', 'kalendrar med dolda brickor'],
+  ['calendars with hidden badges', 'calendriers dont les badges sont masqués', 'Kalender mit ausgeblendeten Badges', 'kalenders met verborgen badges', 'calendarios con insignias ocultas', 'peidetud märkidega kalendrid', 'calendaris amb insígnies amagades', 'kalendere med skjulte badges', 'kalendrar med dolda brickor'],
   ['calendars hidden by default', 'calendriers masqués par défaut', 'standardmäßig ausgeblendete Kalender', 'agenda’s standaard verborgen', 'calendarios ocultos por defecto', 'vaikimisi peidetud kalendrid', 'calendaris amagats per defecte', 'kalendere skjult som standard', 'kalendrar dolda som standard'],
   ['ID is required for runtime matching.', 'Un ID est requis pour l’identification.', 'Eine ID ist für die Zuordnung erforderlich.', 'Een ID is vereist voor herkenning.', 'Se requiere un ID para identificarlo.', 'Tuvastamiseks on vaja ID-d.', 'Cal un ID per identificar-lo.', 'Et ID kræves til identifikation.', 'Ett ID krävs för identifiering.'],
   ['ID duplicates another virtual calendar.', 'Cet ID est déjà utilisé par un autre calendrier virtuel.', 'Diese ID wird bereits von einem anderen virtuellen Kalender verwendet.', 'Deze ID wordt al gebruikt door een andere virtuele agenda.', 'Este ID ya lo usa otro calendario virtual.', 'Seda ID-d kasutab juba teine virtuaalne kalender.', 'Un altre calendari virtual ja utilitza aquest ID.', 'Dette ID bruges allerede af en anden virtuel kalender.', 'Det här ID:t används redan av en annan virtuell kalender.'],
@@ -1517,7 +1517,7 @@ function resolveHeaderButtonGradientColors(rawColor, context = {}) {
   return config.calendars.map(target => resolveHeaderButtonColor(`calendar:${target}`, context)).filter(Boolean);
 }
 
-const FAMILY_CALENDAR_CARD_VERSION = 'v0.1.5';
+const FAMILY_CALENDAR_CARD_VERSION = 'v0.1.6';
 
 function getFamilyCalendarCardVersion() {
   return FAMILY_CALENDAR_CARD_VERSION.includes('__')
@@ -4059,7 +4059,7 @@ class FamilyCalendarCardEditor extends HTMLElement {
         </div>
       </div>
       ${this.renderSubSection('Read-only calendars', `<div class="list-checkbox-grid">${this.renderCalendarListCheckboxes('readonly_calendars', { label: 'read-only calendars' })}</div>`)}
-      ${this.renderSubSection('Hide header badges for calendars', `<div class="list-checkbox-grid">${this.renderCalendarListCheckboxes('hide_badge_calendars', { label: 'hidden header badges calendars' })}</div>`)}
+      ${this.renderSubSection('Hide calendar badges in all views', `<div class="list-checkbox-grid">${this.renderCalendarListCheckboxes('hide_badge_calendars', { label: 'calendars with hidden badges' })}</div>`)}
       ${this.renderSubSection('Calendars hidden by default', `<div class="list-checkbox-grid">${this.renderCalendarListCheckboxes('default_hidden_calendars', { label: 'calendars hidden by default' })}</div>`)}
       ${this.renderSubSection('Virtual calendars', this.renderVirtualCalendarsEditor())}
     `);
@@ -6316,6 +6316,18 @@ function getCardStyles() {
         padding-right: 4px;
         flex: 1 1 auto;
         min-height: 0;
+      }
+
+      family-calendar-card.agenda-content-height,
+      family-calendar-card-legacy.agenda-content-height,
+      .calendar-container.agenda-content-height {
+        height: auto;
+        min-height: 0;
+      }
+
+      .calendar-container.agenda-content-height > .calendar-body,
+      .calendar-container.agenda-content-height > .calendar-body > .agenda-container {
+        flex: 0 0 auto;
       }
 
       .agenda-day-row {
@@ -11841,7 +11853,7 @@ function renderEventDetailsModal({
           </div>
         ` : '');
 
-  const combinedBadgeHtml = event.isCombinedCalendarEvent
+  const combinedBadgeHtml = visibleBadges.length === 0 ? '' : event.isCombinedCalendarEvent
     ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">${visibleBadges.map(calendar => `<span class="modal-calendar-badge" style="background: ${calendar.color}; color: ${calendar.textColor || 'white'}; display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px;">${escapeHtml(calendar.name)}</span>`).join('')}</div>`
     : `<div class="modal-calendar-badge" style="background: ${modalBadgeColor}; color: ${modalBadgeTextColor}; display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-top: 8px;">${escapeHtml(calendarName)}</div>`;
 
@@ -16764,6 +16776,8 @@ class FamilyCalendarCard extends HTMLElement {
 
   render() {
     this._sharedDisplayNeedsRender = false;
+    const agendaContentHeight = this._viewMode === 'agenda' && !this._config.compact_height;
+    this.classList?.toggle?.('agenda-content-height', agendaContentHeight);
     this._dayBadgeActions = new Map();
     this._dayBadgeActionSequence = 0;
     const shouldRestoreAgendaScrollPosition = this._viewMode === 'agenda' && Number.isFinite(this._agendaPendingScrollTop);
@@ -16878,7 +16892,7 @@ class FamilyCalendarCard extends HTMLElement {
         </style>
       ` : ''}
 
-      <div class="calendar-container ${this._isDarkMode ? 'dark-mode' : ''} ${hasCustomBackground ? 'custom-background' : ''} ${this._config.hide_year ? 'hide-year' : ''} ${this._config.agenda_compact_events ? 'agenda-compact-events' : ''}" style="${containerStyle}">
+      <div class="calendar-container ${agendaContentHeight ? 'agenda-content-height' : ''} ${this._isDarkMode ? 'dark-mode' : ''} ${hasCustomBackground ? 'custom-background' : ''} ${this._config.hide_year ? 'hide-year' : ''} ${this._config.agenda_compact_events ? 'agenda-compact-events' : ''}" style="${containerStyle}">
         ${this._config.hide_header ? '' : (this._config.compact_header ? this.renderCompactHeader() : this.renderStandardHeader())}
         ${this.renderEventRefreshWarning()}
         <div class="calendar-body">
@@ -20770,6 +20784,13 @@ class FamilyCalendarCard extends HTMLElement {
     return getModalCalendarBadgesForEvent(event, {
       hiddenCalendars: this._hiddenCalendars,
       getVisibleCalendarBadges: (badgeEvent) => this.getVisibleCalendarBadgesForEvent(badgeEvent)
+    }).filter(calendar => {
+      const hiddenBadges = this._config.hide_badge_calendars || [];
+      if (hiddenBadges.includes(calendar.entityId)) return false;
+      if (!calendar.entityId.startsWith('virtual:')) return true;
+      const virtualCalendar = this.getVirtualBadgeById(calendar.entityId.slice('virtual:'.length));
+      return !virtualCalendar || virtualCalendar.entities.some(entityId =>
+        this._config.entities.includes(entityId) && !hiddenBadges.includes(entityId));
     });
   }
 

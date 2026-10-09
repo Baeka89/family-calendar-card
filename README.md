@@ -275,3 +275,11 @@ Agenda-Textausrichtung / Agenda text alignment: `agenda_text_alignment: left` (a
 Card, visual editor and companion setup support English, German, French, Dutch, Spanish, Estonian, Catalan, Danish and Swedish. README and changelog are maintained in English and German. Home Assistant’s selected language is used where supported; other languages fall back to English.
 
 Karte, visueller Editor und Einrichtung der Begleitintegration unterstützen Englisch, Deutsch, Französisch, Niederländisch, Spanisch, Estnisch, Katalanisch, Dänisch und Schwedisch. README und Changelog werden auf Englisch und Deutsch gepflegt. Die gewählte Home-Assistant-Sprache wird verwendet, sofern unterstützt; andere Sprachen verwenden Englisch.
+
+### Agenda content height / Agenda-Inhaltshöhe
+
+**English:** Set `compact_height: false` to size Agenda to its visible content. Use `hide_empty_days: true` to omit dates without visible events. `rolling_days_agenda: 2` means today plus two additional days (three dates in total). Remove any explicit height allocation in the dashboard layout if space is still reserved outside the card. `compact_height: true` intentionally fills a fixed-height layout or the available viewport.
+
+**Deutsch:** Mit `compact_height: false` richtet sich die Agenda-Höhe nach dem sichtbaren Inhalt. `hide_empty_days: true` lässt Tage ohne sichtbare Termine weg. `rolling_days_agenda: 2` bedeutet heute plus zwei weitere Tage (insgesamt drei Tage). Falls außerhalb der Karte weiterhin Platz reserviert ist, die feste Höhenvorgabe im Dashboard-Layout entfernen. `compact_height: true` füllt bewusst ein Layout mit fester Höhe oder die verfügbare Bildschirmhöhe.
+
+**Hidden calendar badges / Ausgeblendete Kalender-Badges:** `hide_badge_calendars` hides the selected calendars’ badges in every view and event details, including calendar name prefixes. Events and colors remain visible. / `hide_badge_calendars` blendet die Badges der ausgewählten Kalender in allen Ansichten und Termindetails aus, einschließlich Kalendernamen vor dem Titel. Termine und Farben bleiben sichtbar.

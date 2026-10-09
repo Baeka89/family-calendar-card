@@ -132,6 +132,8 @@ Do not duplicate the full docs in the README unless explicitly requested.
 
 ## Release/version rules
 
+* User version policy: increment the regular release version only when the user is ready to publish to GitHub. Local experiments append an iteration digit to the current release version (for example released v0.3.3, local v0.3.31); the next public release is v0.3.4. Never derive the next public release by incrementing the local experimental number.
+
 Do not update `FAMILY_CALENDAR_CARD_VERSION`, create tags, or change release workflows unless the prompt is specifically about preparing a release.
 
 Normal feature and bug-fix work should target `dev` unless told otherwise.

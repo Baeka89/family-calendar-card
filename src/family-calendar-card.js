@@ -3922,6 +3922,8 @@ class FamilyCalendarCard extends HTMLElement {
 
   render() {
     this._sharedDisplayNeedsRender = false;
+    const agendaContentHeight = this._viewMode === 'agenda' && !this._config.compact_height;
+    this.classList?.toggle?.('agenda-content-height', agendaContentHeight);
     this._dayBadgeActions = new Map();
     this._dayBadgeActionSequence = 0;
     const shouldRestoreAgendaScrollPosition = this._viewMode === 'agenda' && Number.isFinite(this._agendaPendingScrollTop);
@@ -4036,7 +4038,7 @@ class FamilyCalendarCard extends HTMLElement {
         </style>
       ` : ''}
 
-      <div class="calendar-container ${this._isDarkMode ? 'dark-mode' : ''} ${hasCustomBackground ? 'custom-background' : ''} ${this._config.hide_year ? 'hide-year' : ''} ${this._config.agenda_compact_events ? 'agenda-compact-events' : ''}" style="${containerStyle}">
+      <div class="calendar-container ${agendaContentHeight ? 'agenda-content-height' : ''} ${this._isDarkMode ? 'dark-mode' : ''} ${hasCustomBackground ? 'custom-background' : ''} ${this._config.hide_year ? 'hide-year' : ''} ${this._config.agenda_compact_events ? 'agenda-compact-events' : ''}" style="${containerStyle}">
         ${this._config.hide_header ? '' : (this._config.compact_header ? this.renderCompactHeader() : this.renderStandardHeader())}
         ${this.renderEventRefreshWarning()}
         <div class="calendar-body">
@@ -7928,6 +7930,13 @@ class FamilyCalendarCard extends HTMLElement {
     return getModalCalendarBadgesForEventHelper(event, {
       hiddenCalendars: this._hiddenCalendars,
       getVisibleCalendarBadges: (badgeEvent) => this.getVisibleCalendarBadgesForEvent(badgeEvent)
+    }).filter(calendar => {
+      const hiddenBadges = this._config.hide_badge_calendars || [];
+      if (hiddenBadges.includes(calendar.entityId)) return false;
+      if (!calendar.entityId.startsWith('virtual:')) return true;
+      const virtualCalendar = this.getVirtualBadgeById(calendar.entityId.slice('virtual:'.length));
+      return !virtualCalendar || virtualCalendar.entities.some(entityId =>
+        this._config.entities.includes(entityId) && !hiddenBadges.includes(entityId));
     });
   }
 

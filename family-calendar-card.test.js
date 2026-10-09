@@ -12100,3 +12100,62 @@ test('all supported card and editor languages have complete translation keys and
     }
   }
 });
+
+test('Agenda content height switches off when changing to fixed-height or another view', (t) => {
+  const savedRaf=window.requestAnimationFrame;
+  const savedCancelRaf=window.cancelAnimationFrame;
+  window.requestAnimationFrame=()=>0;
+  window.cancelAnimationFrame=()=>{};
+  t.after(()=>{window.requestAnimationFrame=savedRaf;window.cancelAnimationFrame=savedCancelRaf;});
+  const card=makeCard({entities:['calendar.family'],default_view:'agenda',rolling_days_agenda:2,compact_height:false});
+  card.getAgendaEventMinHeight=()=>68;
+  card.getCompactMaxHeight=()=>900;
+  const classes=new Set();
+  card.classList={toggle(name,enabled){enabled?classes.add(name):classes.delete(name);}};
+  originalCardRender.call(card);
+  assert.ok(classes.has('agenda-content-height'));
+  assert.match(card._root.innerHTML,/<div class="calendar-container agenda-content-height /);
+  card._config.compact_height=true;
+  originalCardRender.call(card);
+  assert.equal(classes.has('agenda-content-height'),false);
+  assert.doesNotMatch(card._root.innerHTML,/<div class="calendar-container agenda-content-height /);
+  card._config.compact_height=false;
+  card._viewMode='month';
+  originalCardRender.call(card);
+  assert.equal(classes.has('agenda-content-height'),false);
+});
+
+
+test('hidden calendar badges suppress event badges and prefixes without hiding event metadata', () => {
+  const card=makeCard({entities:['calendar.waste','calendar.family'],hide_badge_calendars:['calendar.waste'],event_title_prefix:'badge'});
+  const waste={entityId:'calendar.waste',color:'#ff0000',summary:'Waste collection',start:{date:'2026-10-09'},end:{date:'2026-10-10'}};
+  assert.deepEqual(card.getModalCalendarBadgesForEvent(waste),[]);
+  assert.equal(card.renderEventIcon(waste),'');
+  assert.equal(card.renderEventTitleWithPrefix(waste,waste.summary),'Waste collection');
+  assert.equal(card.getVisibleCalendarBadgesForEvent(waste)[0].color,'#ff0000');
+  const combined={...waste,isCombinedCalendarEvent:true,sourceCalendars:[{entityId:'calendar.waste',color:'#ff0000'},{entityId:'calendar.family',color:'#00ff00'}]};
+  assert.deepEqual(card.getModalCalendarBadgesForEvent(combined),[{entityId:'calendar.family',color:'#00ff00'}]);
+  assert.match(card.renderEventIcon(combined),/week-standard-event-icon/);
+  card._config.hide_badge_calendars.push('calendar.family');
+  assert.deepEqual(card.getModalCalendarBadgesForEvent(combined),[]);
+});
+
+test('virtual calendar badges disappear only when all configured member badges are hidden', () => {
+  const card=makeCard({entities:['calendar.a','calendar.b'],hide_badge_calendars:['calendar.a','calendar.b']});
+  card._config.virtual_calendars=[{id:'family',entities:['calendar.a','calendar.b'],name:'Family'}];
+  const event={entityId:'calendar.a',color:'#ff0000'};
+  assert.deepEqual(card.getModalCalendarBadgesForEvent(event),[]);
+  card._config.hide_badge_calendars=['calendar.a'];
+  assert.equal(card.getModalCalendarBadgesForEvent(event)[0].entityId,'virtual:family');
+});
+
+test('event details do not restore a hidden single-calendar badge as a fallback', async () => {
+  const {renderEventDetailsModal}=await import('./src/renderers/event-modal-renderer.js');
+  const options={event:{summary:'Waste collection',color:'#ff0000'},visibleBadges:[],calendarName:'Waste',isAllDay:true,capabilities:{},hasUID:true,helpers:{escapeHtml:value=>String(value),formatDate:()=>'',formatEventTime:()=>'',formatDuration:()=>'',renderEventDescription:()=>'',t:key=>key}};
+  for(const combined of [false,true]){
+    const html=renderEventDetailsModal({...options,event:{...options.event,isCombinedCalendarEvent:combined}});
+    assert.doesNotMatch(html,/modal-calendar-badge/);
+    assert.match(html,/Waste collection/);
+  }
+  assert.match(renderEventDetailsModal({...options,visibleBadges:[{entityId:'calendar.waste',name:'Waste',color:'#ff0000'}]}),/modal-calendar-badge/);
+});
