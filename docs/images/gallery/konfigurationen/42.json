@@ -1,0 +1,24 @@
+{
+  "type": "custom:family-calendar-card",
+  "entities": [
+    "calendar.family",
+    "calendar.work",
+    "calendar.school"
+  ],
+  "language": "de",
+  "title": "Unser Familienkalender",
+  "enable_event_management": true,
+  "week_start_hour": 7,
+  "week_end_hour": 19,
+  "combine_calendars": true,
+  "colors": {
+    "calendar.family": "#e56b6f",
+    "calendar.work": "#4f86c6",
+    "calendar.school": "#52b788"
+  },
+  "default_view": "month",
+  "color_scheme": "dark",
+  "event_color_mode": "classic",
+  "event_tint_opacity": 22,
+  "event_neutral_background": "#f8f3e9"
+}

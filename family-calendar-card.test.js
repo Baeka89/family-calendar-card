@@ -753,6 +753,7 @@ test('event detail modal exposes Color action for read-only events and badge use
 test('combined event detail modal badges use visible source effective custom colors', async () => {
   const { applyCustomEventColor } = await import('./src/events/custom-event-colors.js');
   const card = makeCard({ entities: ['calendar.a', 'calendar.b', 'calendar.hidden'], combine_calendars: true });
+  card._sharedDisplayStore = {available:true};
   const sourceA = { entityId: 'calendar.a', uid: 'badge-a', color: '#ffffff', summary: 'Dup', location: '', start: { dateTime: '2026-05-01T10:00:00Z' }, end: { dateTime: '2026-05-01T11:00:00Z' } };
   const sourceB = { entityId: 'calendar.b', uid: 'badge-b', color: '#222222', summary: 'Dup', location: '', start: { dateTime: '2026-05-01T10:00:00Z' }, end: { dateTime: '2026-05-01T11:00:00Z' } };
   const hiddenSource = { entityId: 'calendar.hidden', uid: 'badge-hidden', color: '#333333', summary: 'Dup', location: '', start: { dateTime: '2026-05-01T10:00:00Z' }, end: { dateTime: '2026-05-01T11:00:00Z' } };
@@ -11746,6 +11747,7 @@ test('display assignment scopes recurring events to one occurrence', async () =>
 
 test('read-only event selection includes every configured calendar with original source locked', () => {
   const card=makeCard({entities:['calendar.family','calendar.work','calendar.school'],language:'de',enable_event_management:false});
+  card._sharedDisplayStore = {available:true};
   const event={entityId:'calendar.family',uid:'invite',start:'2026-10-07T10:00:00Z'};
   const html=card.renderEventDisplayCalendarsSelection(event);
   assert.match(html,/Betrifft auch diese Kalender/);
@@ -12063,4 +12065,38 @@ test('display assignment save identifies the calendars controlled by this card',
   await card.saveEventDisplayCalendars({entityId:'calendar.family',uid:'event',start:'2026-10-08T10:00:00Z'},['calendar.work','calendar.school']);
   assert.deepEqual(payload.managed_calendars,['calendar.family','calendar.work']);
   assert.deepEqual(payload.calendars,['calendar.work']);
+});
+
+
+test('standalone assignments show optional setup without unavailable controls', () => {
+  const card = makeCard({entities:['calendar.family'],language:'de'});
+  const html = card.renderEventDisplayCalendarsSelection({entityId:'calendar.family',uid:'invite',start:'2026-10-07T10:00:00Z'});
+  assert.match(html,/Optional:/);
+  assert.doesNotMatch(html,/save-display-calendars|data-display-calendar/);
+});
+
+test('all supported card and editor languages have complete translation keys and placeholders', async () => {
+  const {TRANSLATIONS} = await import('./src/translations.js');
+  const {EDITOR_TRANSLATION_LOCALES,EDITOR_TRANSLATION_ROWS} = await import('./src/editor/editor-translations.js');
+  const locales=['en','fr','de','nl','es','et','ca','da','sv'];
+  assert.deepEqual(Object.keys(TRANSLATIONS),locales);
+  assert.deepEqual(EDITOR_TRANSLATION_LOCALES,locales);
+  const reference=TRANSLATIONS.en.strings;
+  const placeholders=value=>[...value.matchAll(/\{[a-zA-Z_][a-zA-Z_0-9]*\}/g)].map(match=>match[0]).sort();
+  for(const locale of locales){
+    const strings=TRANSLATIONS[locale].strings;
+    assert.deepEqual(Object.keys(strings).sort(),Object.keys(reference).sort(),locale);
+    for(const key of Object.keys(reference)){
+      assert.ok(typeof strings[key]==='string'&&strings[key].trim(),`${locale}.${key}`);
+      assert.deepEqual(placeholders(strings[key]),placeholders(reference[key]),`${locale}.${key}`);
+    }
+    if(locale!=='en')for(const key of ['displayCalendarsIntegrationRequired','displayCalendarsSaveError'])assert.notEqual(strings[key],reference[key],`${locale}.${key}`);
+  }
+  for(const row of EDITOR_TRANSLATION_ROWS){
+    assert.equal(row.length,locales.length,row[0]);
+    for(const value of row){
+      assert.ok(typeof value==='string'&&value.trim(),row[0]);
+      assert.deepEqual(placeholders(value),placeholders(row[0]),row[0]);
+    }
+  }
 });

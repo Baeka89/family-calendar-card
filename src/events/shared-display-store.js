@@ -18,6 +18,7 @@ export function createSharedDisplayStore(onState) {
   let retryAfter = 0;
   let failedConnection;
   let latestState;
+  let available = false;
   let serverEpoch;
   let serverRevision = -1;
 
@@ -29,12 +30,14 @@ export function createSharedDisplayStore(onState) {
       serverRevision = message.revision;
     }
 
+    available = true;
     latestState = state;
     onState(state);
   }
 
   return {
     get state() { return latestState; },
+    get available() { return available; },
 
     async connect(nextConnection) {
       if (!nextConnection?.subscribeMessage || connection === nextConnection) return;
@@ -63,6 +66,7 @@ export function createSharedDisplayStore(onState) {
         }
       } catch {
         if (current === generation) {
+          available = false;
           connection = null;
           failedConnection = nextConnection;
           retryAfter = Date.now() + RETRY_DELAY_MS;
@@ -72,6 +76,7 @@ export function createSharedDisplayStore(onState) {
     },
 
     disconnect() {
+      available = false;
       generation += 1;
       serverEpoch = undefined;
       serverRevision = -1;

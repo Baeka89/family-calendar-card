@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Family Calendar Card Companion",
+        "description": "Activa les assignacions compartides a calendaris addicionals per a Family Calendar Card. La targeta del tauler també funciona sense aquesta integració."
+      }
+    },
+    "abort": {
+      "already_configured": "Aquesta integració ja està configurada."
+    }
+  }
+}

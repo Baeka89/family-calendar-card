@@ -59,7 +59,30 @@ class SharedStoreTests(unittest.IsolatedAsyncioTestCase):
         FakeStore.disk = {}
         FakeStore.fail = False
         self.hass = types.SimpleNamespace(data={})
-        await backend.async_setup(self.hass, {})
+        await backend.async_setup_entry(self.hass, None)
+
+    async def test_unconfigured_integration_does_not_start_storage(self):
+        hass = types.SimpleNamespace(data={})
+        self.assertTrue(await backend.async_setup(hass, {}))
+        self.assertNotIn(backend.DOMAIN, hass.data)
+
+    async def test_yaml_setup_imports_and_preserves_storage(self):
+        calls = []
+        tasks = []
+        async def async_init(domain, **kwargs):
+            calls.append((domain, kwargs))
+        key = backend.DOMAIN + ".display_calendars"
+        FakeStore.disk[key] = {"existing": ["calendar.family"]}
+        hass = types.SimpleNamespace(data={}, config_entries=types.SimpleNamespace(flow=types.SimpleNamespace(async_init=async_init)), async_create_task=lambda coro: tasks.append(asyncio.create_task(coro)))
+        self.assertTrue(await backend.async_setup(hass, {backend.DOMAIN: {}}))
+        await asyncio.gather(*tasks)
+        self.assertEqual(hass.data[backend.DOMAIN]["assignments"], {"existing": ["calendar.family"]})
+        self.assertEqual(calls, [(backend.DOMAIN, {"context": {"source": "import"}, "data": {}})])
+
+    async def test_entry_setup_is_idempotent(self):
+        data = self.hass.data[backend.DOMAIN]
+        self.assertTrue(await backend.async_setup_entry(self.hass, None))
+        self.assertIs(self.hass.data[backend.DOMAIN], data)
 
     async def test_two_clients_concurrent_updates_delete_and_restart(self):
         first, second = Connection(), Connection()
@@ -74,7 +97,7 @@ class SharedStoreTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(second.events[-1]["assignments"], expected)
         await backend.websocket_set(self.hass, first, {"id": 5, "keys": ["event-a"], "calendars": []})
         restarted = types.SimpleNamespace(data={})
-        await backend.async_setup(restarted, {})
+        await backend.async_setup_entry(restarted, None)
         self.assertEqual(restarted.data[backend.DOMAIN]["assignments"], {"event-b": ["calendar.school"]})
         second.subscriptions[2]()
         count = len(second.events)
@@ -96,7 +119,7 @@ class SharedStoreTests(unittest.IsolatedAsyncioTestCase):
         key = backend.DOMAIN + ".display_calendars"
         FakeStore.disk[key] = {"valid": ["calendar.work"], "bad": ["sensor.bad"], "empty": []}
         restarted = types.SimpleNamespace(data={})
-        await backend.async_setup(restarted, {})
+        await backend.async_setup_entry(restarted, None)
         self.assertEqual(restarted.data[backend.DOMAIN]["assignments"], {"valid": ["calendar.work"]})
         self.assertEqual(backend.normalize_assignments(["bad"]), {})
 
@@ -134,7 +157,7 @@ class SharedStoreTests(unittest.IsolatedAsyncioTestCase):
         await asyncio.gather(*(backend.websocket_set(self.hass, client, {"id": index + 1, "keys": ["same-event"], "calendars": [entity_id], "managed_calendars": [entity_id]}) for index, entity_id in enumerate(calendars)))
         self.assertEqual(set(self.hass.data[backend.DOMAIN]["assignments"]["same-event"]), set(calendars))
         restarted = types.SimpleNamespace(data={})
-        await backend.async_setup(restarted, {})
+        await backend.async_setup_entry(restarted, None)
         self.assertEqual(set(restarted.data[backend.DOMAIN]["assignments"]["same-event"]), set(calendars))
         self.assertEqual(self.hass.data[backend.DOMAIN]["revision"], len(calendars))
 
@@ -149,7 +172,7 @@ class SharedStoreTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.hass.data[backend.DOMAIN]["revision"], before_revision)
         self.assertNotIn("new-event", self.hass.data[backend.DOMAIN]["assignments"])
         restarted = types.SimpleNamespace(data={})
-        await backend.async_setup(restarted, {})
+        await backend.async_setup_entry(restarted, None)
         self.assertEqual(restarted.data[backend.DOMAIN]["assignments"]["event"], calendars)
 
     async def test_validation_rejects_bad_ids_and_bounds_payloads(self):

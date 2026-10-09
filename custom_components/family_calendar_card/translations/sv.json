@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Family Calendar Card Companion",
+        "description": "Aktivera delade tilldelningar till ytterligare kalendrar för Family Calendar Card. Panelkortet fungerar även utan denna integration."
+      }
+    },
+    "abort": {
+      "already_configured": "Den här integrationen är redan konfigurerad."
+    }
+  }
+}

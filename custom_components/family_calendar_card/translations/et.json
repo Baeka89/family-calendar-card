@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Family Calendar Card Companion",
+        "description": "Luba Family Calendar Cardi sündmuste jagatud lisakalendrite määrangud. Juhtpaneeli kaart töötab ka ilma selle integratsioonita."
+      }
+    },
+    "abort": {
+      "already_configured": "See integratsioon on juba seadistatud."
+    }
+  }
+}

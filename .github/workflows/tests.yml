@@ -29,4 +29,6 @@ jobs:
         run: npm test
 
       - name: Test shared calendar storage contracts
-        run: python3 tests/test_shared_store.py
+        run: |
+          python3 tests/test_shared_store.py
+          python3 tests/test_config_flow.py

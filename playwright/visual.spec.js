@@ -2360,13 +2360,14 @@ test('header gradient: visual editor selections survive config round trip', asyn
 
 test('display calendars: read-only invitation can be assigned and cleared without calendar service writes', async ({page}) => {
   await page.goto(`file://${path.join(process.cwd(), 'playwright', 'ha-fixture.html')}`);
-  await page.evaluate(() => {
+  await page.evaluate(async () => {
     const card=document.createElement('family-calendar-card');
     card.setConfig({entities:['calendar.family','calendar.work'],default_view:'week',language:'en',enable_event_management:false,
       preference_storage_key:'display-calendars-browser-test',colors:{'calendar.family':'#ff0000','calendar.work':'#0000ff'}});
     card._hass={states:{},callService(){throw new Error('Unexpected backend write');},callWS:async msg=>{const assignments={};for(const key of msg.keys)if(msg.calendars.length)assignments[key]=msg.calendars;return {assignments};}};
     card._calendarCapabilities={'calendar.family':{isReadonly:true}};
     document.body.append(card);
+    await card._sharedDisplayStore.connect({subscribeMessage:async callback=>{callback({assignments:{}});return ()=>{};}});
     card.showEventModal({entityId:'calendar.family',uid:'invitation',summary:'Invitation',start:'2026-10-07T10:00:00Z',end:'2026-10-07T11:00:00Z',color:'#ff0000'});
   });
   const card=page.locator('family-calendar-card').last();
@@ -2409,11 +2410,12 @@ for (const view of ['week', 'schedule', 'month', 'agenda']) {
 for (const darkMode of [false, true]) {
   test(`popup controls: readable assignment, sticky close and backdrop discard (${darkMode ? 'dark' : 'light'})`, async ({page}) => {
     await page.goto(`file://${path.join(process.cwd(), 'playwright', 'ha-fixture.html')}`);
-    await page.evaluate(({darkMode}) => {
+    await page.evaluate(async ({darkMode}) => {
       const card=document.createElement('family-calendar-card');
       card.setConfig({entities:['calendar.family','calendar.work'],language:'de',color_scheme:darkMode?'dark':'light',enable_event_management:false});
       card._hass={states:{},callService(){throw new Error('Unexpected save');},callWS(){throw new Error('Unexpected save');}};
       document.body.appendChild(card);
+      await card._sharedDisplayStore.connect({subscribeMessage:async callback=>{callback({assignments:{}});return ()=>{};}});
       window.popupTestEvent={entityId:'calendar.family',uid:'popup-test',summary:'Testtermin',description:Array(50).fill('Langer Beschreibungstext zum Scrollen.').join('\n\n'),start:'2026-10-08T10:00:00Z',end:'2026-10-08T11:00:00Z',color:'#ff0000'};
       card.showEventModal(window.popupTestEvent);
     }, {darkMode});
@@ -2441,3 +2443,21 @@ for (const darkMode of [false, true]) {
     await expect(card.locator('#event-modal')).not.toBeVisible();
   });
 }
+
+
+test('standalone event details keep normal actions and explain optional shared assignments', async ({page}) => {
+  await page.goto(`file://${path.join(process.cwd(), 'playwright', 'ha-fixture.html')}`);
+  await page.evaluate(() => {
+    const card=document.createElement('family-calendar-card');
+    card.setConfig({entities:['calendar.family'],language:'de'});
+    document.body.appendChild(card);
+    card.showEventModal({entityId:'calendar.family',uid:'standalone',summary:'Standalone event',start:'2026-10-08T10:00:00Z',end:'2026-10-08T11:00:00Z'});
+  });
+  const card=page.locator('family-calendar-card');
+  await expect(card.locator('#modal-content')).toContainText('Standalone event');
+  await card.locator('.event-display-calendars summary').click();
+  await expect(card.locator('.event-display-calendars')).toContainText('Optional:');
+  await expect(card.locator('#save-display-calendars')).toHaveCount(0);
+  await card.locator('#close-modal').click();
+  await expect(card.locator('#event-modal')).not.toBeVisible();
+});

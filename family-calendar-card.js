@@ -268,6 +268,7 @@ function createSharedDisplayStore(onState) {
   let retryAfter = 0;
   let failedConnection;
   let latestState;
+  let available = false;
   let serverEpoch;
   let serverRevision = -1;
 
@@ -279,12 +280,14 @@ function createSharedDisplayStore(onState) {
       serverRevision = message.revision;
     }
 
+    available = true;
     latestState = state;
     onState(state);
   }
 
   return {
     get state() { return latestState; },
+    get available() { return available; },
 
     async connect(nextConnection) {
       if (!nextConnection?.subscribeMessage || connection === nextConnection) return;
@@ -313,6 +316,7 @@ function createSharedDisplayStore(onState) {
         }
       } catch {
         if (current === generation) {
+          available = false;
           connection = null;
           failedConnection = nextConnection;
           retryAfter = Date.now() + RETRY_DELAY_MS;
@@ -322,6 +326,7 @@ function createSharedDisplayStore(onState) {
     },
 
     disconnect() {
+      available = false;
       generation += 1;
       serverEpoch = undefined;
       serverRevision = -1;
@@ -1201,7 +1206,7 @@ const EDITOR_TRANSLATION_ROWS = [
   ['No color override set', 'Aucune couleur personnalisée', 'Keine Farbabweichung festgelegt', 'Geen aangepaste kleur ingesteld', 'No se ha definido color personalizado', 'Värvi ülekirjutust pole määratud', 'No s’ha definit cap color personalitzat', 'Ingen farveoverskrivning valgt', 'Ingen färgåsidosättning inställd'],
   ['Override:', 'Remplacement :', 'Überschreibung:', 'Overschrijven:', 'Anulación:', 'Ülekirjutus:', 'Sobreescriu:', 'Tilsidesæt:', 'Åsidosätt:'],
   ['(not in configured calendars)', '(pas dans les calendriers configurés)', '(nicht in den konfigurierten Kalendern)', '(niet in ingestelde agenda’s)', '(no está en los calendarios configurados)', '(pole seadistatud kalendrites)', '(no és als calendaris configurats)', '(ikke i konfigurerede kalendere)', '(finns inte i konfigurerade kalendrar)'],
-  ['Select at least one real calendar above to include calendars here.', 'Sélectionnez ci-dessus au moins un calendrier réel à inclure ici.', 'Wählen Sie oben mindestens einen echten Kalender zur Aufnahme aus.', 'Selecteer hierboven minstens één echte agenda om hier op te nemen.', 'Selecciona arriba al menos un calendario real para incluirlo aquí.', 'Vali ülal vähemalt üks päriskalender, mida siia lisada.', 'Selecciona a dalt almenys un calendari real per incloure’l aquí.', 'Vælg mindst én rigtig kalender ovenfor, der skal medtages her.', 'Välj minst en riktig kalender ovan som ska ingå här.'],,
+  ['Select at least one real calendar above to include calendars here.', 'Sélectionnez ci-dessus au moins un calendrier réel à inclure ici.', 'Wählen Sie oben mindestens einen echten Kalender zur Aufnahme aus.', 'Selecteer hierboven minstens één echte agenda om hier op te nemen.', 'Selecciona arriba al menos un calendario real para incluirlo aquí.', 'Vali ülal vähemalt üks päriskalender, mida siia lisada.', 'Selecciona a dalt almenys un calendari real per incloure’l aquí.', 'Vælg mindst én rigtig kalender ovenfor, der skal medtages her.', 'Välj minst en riktig kalender ovan som ska ingå här.'],
   ['1 (browser picker)', '1 (sélecteur du navigateur)', '1 (Browser-Auswahl)', '1 (browserkiezer)', '1 (selector del navegador)', '1 (brauseri valik)', '1 (selector del navegador)', '1 (browservælger)', '1 (webbläsarens val)'],
   ['{count} minutes', '{count} minutes', '{count} Minuten', '{count} minuten', '{count} minutos', '{count} minutit', '{count} minuts', '{count} minutter', '{count} minuter'],
   ['Family Calendar Card', 'Family Calendar Card', 'Family Calendar Card', 'Family Calendar Card', 'Family Calendar Card', 'Family Calendar Card', 'Family Calendar Card', 'Family Calendar Card', 'Family Calendar Card'],
@@ -1512,7 +1517,7 @@ function resolveHeaderButtonGradientColors(rawColor, context = {}) {
   return config.calendars.map(target => resolveHeaderButtonColor(`calendar:${target}`, context)).filter(Boolean);
 }
 
-const FAMILY_CALENDAR_CARD_VERSION = 'v0.1.4';
+const FAMILY_CALENDAR_CARD_VERSION = 'v0.1.5';
 
 function getFamilyCalendarCardVersion() {
   return FAMILY_CALENDAR_CARD_VERSION.includes('__')
@@ -8241,6 +8246,7 @@ const TRANSLATIONS = {
     locale: 'en-US',
     strings: {
       displayCalendarsTitle: "Also concerns these calendars",
+      displayCalendarsIntegrationRequired: "Optional: Install and set up Family Calendar Card Companion to share additional calendar assignments across devices. The card works without it.",
       displayCalendarsHelp: "Shared across this Home Assistant instance. The original event is unchanged. Recurring events: this occurrence only.",
       displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
       displayCalendarSource: "Original calendar",
@@ -8370,8 +8376,9 @@ const TRANSLATIONS = {
     locale: 'fr-FR',
     strings: {
       displayCalendarsTitle: "Concerne aussi ces calendriers",
+      displayCalendarsIntegrationRequired: "Facultatif : installez et configurez Family Calendar Card Companion pour partager les associations à des calendriers supplémentaires entre vos appareils. La carte fonctionne également sans cette intégration.",
       displayCalendarsHelp: "Partagé dans cette instance Home Assistant. L’événement original reste inchangé. Récurrences : cette occurrence uniquement.",
-      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
+      displayCalendarsSaveError: "Non enregistré. Vérifiez que l’intégration Family Calendar Card Companion est installée et que Home Assistant est accessible.",
       displayCalendarSource: "Calendrier source",
       partialUpdateDeleteError: "Le nouveau rendez-vous est enregistré, mais l’original n’a pas pu être supprimé. Réessayez avec les mêmes valeurs et le même calendrier pour terminer la suppression sans créer de doublon.",
       partialBatchUpdateError: "Certains calendriers ont déjà été enregistrés. Réessayez avec les mêmes valeurs pour terminer les autres, puis rouvrez l’éditeur pour modifier à nouveau.",
@@ -8499,6 +8506,7 @@ const TRANSLATIONS = {
     locale: 'de-DE',
     strings: {
       displayCalendarsTitle: "Betrifft auch diese Kalender",
+      displayCalendarsIntegrationRequired: "Optional: Installiere und richte Family Calendar Card Companion ein, um zusätzliche Kalenderzuordnungen auf allen Geräten zu teilen. Die Karte funktioniert auch ohne diese Integration.",
       displayCalendarsHelp: "Für alle Geräte und Benutzer dieser Home-Assistant-Instanz. Der Originaltermin bleibt unverändert. Bei Wiederholungen gilt die Auswahl nur für dieses Vorkommen.",
       displayCalendarsSaveError: "Nicht gespeichert. Prüfe, ob die Begleitintegration Family Calendar Card installiert und Home Assistant erreichbar ist.",
       displayCalendarSource: "Quellkalender",
@@ -8628,8 +8636,9 @@ const TRANSLATIONS = {
     locale: 'nl-NL',
     strings: {
       displayCalendarsTitle: "Betreft ook deze kalenders",
+      displayCalendarsIntegrationRequired: "Optioneel: installeer en configureer Family Calendar Card Companion om extra kalendertoewijzingen tussen apparaten te delen. De kaart werkt ook zonder deze integratie.",
       displayCalendarsHelp: "Gedeeld binnen deze Home Assistant-installatie. De originele afspraak blijft ongewijzigd. Alleen deze herhaling.",
-      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
+      displayCalendarsSaveError: "Niet opgeslagen. Controleer of de integratie Family Calendar Card Companion is geïnstalleerd en Home Assistant bereikbaar is.",
       displayCalendarSource: "Bronkalender",
       partialUpdateDeleteError: "De nieuwe afspraak is opgeslagen, maar het origineel kon niet worden verwijderd. Probeer opnieuw met dezelfde waarden en doelagenda om alleen de verwijdering af te ronden.",
       partialBatchUpdateError: "Sommige agenda’s zijn al opgeslagen. Probeer opnieuw met dezelfde waarden om de overige agenda’s af te ronden. Open daarna de editor opnieuw voor verdere wijzigingen.",
@@ -8756,8 +8765,9 @@ const TRANSLATIONS = {
     locale: 'es-ES',
     strings: {
       displayCalendarsTitle: "También afecta a estos calendarios",
+      displayCalendarsIntegrationRequired: "Opcional: instala y configura Family Calendar Card Companion para compartir las asignaciones a calendarios adicionales entre dispositivos. La tarjeta también funciona sin esta integración.",
       displayCalendarsHelp: "Compartido en esta instancia de Home Assistant. El evento original no cambia. Solo esta ocurrencia.",
-      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
+      displayCalendarsSaveError: "No se ha guardado. Comprueba que la integración Family Calendar Card Companion esté instalada y que Home Assistant sea accesible.",
       displayCalendarSource: "Calendario original",
       partialUpdateDeleteError: "El evento nuevo se guardó, pero no se pudo eliminar el original. Reintenta con los mismos valores y calendario de destino para terminar la eliminación sin crear otro evento.",
       partialBatchUpdateError: "Algunos calendarios ya se guardaron. Reintenta con los mismos valores para completar los restantes y vuelve a abrir el editor para realizar más cambios.",
@@ -8885,8 +8895,9 @@ const TRANSLATIONS = {
     locale: 'et-EE',
     strings: {
       displayCalendarsTitle: "Puudutab ka neid kalendreid",
+      displayCalendarsIntegrationRequired: "Valikuline: paigalda ja seadista Family Calendar Card Companion, et jagada sündmuste lisakalendrite määranguid seadmete vahel. Kaart töötab ka ilma selle integratsioonita.",
       displayCalendarsHelp: "Jagatud selles Home Assistanti eksemplaris. Algne sündmus ei muutu. Ainult see kord.",
-      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
+      displayCalendarsSaveError: "Salvestamine ebaõnnestus. Kontrolli, et Family Calendar Card Companioni integratsioon oleks paigaldatud ja Home Assistant kättesaadav.",
       displayCalendarSource: "Algne kalender",
       partialUpdateDeleteError: "Uus sündmus on salvestatud, kuid algset ei saanud kustutada. Proovi samade väärtuste ja sihtkalendriga uuesti, et lõpetada kustutamine uut sündmust loomata.",
       partialBatchUpdateError: "Mõned kalendrid on juba salvestatud. Proovi samade väärtustega uuesti, et lõpetada ülejäänud, ning ava seejärel redaktor uute muudatuste jaoks.",
@@ -9014,8 +9025,9 @@ const TRANSLATIONS = {
     locale: 'ca-ES',
     strings: {
       displayCalendarsTitle: "També afecta aquests calendaris",
+      displayCalendarsIntegrationRequired: "Opcional: instal·la i configura Family Calendar Card Companion per compartir les assignacions a calendaris addicionals entre dispositius. La targeta també funciona sense aquesta integració.",
       displayCalendarsHelp: "Compartit en aquesta instància de Home Assistant. L’esdeveniment original no canvia. Només aquesta ocurrència.",
-      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
+      displayCalendarsSaveError: "No s’ha desat. Comprova que la integració Family Calendar Card Companion estigui instal·lada i que Home Assistant sigui accessible.",
       displayCalendarSource: "Calendari original",
       partialUpdateDeleteError: "L’esdeveniment nou s’ha desat, però no s’ha pogut eliminar l’original. Torna-ho a provar amb els mateixos valors i calendari de destinació per acabar l’eliminació sense crear-ne un altre.",
       partialBatchUpdateError: "Alguns calendaris ja s’han desat. Torna-ho a provar amb els mateixos valors per completar els restants i torna a obrir l’editor per fer més canvis.",
@@ -9143,8 +9155,9 @@ const TRANSLATIONS = {
     locale: 'da-DK',
     strings: {
       displayCalendarsTitle: "Vedrører også disse kalendere",
+      displayCalendarsIntegrationRequired: "Valgfrit: installer og konfigurer Family Calendar Card Companion for at dele tilknytninger til ekstra kalendere på tværs af enheder. Kortet fungerer også uden denne integration.",
       displayCalendarsHelp: "Delt i denne Home Assistant-instans. Originalen ændres ikke. Kun denne forekomst.",
-      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
+      displayCalendarsSaveError: "Ikke gemt. Kontrollér, at integrationen Family Calendar Card Companion er installeret, og at Home Assistant er tilgængelig.",
       displayCalendarSource: "Oprindelig kalender",
       partialUpdateDeleteError: "Den nye aftale er gemt, men originalen kunne ikke slettes. Prøv igen med de samme værdier og den samme målkalender for at afslutte sletningen uden at oprette endnu en aftale.",
       partialBatchUpdateError: "Nogle kalendere er allerede gemt. Prøv igen med de samme værdier for at afslutte de resterende, og åbn derefter editoren igen for flere ændringer.",
@@ -9272,8 +9285,9 @@ const TRANSLATIONS = {
     locale: 'sv-SE',
     strings: {
       displayCalendarsTitle: "Berör också dessa kalendrar",
+      displayCalendarsIntegrationRequired: "Valfritt: installera och konfigurera Family Calendar Card Companion för att dela tilldelningar till ytterligare kalendrar mellan enheter. Kortet fungerar även utan denna integration.",
       displayCalendarsHelp: "Delat i denna Home Assistant-instans. Originalet ändras inte. Endast denna förekomst.",
-      displayCalendarsSaveError: "Not saved. Check that the Family Calendar Card companion integration is installed and Home Assistant is reachable.",
+      displayCalendarsSaveError: "Inte sparat. Kontrollera att integrationen Family Calendar Card Companion är installerad och att Home Assistant är tillgänglig.",
       displayCalendarSource: "Ursprunglig kalender",
       partialUpdateDeleteError: "Den nya händelsen är sparad, men originalet kunde inte tas bort. Försök igen med samma värden och målkalender för att slutföra borttagningen utan att skapa en ny händelse.",
       partialBatchUpdateError: "Vissa kalendrar har redan sparats. Försök igen med samma värden för att slutföra de återstående och öppna sedan redigeraren igen för fler ändringar.",
@@ -20803,6 +20817,9 @@ class FamilyCalendarCard extends HTMLElement {
     const selected = new Set(getAssignedDisplayCalendars(event, this._eventDisplayCalendars, {getEventIdentityKey:this.getEventIdentityKey.bind(this)}));
     const keys = getEventDisplayKeys(event, {getEventIdentityKey:this.getEventIdentityKey.bind(this)});
     if (!keys.length) return '';
+    if (!this._sharedDisplayStore?.available) {
+      return `<details class="event-display-calendars"><summary>${this.t('displayCalendarsTitle')}</summary><p>${this.t('displayCalendarsIntegrationRequired')}</p></details>`;
+    }
     const sourceIds = new Set((event.displayOriginalEvent?.sourceEvents || event.sourceEvents || [event]).map(source=>source.entityId));
     return `<details class="event-display-calendars"><summary>${this.t('displayCalendarsTitle')}</summary>
       <p>${this.t('displayCalendarsHelp')}</p>

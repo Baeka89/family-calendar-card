@@ -1,0 +1,1343 @@
+[
+  {
+    "id": "01",
+    "title": "Monat · Hell · Vollfläche",
+    "group": "Kartenansichten",
+    "file": "screenshots/01.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "month",
+      "color_scheme": "light",
+      "event_color_mode": "classic",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "02",
+    "title": "Monat · Hell · Farbleiste · neutral",
+    "group": "Kartenansichten",
+    "file": "screenshots/02.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "month",
+      "color_scheme": "light",
+      "event_color_mode": "left-neutral",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "03",
+    "title": "Monat · Hell · Farbleiste · getönt",
+    "group": "Kartenansichten",
+    "file": "screenshots/03.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "month",
+      "color_scheme": "light",
+      "event_color_mode": "left-tint",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "04",
+    "title": "Monat · Dunkel · Vollfläche",
+    "group": "Kartenansichten",
+    "file": "screenshots/04.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "month",
+      "color_scheme": "dark",
+      "event_color_mode": "classic",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#303a46"
+    }
+  },
+  {
+    "id": "05",
+    "title": "Monat · Dunkel · Farbleiste · neutral",
+    "group": "Kartenansichten",
+    "file": "screenshots/05.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "month",
+      "color_scheme": "dark",
+      "event_color_mode": "left-neutral",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#303a46"
+    }
+  },
+  {
+    "id": "06",
+    "title": "Monat · Dunkel · Farbleiste · getönt",
+    "group": "Kartenansichten",
+    "file": "screenshots/06.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "month",
+      "color_scheme": "dark",
+      "event_color_mode": "left-tint",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#303a46"
+    }
+  },
+  {
+    "id": "07",
+    "title": "Woche · Hell · Vollfläche",
+    "group": "Kartenansichten",
+    "file": "screenshots/07.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "light",
+      "event_color_mode": "classic",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "08",
+    "title": "Woche · Hell · Farbleiste · neutral",
+    "group": "Kartenansichten",
+    "file": "screenshots/08.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "light",
+      "event_color_mode": "left-neutral",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "09",
+    "title": "Woche · Hell · Farbleiste · getönt",
+    "group": "Kartenansichten",
+    "file": "screenshots/09.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "light",
+      "event_color_mode": "left-tint",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "10",
+    "title": "Woche · Dunkel · Vollfläche",
+    "group": "Kartenansichten",
+    "file": "screenshots/10.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "dark",
+      "event_color_mode": "classic",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#303a46"
+    }
+  },
+  {
+    "id": "11",
+    "title": "Woche · Dunkel · Farbleiste · neutral",
+    "group": "Kartenansichten",
+    "file": "screenshots/11.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "dark",
+      "event_color_mode": "left-neutral",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#303a46"
+    }
+  },
+  {
+    "id": "12",
+    "title": "Woche · Dunkel · Farbleiste · getönt",
+    "group": "Kartenansichten",
+    "file": "screenshots/12.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "dark",
+      "event_color_mode": "left-tint",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#303a46"
+    }
+  },
+  {
+    "id": "13",
+    "title": "Zeitplan · Hell · Vollfläche",
+    "group": "Kartenansichten",
+    "file": "screenshots/13.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "schedule",
+      "color_scheme": "light",
+      "event_color_mode": "classic",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "14",
+    "title": "Zeitplan · Hell · Farbleiste · neutral",
+    "group": "Kartenansichten",
+    "file": "screenshots/14.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "schedule",
+      "color_scheme": "light",
+      "event_color_mode": "left-neutral",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "15",
+    "title": "Zeitplan · Hell · Farbleiste · getönt",
+    "group": "Kartenansichten",
+    "file": "screenshots/15.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "schedule",
+      "color_scheme": "light",
+      "event_color_mode": "left-tint",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "16",
+    "title": "Zeitplan · Dunkel · Vollfläche",
+    "group": "Kartenansichten",
+    "file": "screenshots/16.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "schedule",
+      "color_scheme": "dark",
+      "event_color_mode": "classic",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#303a46"
+    }
+  },
+  {
+    "id": "17",
+    "title": "Zeitplan · Dunkel · Farbleiste · neutral",
+    "group": "Kartenansichten",
+    "file": "screenshots/17.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "schedule",
+      "color_scheme": "dark",
+      "event_color_mode": "left-neutral",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#303a46"
+    }
+  },
+  {
+    "id": "18",
+    "title": "Zeitplan · Dunkel · Farbleiste · getönt",
+    "group": "Kartenansichten",
+    "file": "screenshots/18.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "schedule",
+      "color_scheme": "dark",
+      "event_color_mode": "left-tint",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#303a46"
+    }
+  },
+  {
+    "id": "19",
+    "title": "Agenda · Hell · Vollfläche",
+    "group": "Kartenansichten",
+    "file": "screenshots/19.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "agenda",
+      "color_scheme": "light",
+      "event_color_mode": "classic",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "20",
+    "title": "Agenda · Hell · Farbleiste · neutral",
+    "group": "Kartenansichten",
+    "file": "screenshots/20.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "agenda",
+      "color_scheme": "light",
+      "event_color_mode": "left-neutral",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "21",
+    "title": "Agenda · Hell · Farbleiste · getönt",
+    "group": "Kartenansichten",
+    "file": "screenshots/21.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "agenda",
+      "color_scheme": "light",
+      "event_color_mode": "left-tint",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "22",
+    "title": "Agenda · Dunkel · Vollfläche",
+    "group": "Kartenansichten",
+    "file": "screenshots/22.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "agenda",
+      "color_scheme": "dark",
+      "event_color_mode": "classic",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#303a46"
+    }
+  },
+  {
+    "id": "23",
+    "title": "Agenda · Dunkel · Farbleiste · neutral",
+    "group": "Kartenansichten",
+    "file": "screenshots/23.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "agenda",
+      "color_scheme": "dark",
+      "event_color_mode": "left-neutral",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#303a46"
+    }
+  },
+  {
+    "id": "24",
+    "title": "Agenda · Dunkel · Farbleiste · getönt",
+    "group": "Kartenansichten",
+    "file": "screenshots/24.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "agenda",
+      "color_scheme": "dark",
+      "event_color_mode": "left-tint",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#303a46"
+    }
+  },
+  {
+    "id": "25",
+    "title": "Farbpalette Klassisch",
+    "group": "Farbpaletten",
+    "file": "screenshots/25.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "light"
+    }
+  },
+  {
+    "id": "26",
+    "title": "Farbpalette Pastell",
+    "group": "Farbpaletten",
+    "file": "screenshots/26.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#c084fc",
+        "calendar.work": "#60a5fa",
+        "calendar.school": "#f59e0b"
+      },
+      "default_view": "week",
+      "color_scheme": "light"
+    }
+  },
+  {
+    "id": "27",
+    "title": "Farbpalette Natur",
+    "group": "Farbpaletten",
+    "file": "screenshots/27.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#b77942",
+        "calendar.work": "#52796f",
+        "calendar.school": "#a786ba"
+      },
+      "default_view": "week",
+      "color_scheme": "light"
+    }
+  },
+  {
+    "id": "28",
+    "title": "Gemeinsamer Termin · calendar",
+    "group": "Gemeinsame Termine",
+    "file": "screenshots/28.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "dark",
+      "combine_color_mode": "calendar"
+    }
+  },
+  {
+    "id": "29",
+    "title": "Gemeinsamer Termin · gradient",
+    "group": "Gemeinsame Termine",
+    "file": "screenshots/29.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "dark",
+      "combine_color_mode": "gradient"
+    }
+  },
+  {
+    "id": "30",
+    "title": "Gemeinsamer Termin · solid",
+    "group": "Gemeinsame Termine",
+    "file": "screenshots/30.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "dark",
+      "combine_color_mode": "solid"
+    }
+  },
+  {
+    "id": "31",
+    "title": "Termin erstellen · Hell",
+    "group": "Termindialoge",
+    "file": "screenshots/31.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "light"
+    }
+  },
+  {
+    "id": "32",
+    "title": "Zusätzliche Kalender wählen · Hell",
+    "group": "Termindialoge",
+    "file": "screenshots/32.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "light"
+    }
+  },
+  {
+    "id": "33",
+    "title": "Eigene Terminfarbe · Hell",
+    "group": "Termindialoge",
+    "file": "screenshots/33.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "light"
+    }
+  },
+  {
+    "id": "34",
+    "title": "Serientermin · Farboptionen · Hell",
+    "group": "Termindialoge",
+    "file": "screenshots/34.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "light"
+    }
+  },
+  {
+    "id": "35",
+    "title": "Termin erstellen · Dunkel",
+    "group": "Termindialoge",
+    "file": "screenshots/35.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "dark"
+    }
+  },
+  {
+    "id": "36",
+    "title": "Zusätzliche Kalender wählen · Dunkel",
+    "group": "Termindialoge",
+    "file": "screenshots/36.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "dark"
+    }
+  },
+  {
+    "id": "37",
+    "title": "Eigene Terminfarbe · Dunkel",
+    "group": "Termindialoge",
+    "file": "screenshots/37.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "dark"
+    }
+  },
+  {
+    "id": "38",
+    "title": "Serientermin · Farboptionen · Dunkel",
+    "group": "Termindialoge",
+    "file": "screenshots/38.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "dark"
+    }
+  },
+  {
+    "id": "39",
+    "title": "Kalenderfarben im Editor · Hell",
+    "group": "Farbeinstellungen",
+    "file": "screenshots/39.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "month",
+      "color_scheme": "light",
+      "event_color_mode": "classic",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "40",
+    "title": "Schriftfarben pro Kalender · Hell",
+    "group": "Farbeinstellungen",
+    "file": "screenshots/40.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "month",
+      "color_scheme": "light",
+      "event_color_mode": "classic",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "41",
+    "title": "Farbeinstellungen – Übersicht · Hell",
+    "group": "Farbeinstellungen",
+    "file": "screenshots/41.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "month",
+      "color_scheme": "light",
+      "event_color_mode": "classic",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "42",
+    "title": "Kalenderfarben im Editor · Dunkel",
+    "group": "Farbeinstellungen",
+    "file": "screenshots/42.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "month",
+      "color_scheme": "dark",
+      "event_color_mode": "classic",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "43",
+    "title": "Schriftfarben pro Kalender · Dunkel",
+    "group": "Farbeinstellungen",
+    "file": "screenshots/43.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "month",
+      "color_scheme": "dark",
+      "event_color_mode": "classic",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "44",
+    "title": "Farbeinstellungen – Übersicht · Dunkel",
+    "group": "Farbeinstellungen",
+    "file": "screenshots/44.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "month",
+      "color_scheme": "dark",
+      "event_color_mode": "classic",
+      "event_tint_opacity": 22,
+      "event_neutral_background": "#f8f3e9"
+    }
+  },
+  {
+    "id": "45",
+    "title": "Mobil · Monat",
+    "group": "Mobile Ansichten",
+    "file": "screenshots/45.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "month",
+      "color_scheme": "light"
+    }
+  },
+  {
+    "id": "46",
+    "title": "Mobil · Woche",
+    "group": "Mobile Ansichten",
+    "file": "screenshots/46.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "week",
+      "color_scheme": "light"
+    }
+  },
+  {
+    "id": "47",
+    "title": "Mobil · Zeitplan",
+    "group": "Mobile Ansichten",
+    "file": "screenshots/47.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "schedule",
+      "color_scheme": "light"
+    }
+  },
+  {
+    "id": "48",
+    "title": "Mobil · Agenda",
+    "group": "Mobile Ansichten",
+    "file": "screenshots/48.png",
+    "config": {
+      "entities": [
+        "calendar.family",
+        "calendar.work",
+        "calendar.school"
+      ],
+      "language": "de",
+      "title": "Unser Familienkalender",
+      "enable_event_management": true,
+      "week_start_hour": 7,
+      "week_end_hour": 19,
+      "combine_calendars": true,
+      "colors": {
+        "calendar.family": "#e56b6f",
+        "calendar.work": "#4f86c6",
+        "calendar.school": "#52b788"
+      },
+      "default_view": "agenda",
+      "color_scheme": "light"
+    }
+  }
+]

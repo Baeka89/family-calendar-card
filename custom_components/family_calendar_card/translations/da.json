@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Family Calendar Card Companion",
+        "description": "Aktivér delte tilknytninger til ekstra kalendere for Family Calendar Card. Dashboardkortet fungerer også uden denne integration."
+      }
+    },
+    "abort": {
+      "already_configured": "Denne integration er allerede konfigureret."
+    }
+  }
+}

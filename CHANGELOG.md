@@ -3,7 +3,16 @@
 All notable changes to this project are documented in this file.
 Alle wesentlichen Änderungen an diesem Projekt werden hier dokumentiert.
 
-## [Unreleased]
+## [v0.1.5]
+
+- Include all 48 example screenshots, their configurations and the interactive gallery in the repository. / Alle 48 Beispielbilder einschließlich Konfigurationen und interaktiver Galerie ins Repository aufnehmen.
+
+- Replace the README gallery with nine selected example screenshots and English/German feature descriptions. / README-Galerie durch neun ausgewählte Beispielbilder mit englischen und deutschen Funktionsbeschreibungen ersetzen.
+
+- Complete optional integration notices and setup translations in all nine supported languages; validate translation keys and placeholders. / Hinweise und Einrichtungstexte der optionalen Integration in allen neun unterstützten Sprachen vervollständigen; Textschlüssel und Platzhalter prüfen.
+
+- Optional companion setup through the Home Assistant UI; legacy YAML import preserves shared assignments. / Optionale Einrichtung der Begleitintegration über die Home-Assistant-Oberfläche; YAML-Übernahme erhält gemeinsame Zuordnungen.
+- Standalone card displays installation information instead of unavailable assignment controls. / Die eigenständig nutzbare Karte zeigt einen Einrichtungshinweis statt nicht verfügbarer Zuordnungsschaltflächen.
 
 - Preserve shared assignments outside the editing card’s calendars and validate merged assignments before saving. / Gemeinsame Zuordnungen außerhalb der bearbeitenden Karte erhalten und zusammengeführte Zuordnungen vor dem Speichern prüfen.
 
@@ -26,8 +35,8 @@ Alle wesentlichen Änderungen an diesem Projekt werden hier dokumentiert.
 - Preserve the Agenda scroll position when shared calendar assignments update, including deferred refreshes after closing the event dialog. / Agenda-Scrollposition bei gemeinsamen Kalenderzuordnungen erhalten, auch nach dem Schließen eines Dialogs.
 
 
-- Prevent stale shared-calendar save replies from replacing newer updates; notify other devices even if the writer disconnects after saving.
-- Compare future recurring color rules chronologically across explicit time-zone offsets.
+- Prevent stale shared-calendar save replies from replacing newer updates; notify other devices even if the writer disconnects after saving. / Veraltete Speicherantworten überschreiben keine neueren Zuordnungen; andere Geräte werden auch nach einer Trennung des speichernden Clients benachrichtigt.
+- Compare future recurring color rules chronologically across explicit time-zone offsets. / Farbregeln für zukünftige Serienvorkommen anhand der tatsächlichen zeitlichen Reihenfolge einschließlich Zeitzonen vergleichen.
 
 
 ### Added / Hinzugefügt

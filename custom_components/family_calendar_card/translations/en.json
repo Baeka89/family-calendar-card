@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Family Calendar Card Companion",
+        "description": "Enable shared additional calendar assignments for Family Calendar Card. The dashboard card works independently without this integration."
+      }
+    },
+    "abort": {
+      "already_configured": "This integration is already configured."
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Family Calendar Card Companion",
+        "description": "Activez les associations partagées à des calendriers supplémentaires pour Family Calendar Card. La carte du tableau de bord fonctionne également sans cette intégration."
+      }
+    },
+    "abort": {
+      "already_configured": "Cette intégration est déjà configurée."
+    }
+  }
+}

@@ -7975,6 +7975,9 @@ class FamilyCalendarCard extends HTMLElement {
     const selected = new Set(getAssignedDisplayCalendars(event, this._eventDisplayCalendars, {getEventIdentityKey:this.getEventIdentityKey.bind(this)}));
     const keys = getEventDisplayKeys(event, {getEventIdentityKey:this.getEventIdentityKey.bind(this)});
     if (!keys.length) return '';
+    if (!this._sharedDisplayStore?.available) {
+      return `<details class="event-display-calendars"><summary>${this.t('displayCalendarsTitle')}</summary><p>${this.t('displayCalendarsIntegrationRequired')}</p></details>`;
+    }
     const sourceIds = new Set((event.displayOriginalEvent?.sourceEvents || event.sourceEvents || [event]).map(source=>source.entityId));
     return `<details class="event-display-calendars"><summary>${this.t('displayCalendarsTitle')}</summary>
       <p>${this.t('displayCalendarsHelp')}</p>

@@ -58,6 +58,19 @@ def normalize_assignments(value):
 
 async def async_setup(hass, config):
     """Load the central store and register authenticated WebSocket commands."""
+    if DOMAIN not in config:
+        return True
+    await async_setup_entry(hass, None)
+    hass.async_create_task(hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "import"}, data={}
+    ))
+    return True
+
+
+async def async_setup_entry(hass, entry):
+    """Enable optional shared storage when the integration is configured."""
+    if DOMAIN in hass.data:
+        return True
     store = Store(hass, 1, DOMAIN + ".display_calendars")
     assignments = normalize_assignments(await store.async_load())
     hass.data[DOMAIN] = {
