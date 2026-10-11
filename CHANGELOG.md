@@ -5,6 +5,9 @@ Alle wesentlichen Änderungen an diesem Projekt werden hier dokumentiert.
 
 ## [Unreleased]
 
+- EN: Embed the nine README screenshots as Markdown images and clarify that additional calendar assignments use central Home Assistant storage through the optional companion. Exclude obsolete assignment screenshots from active gallery previews while keeping labeled historical files available.
+- DE: Die neun README-Screenshots als Markdown-Bilder einbinden und die zentrale Speicherung zusätzlicher Kalenderzuordnungen über die optionale Begleitintegration klarstellen. Überholte Zuordnungsbilder aus den aktiven Galerievorschauen entfernen und als gekennzeichnete historische Dateien verfügbar halten.
+
 ## [v0.1.6]
 
 - EN: Apply hidden calendar badges to all views and event details, while preserving events, colors and calendar selection.
