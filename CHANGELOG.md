@@ -2,6 +2,70 @@
 
 Veröffentlichte Änderungen werden hier dokumentiert. Noch nicht veröffentlichte Änderungen stehen getrennt davor. / Published changes are documented here, preceded by a separate section for unreleased changes.
 
+## Noch nicht veröffentlicht / Unreleased
+
+### Deutsch 🇩🇪
+
+#### Hinzugefügt
+
+Keine.
+
+#### Geändert
+
+Keine.
+
+#### Behoben
+
+Keine.
+
+#### Entfernt
+
+- Den nicht verwendeten Workflow „Sync Main Back Into Dev“ entfernt. Er setzte einen nicht vorhandenen `dev`-Branch voraus und verursachte nach Veröffentlichungen fehlgeschlagene Läufe.
+
+#### Updatehinweise
+
+- Keine Aktualisierung der Karte oder Integration erforderlich. Versionsnummern und bestehende Releases bleiben unverändert.
+
+#### Bekannte Einschränkungen
+
+- Historische fehlgeschlagene Workflow-Läufe bleiben im GitHub-Verlauf sichtbar.
+
+#### Prüfungen
+
+- Verbleibende Workflow-Dateien und Referenzen geprüft. Karten-Quellcode und Installationsdatei bleiben unverändert.
+
+### English 🇺🇸
+
+#### Added
+
+None.
+
+#### Changed
+
+None.
+
+#### Fixed
+
+None.
+
+#### Removed
+
+- Removed the unused “Sync Main Back Into Dev” workflow. It required a nonexistent `dev` branch and caused failed runs after releases.
+
+#### Update notes
+
+- No card or integration update is required. Version numbers and existing releases are unchanged.
+
+#### Known limitations
+
+- Historical failed workflow runs remain visible in GitHub history.
+
+#### Checks
+
+- Checked remaining workflow files and references. Card source code and the installation file are unchanged.
+
+---
+
 <a id="release-0-1-7"></a>
 
 ## [0.1.7] – 2026-11-04
