@@ -769,8 +769,8 @@ function getEventCalendarBubbleMode(config = {}) {
 function renderEditorSection({ title, content, disclosureKey, open = false }) {
   const openAttr = open ? 'open' : '';
   return `
-      <details class="config-section" data-disclosure-key="${disclosureKey}" ${openAttr}>
-        <summary>${title}</summary>
+      <details class="config-section" data-disclosure-key="${escapeHtmlAttribute(disclosureKey)}" ${openAttr}>
+        <summary>${escapeHtmlAttribute(title)}</summary>
         <div class="section-content">${content}</div>
       </details>
     `;
@@ -779,8 +779,8 @@ function renderEditorSection({ title, content, disclosureKey, open = false }) {
 function renderEditorSubSection({ title, content, disclosureKey, open = false }) {
   const openAttr = open ? 'open' : '';
   return `
-      <details class="config-subsection" data-disclosure-key="${disclosureKey}" ${openAttr}>
-        <summary>${title}</summary>
+      <details class="config-subsection" data-disclosure-key="${escapeHtmlAttribute(disclosureKey)}" ${openAttr}>
+        <summary>${escapeHtmlAttribute(title)}</summary>
         <div class="subsection-content">${content}</div>
       </details>
     `;
@@ -789,12 +789,12 @@ function renderEditorSubSection({ title, content, disclosureKey, open = false })
 function renderEditorColorInputControl({ id, field, mapKey = null, value, toColorInputValue }) {
   const colorValue = toColorInputValue(value);
   const triggerAttributes = mapKey
-    ? `data-color-trigger="true" data-color-field="${field}" data-color-map-key="${mapKey}"`
-    : `data-color-trigger="true" data-color-field="${field}"`;
+    ? `data-color-trigger="true" data-color-field="${escapeHtmlAttribute(field)}" data-color-map-key="${escapeHtmlAttribute(mapKey)}"`
+    : `data-color-trigger="true" data-color-field="${escapeHtmlAttribute(field)}"`;
 
   return `
       <div class="color-picker-wrap">
-        <button id="${id}" class="selected-color-swatch" data-color-field="${field}" ${mapKey ? `data-color-map-key="${mapKey}"` : ''} ${triggerAttributes} style="--selected-color: ${colorValue};" title="Choose color" type="button"></button>
+        <button id="${escapeHtmlAttribute(id)}" class="selected-color-swatch" data-color-field="${escapeHtmlAttribute(field)}" ${mapKey ? `data-color-map-key="${escapeHtmlAttribute(mapKey)}"` : ''} ${triggerAttributes} style="--selected-color: ${escapeHtmlAttribute(colorValue)};" title="Choose color" type="button"></button>
       </div>
     `;
 }
@@ -2740,7 +2740,7 @@ class FamilyCalendarCardEditor extends HTMLElement {
         if (inputType === 'color') {
           return `
             <div class="map-row">
-              <label class="map-label" for="${mapKey}-${entityId}">${displayName}</label>
+              <label class="map-label" for="${mapKey}-${this.escapeHtml(entityId)}">${displayName}</label>
               ${this.renderColorInputControl({ id: `${mapKey}-${entityId}`, field: mapKey, mapKey: entityId, value })}
             </div>
           `;
@@ -2748,8 +2748,8 @@ class FamilyCalendarCardEditor extends HTMLElement {
 
         return `
           <div class="map-row">
-            <label class="map-label" for="${mapKey}-${entityId}">${displayName}</label>
-            <input id="${mapKey}-${entityId}" type="text" data-map-field="${mapKey}" data-map-key="${entityId}" value="${this.escapeHtml(value)}" placeholder="${placeholder}">
+            <label class="map-label" for="${mapKey}-${this.escapeHtml(entityId)}">${displayName}</label>
+            <input id="${mapKey}-${this.escapeHtml(entityId)}" type="text" data-map-field="${mapKey}" data-map-key="${this.escapeHtml(entityId)}" value="${this.escapeHtml(value)}" placeholder="${this.escapeHtml(placeholder)}">
           </div>
         `;
       })
@@ -2771,7 +2771,7 @@ class FamilyCalendarCardEditor extends HTMLElement {
         return `
           <label class="list-checkbox-row">
             <span>${displayName}</span>
-            <input type="checkbox" data-list-field="${field}" value="${entityId}" ${checked}>
+            <input type="checkbox" data-list-field="${field}" value="${this.escapeHtml(entityId)}" ${checked}>
           </label>
         `;
       })
@@ -3901,18 +3901,18 @@ class FamilyCalendarCardEditor extends HTMLElement {
       <div class="field-row">
         <div class="field field-inline">
           <label for="background_image_size">Image size</label>
-          <input id="background_image_size" data-field="background_image_size" type="text" value="${this._config.background_image_size || 'cover'}" placeholder="cover">
+          <input id="background_image_size" data-field="background_image_size" type="text" value="${this.escapeHtml(this._config.background_image_size || 'cover')}" placeholder="cover">
         </div>
       </div>
       <div class="field-row">
         <div class="field field-inline">
           <label for="background_image_position">Image position</label>
-          <input id="background_image_position" data-field="background_image_position" type="text" value="${this._config.background_image_position || 'center'}" placeholder="center">
+          <input id="background_image_position" data-field="background_image_position" type="text" value="${this.escapeHtml(this._config.background_image_position || 'center')}" placeholder="center">
         </div>
       </div>
       <div class="field field-inline">
         <label for="background_image_repeat">Image repeat</label>
-        <input id="background_image_repeat" data-field="background_image_repeat" type="text" value="${this._config.background_image_repeat || 'no-repeat'}" placeholder="no-repeat">
+        <input id="background_image_repeat" data-field="background_image_repeat" type="text" value="${this.escapeHtml(this._config.background_image_repeat || 'no-repeat')}" placeholder="no-repeat">
       </div>
     `);
 
@@ -4068,25 +4068,25 @@ class FamilyCalendarCardEditor extends HTMLElement {
       <div class="field-row">
         <div class="field field-inline">
           <label for="language">Language code</label>
-          <input id="language" data-field="language" type="text" value="${this._config.language || ''}" placeholder="en, fr, de...">
+          <input id="language" data-field="language" type="text" value="${this.escapeHtml(this._config.language || '')}" placeholder="en, fr, de...">
         </div>
       </div>
       <div class="field-row">
         <div class="field field-inline">
           <label for="locale">Locale override</label>
-          <input id="locale" data-field="locale" type="text" value="${this._config.locale || ''}" placeholder="en-US">
+          <input id="locale" data-field="locale" type="text" value="${this.escapeHtml(this._config.locale || '')}" placeholder="en-US">
         </div>
       </div>
       <div class="field-row">
         <div class="field field-inline">
           <label for="header_time_sensor">Header time sensor</label>
-          <input id="header_time_sensor" data-field="header_time_sensor" type="text" value="${this._config.header_time_sensor || ''}" placeholder="sensor.current_time">
+          <input id="header_time_sensor" data-field="header_time_sensor" type="text" value="${this.escapeHtml(this._config.header_time_sensor || '')}" placeholder="sensor.current_time">
         </div>
       </div>
       <div class="field-row">
         <div class="field field-inline">
           <label for="header_weather_sensor">Header weather sensor</label>
-          <input id="header_weather_sensor" data-field="header_weather_sensor" type="text" value="${this._config.header_weather_sensor || ''}" placeholder="weather.home">
+          <input id="header_weather_sensor" data-field="header_weather_sensor" type="text" value="${this.escapeHtml(this._config.header_weather_sensor || '')}" placeholder="weather.home">
         </div>
       </div>
       <label class="checkbox-row">
@@ -4095,7 +4095,7 @@ class FamilyCalendarCardEditor extends HTMLElement {
       </label>
       <div class="field field-inline">
         <label for="preference_storage_key">Preference storage key</label>
-        <input id="preference_storage_key" data-field="preference_storage_key" type="text" value="${this._config.preference_storage_key || ''}" placeholder="Optional custom key">
+        <input id="preference_storage_key" data-field="preference_storage_key" type="text" value="${this.escapeHtml(this._config.preference_storage_key || '')}" placeholder="Optional custom key">
       </div>
     `);
 
@@ -4563,7 +4563,7 @@ class FamilyCalendarCardEditor extends HTMLElement {
       <div class="card-config">
         <div class="field field-inline">
           <label for="title">Title</label>
-          <input id="title" data-field="title" type="text" value="${this._config.title || ''}" placeholder="Family Calendar">
+          <input id="title" data-field="title" type="text" value="${this.escapeHtml(this._config.title || '')}" placeholder="Family Calendar">
         </div>
 
         <div class="field">
@@ -4770,7 +4770,7 @@ class FamilyCalendarCardEditor extends HTMLElement {
       .map((entityId) => {
         const friendlyName = this._hass?.states?.[entityId]?.attributes?.friendly_name || entityId;
         const checked = selectedEntities.has(entityId) ? 'checked' : '';
-        return `<label><input type="checkbox" data-field="entity" value="${entityId}" ${checked}> ${friendlyName}</label>`;
+        return `<label><input type="checkbox" data-field="entity" value="${this.escapeHtml(entityId)}" ${checked}> ${this.escapeHtml(friendlyName)}</label>`;
       })
       .join('');
 
@@ -9434,7 +9434,7 @@ function renderDayBadge(badge, { escapeHtml, registerDayBadgeAction } = {}) {
   const hasIcon = Boolean(badge.icon);
   const hasText = Boolean(badge.text);
   const content = [
-    hasIcon ? `<ha-icon icon="${escapeHtml(badge.icon)}"></ha-icon>` : '',
+    hasIcon ? `<ha-icon icon="${escapeHtmlAttribute(badge.icon)}"></ha-icon>` : '',
     hasText ? `<span class="day-badge-text">${escapeHtml(badge.text)}</span>` : ''
   ].join('');
   const actionId = badge.tap_action && typeof registerDayBadgeAction === 'function'
@@ -9442,9 +9442,9 @@ function renderDayBadge(badge, { escapeHtml, registerDayBadgeAction } = {}) {
     : null;
   const classes = ['day-badge', actionId ? 'day-badge-action' : '', hasIcon ? 'has-icon' : '', hasText ? 'has-text' : ''].filter(Boolean).join(' ');
   if (actionId) {
-    return `<button type="button" class="${classes}" style="${style}" data-day-badge-action-id="${escapeHtml(actionId)}">${content}</button>`;
+    return `<button type="button" class="${classes}" style="${escapeHtmlAttribute(style)}" data-day-badge-action-id="${escapeHtmlAttribute(actionId)}">${content}</button>`;
   }
-  return `<span class="${classes}" style="${style}">${content}</span>`;
+  return `<span class="${classes}" style="${escapeHtmlAttribute(style)}">${content}</span>`;
 }
 
 function renderDayBadges(date, dayEvents, { escapeHtml, getDayBadges, registerDayBadgeAction }) {
@@ -9467,7 +9467,7 @@ function getDayForecastClass(viewMode = 'week-compact') {
 }
 
 function renderWeatherIcon(icon, { escapeHtml }) {
-  return `<span class="forecast-condition"><ha-icon icon="${escapeHtml(icon)}"></ha-icon></span>`;
+  return `<span class="forecast-condition"><ha-icon icon="${escapeHtmlAttribute(icon)}"></ha-icon></span>`;
 }
 
 function renderForecastTemperatures(forecast, { escapeHtml }) {
@@ -11753,9 +11753,9 @@ function renderAgendaView({
 
     const isToday = date.toDateString() === today.toDateString();
     const dayStyle = helpers.getDayStyleAttributes(date, entry.matchingEvents, isToday);
-    const dayStyleAttr = dayStyle.style ? ` style="${dayStyle.style}"` : '';
+    const dayStyleAttr = dayStyle.style ? ` style="${escapeHtmlAttribute(dayStyle.style)}"` : '';
     agendaRows.push(`
-        <div class="agenda-day-row ${isToday ? 'today' : ''} ${dayStyle.className}" data-date="${date.toISOString()}"${dayStyleAttr}>
+        <div class="agenda-day-row ${isToday ? 'today' : ''} ${escapeHtmlAttribute(dayStyle.className)}" data-date="${date.toISOString()}"${dayStyleAttr}>
           <div class="agenda-day-label">
             <div class="agenda-day-weekday">${dayNames[date.getDay()]}</div>
             <div class="agenda-day-date">${date.getDate()}</div>
@@ -11775,7 +11775,7 @@ function renderAgendaView({
                 : agendaEventMinHeight;
 
               return `
-                <div class="agenda-event${textAlignment ? ' agenda-text-aligned' : ''}" style="${eventStyle} ${textAlignment ? `text-align: ${textAlignment};` : ''} --agenda-event-min-height: ${eventAgendaMinHeight}; --event-bubble-font-size: ${helpers.getEventBubbleFontSize(event)}; --event-time-font-size: ${helpers.getEventTimeFontSize(event)}; --event-location-font-size: ${helpers.getEventLocationFontSize(event)}; --event-bubble-text-color: ${helpers.getEventBubbleFontColor(event)};" data-event='${escapeHtmlAttribute(JSON.stringify(event))}'>
+                <div class="agenda-event${textAlignment ? ' agenda-text-aligned' : ''}" style="${escapeHtmlAttribute(eventStyle)} ${textAlignment ? `text-align: ${textAlignment};` : ''} --agenda-event-min-height: ${eventAgendaMinHeight}; --event-bubble-font-size: ${escapeHtmlAttribute(helpers.getEventBubbleFontSize(event))}; --event-time-font-size: ${escapeHtmlAttribute(helpers.getEventTimeFontSize(event))}; --event-location-font-size: ${escapeHtmlAttribute(helpers.getEventLocationFontSize(event))}; --event-bubble-text-color: ${escapeHtmlAttribute(helpers.getEventBubbleFontColor(event))};" data-event='${escapeHtmlAttribute(JSON.stringify(event))}'>
                   <div class="agenda-event-title">${helpers.renderEventTitleWithPrefix(event, helpers.getEventDisplayTitle(event))}</div>
                   ${helpers.shouldShowEventTime(event) ? `<div class="agenda-event-time">${timeLabel}</div>` : ''}
                   ${helpers.shouldShowEventLocation(event) ? `<div class="agenda-event-location">📍 ${helpers.escapeHtml(helpers.getDisplayLocation(event.location, event))}</div>` : ''}
@@ -11793,7 +11793,7 @@ function renderAgendaView({
 
   return `
       ${!config.compact_header && !config.hide_calendars ? helpers.renderCalendarBadges() : ''}
-      <div class="agenda-container" id="agenda-container" style="${containerStyle}">
+      <div class="agenda-container" id="agenda-container" style="${escapeHtmlAttribute(containerStyle)}">
         ${agendaRows.join('')}
       </div>
     `;
@@ -11841,7 +11841,7 @@ function renderEventDetailsModal({
           </div>
           ${locationActionsExpanded ? `
             <div class="modal-location-actions" id="event-location-actions">
-              <button type="button" class="btn btn-secondary modal-location-action" id="open-location-map-btn" data-map-url="${escapeHtml(locationMapUrl)}">${t('openInGoogleMaps')}</button>
+              <button type="button" class="btn btn-secondary modal-location-action" id="open-location-map-btn" data-map-url="${escapeHtmlAttribute(locationMapUrl)}">${t('openInGoogleMaps')}</button>
               <button type="button" class="btn btn-secondary modal-location-action" id="copy-location-address-btn">${t('copyAddress')}</button>
             </div>
           ` : ''}
@@ -11854,8 +11854,8 @@ function renderEventDetailsModal({
         ` : '');
 
   const combinedBadgeHtml = visibleBadges.length === 0 ? '' : event.isCombinedCalendarEvent
-    ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">${visibleBadges.map(calendar => `<span class="modal-calendar-badge" style="background: ${calendar.color}; color: ${calendar.textColor || 'white'}; display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px;">${escapeHtml(calendar.name)}</span>`).join('')}</div>`
-    : `<div class="modal-calendar-badge" style="background: ${modalBadgeColor}; color: ${modalBadgeTextColor}; display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-top: 8px;">${escapeHtml(calendarName)}</div>`;
+    ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">${visibleBadges.map(calendar => `<span class="modal-calendar-badge" style="background: ${escapeHtmlAttribute(calendar.color)}; color: ${escapeHtmlAttribute(calendar.textColor || 'white')}; display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px;">${escapeHtml(calendar.name)}</span>`).join('')}</div>`
+    : `<div class="modal-calendar-badge" style="background: ${escapeHtmlAttribute(modalBadgeColor)}; color: ${escapeHtmlAttribute(modalBadgeTextColor)}; display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-top: 8px;">${escapeHtml(calendarName)}</div>`;
 
   return `
       <div class="modal-header">
@@ -11924,7 +11924,7 @@ function renderEventDetailsModal({
               ${canDelete ? `<button class="btn btn-danger" id="delete-event-btn">${t('delete')}</button>` : ''}
             </div>
             <div class="modal-actions-right">
-              <button class="btn btn-secondary" id="custom-color-btn">${t('customColor')}${customColor ? ` <span style="display:inline-block;width:0.8em;height:0.8em;border-radius:50%;background:${customColor};vertical-align:-0.1em;"></span>` : ''}</button>
+              <button class="btn btn-secondary" id="custom-color-btn">${t('customColor')}${customColor ? ` <span style="display:inline-block;width:0.8em;height:0.8em;border-radius:50%;background:${escapeHtmlAttribute(customColor)};vertical-align:-0.1em;"></span>` : ''}</button>
               ${canForward ? `<button class="btn btn-secondary" id="forward-event-btn">${t('forwardEvent')}</button>` : ''}
               ${canEdit ? `<button class="btn btn-primary" id="edit-event-btn">${t('editEvent')}</button>` : ''}
             </div>
@@ -11969,7 +11969,7 @@ function renderEventIcon(event, {
   const badgesHtml = visibleBadges.map(calendar => {
     const name = getCalendarName(calendar.entityId);
     const initial = name.charAt(0).toUpperCase();
-    return `<div class="week-standard-event-icon" style="background: ${calendar.color}; color: white;">${initial}</div>`;
+    return `<div class="week-standard-event-icon" style="background: ${escapeHtmlAttribute(calendar.color)}; color: white;">${escapeHtml(initial)}</div>`;
   }).join('');
 
   return `<div class="week-standard-event-icons">${badgesHtml}</div>`;
@@ -11989,7 +11989,7 @@ function renderCombinedCornerBubbles(event, {
   const bubblesHtml = visibleBadges.map((calendar) => {
     const name = getCalendarName(calendar.entityId);
     const initial = name.charAt(0).toUpperCase();
-    return `<span class="combined-corner-bubble" style="background: ${calendar.color}; color: white;" title="${escapeHtml(name)}">${escapeHtml(initial)}</span>`;
+    return `<span class="combined-corner-bubble" style="background: ${escapeHtmlAttribute(calendar.color)}; color: white;" title="${escapeHtmlAttribute(name)}">${escapeHtml(initial)}</span>`;
   }).join('');
 
   return `<div class="combined-corner-bubbles">${bubblesHtml}</div>`;
@@ -12001,9 +12001,9 @@ function renderEventStyleIcon(iconConfig, { position = 'before_title', escapeHtm
   const styleParts = [];
   if (iconConfig.color) styleParts.push(`color: ${iconConfig.color};`);
   if (iconConfig.size) styleParts.push(`--event-style-icon-size: ${iconConfig.size};`);
-  const styleAttr = styleParts.length ? ` style="${styleParts.join(' ')}"` : '';
+  const styleAttr = styleParts.length ? ` style="${escapeHtmlAttribute(styleParts.join(' '))}"` : '';
   const className = position === 'corner' ? 'event-style-icon event-style-icon-corner' : 'event-style-icon event-style-icon-before-title';
-  return `<ha-icon class="${className}" icon="${escapeHtml(iconConfig.icon)}"${styleAttr}></ha-icon>`;
+  return `<ha-icon class="${className}" icon="${escapeHtmlAttribute(iconConfig.icon)}"${styleAttr}></ha-icon>`;
 }
 
 function renderEventStyleCornerIcon(event, { getEventStyleIconConfig, escapeHtml }) {
@@ -12047,15 +12047,15 @@ function renderEventTitleWithPrefix(event, title, {
     const configuredBadgeIcon = getCalendarBadgeIcon(calendar.entityId);
     let badgeIconHtml = '';
     if (configuredBadgeIcon && configuredBadgeIcon.startsWith('mdi:')) {
-      badgeIconHtml = `<ha-icon icon="${escapeHtml(configuredBadgeIcon)}"></ha-icon>`;
+      badgeIconHtml = `<ha-icon icon="${escapeHtmlAttribute(configuredBadgeIcon)}"></ha-icon>`;
     } else if (configuredBadgeIcon) {
       const normalizedUrl = normalizeBackgroundImageUrl(configuredBadgeIcon) || configuredBadgeIcon;
-      badgeIconHtml = `<img src="${escapeHtml(normalizedUrl)}" alt="" loading="lazy">`;
+      badgeIconHtml = `<img src="${escapeHtmlAttribute(normalizedUrl)}" alt="" loading="lazy">`;
     } else {
       const initial = escapeHtml(getCalendarName(calendar.entityId).charAt(0).toUpperCase());
       badgeIconHtml = `<span>${initial}</span>`;
     }
-    return `<span class="event-title-prefix-badge" style="background: ${iconColor}; color: white;">${badgeIconHtml}</span>`;
+    return `<span class="event-title-prefix-badge" style="background: ${escapeHtmlAttribute(iconColor)}; color: white;">${badgeIconHtml}</span>`;
   }).join('');
 
   return `<span class="event-title-with-prefix"><span class="event-title-prefix-badges">${badgesHtml}</span>${titleHtml}</span>`;
@@ -12101,9 +12101,9 @@ function renderCalendarBadge({ badgeItem, hideCalendarNames, inline, helpers }) 
 
   return `
             <div class="calendar-badge${inlineClass} ${badgeItem.isHidden ? 'calendar-badge-hidden' : ''} ${hideCalendarNames ? 'hide-calendar-name' : ''}"
-                 data-entity="${badgeItem.entityId}"
-                 style="background: ${badgeBackground};
-                        border-color: ${badgeItem.isHidden ? '#d1d5db' : badgeItem.color};${cursorStyle}">
+                 data-entity="${escapeHtmlAttribute(badgeItem.entityId)}"
+                 style="background: ${escapeHtmlAttribute(badgeBackground)};
+                        border-color: ${escapeHtmlAttribute(badgeItem.isHidden ? '#d1d5db' : badgeItem.color)};${cursorStyle}">
               ${renderCalendarBadgeIcon({
                 entityId: badgeItem.entityId,
                 name: badgeItem.name,
@@ -12120,7 +12120,7 @@ function renderCalendarBadge({ badgeItem, hideCalendarNames, inline, helpers }) 
 function renderCalendarBadgeLabel({ badgeItem, badgeTextColor, helpers }) {
   const personStateLabel = helpers.formatPersonStateLabel(helpers.getCalendarBadgePersonState(badgeItem.entityId));
   return `
-      <span class="calendar-badge-label" style="color: ${badgeTextColor}">
+      <span class="calendar-badge-label" style="color: ${escapeHtmlAttribute(badgeTextColor)}">
         <span class="calendar-badge-name">${helpers.escapeHtml(badgeItem.name)}</span>
         ${personStateLabel ? `<span class="calendar-badge-person-state">${helpers.escapeHtml(personStateLabel)}</span>` : ''}
       </span>
@@ -12135,17 +12135,17 @@ function renderCalendarBadgeIcon({ entityId, name, color, isHidden, iconOverride
   const personIconClass = hasPersonEntity ? ' calendar-badge-person-icon' : '';
 
   if (configuredBadgeIcon && configuredBadgeIcon.startsWith('mdi:')) {
-    return `<div class="calendar-badge-icon${personIconClass}" style="background: ${iconBackground}"><ha-icon icon="${helpers.escapeHtml(configuredBadgeIcon)}"></ha-icon></div>`;
+    return `<div class="calendar-badge-icon${personIconClass}" style="background: ${escapeHtmlAttribute(iconBackground)}"><ha-icon icon="${escapeHtmlAttribute(configuredBadgeIcon)}"></ha-icon></div>`;
   }
 
   if (configuredBadgeIcon || personPictureUrl) {
     const imageUrl = configuredBadgeIcon || personPictureUrl;
     const normalizedUrl = helpers.normalizeBackgroundImageUrl(imageUrl) || imageUrl;
-    return `<div class="calendar-badge-icon calendar-badge-photo${personIconClass}" style="background: ${iconBackground}"><img src="${helpers.escapeHtml(normalizedUrl)}" alt="${helpers.escapeHtml(name)}" loading="lazy"></div>`;
+    return `<div class="calendar-badge-icon calendar-badge-photo${personIconClass}" style="background: ${escapeHtmlAttribute(iconBackground)}"><img src="${escapeHtmlAttribute(normalizedUrl)}" alt="${escapeHtmlAttribute(name)}" loading="lazy"></div>`;
   }
 
   const initial = name.charAt(0).toUpperCase();
-  return `<div class="calendar-badge-icon${personIconClass}" style="background: ${iconBackground}">${helpers.escapeHtml(initial)}</div>`;
+  return `<div class="calendar-badge-icon${personIconClass}" style="background: ${escapeHtmlAttribute(iconBackground)}">${helpers.escapeHtml(initial)}</div>`;
 }
 
 function formatDateTimeLocal(date) {
@@ -12357,7 +12357,7 @@ function renderCreateEventForm({
   recurrenceWeekdayOptions,
   helpers
 }) {
-  const { escapeHtml, getCalendarName, t } = helpers;
+  const { escapeHtml, escapeHtmlAttribute, getCalendarName, t } = helpers;
 
   return `
       <div class="modal-header">
@@ -12377,7 +12377,7 @@ function renderCreateEventForm({
                     <input
                       type="checkbox"
                       class="form-checkbox create-event-calendar"
-                      value="${entityId}"
+                      value="${escapeHtmlAttribute(entityId)}"
                       ${(selectedCalendarIds.length > 0 ? selectedCalendarIds.includes(entityId) : index === 0) ? 'checked' : ''}
                     />
                     <span class="form-checkbox-label">${escapeHtml(getCalendarName(entityId))}</span>
@@ -12425,7 +12425,7 @@ function renderEditEventForm({
   recurrenceWeekdayOptions,
   helpers
 }) {
-  const { escapeHtml, getCalendarName, t } = helpers;
+  const { escapeHtml, escapeHtmlAttribute, getCalendarName, t } = helpers;
 
   return `
       <div class="modal-header">
@@ -12440,7 +12440,7 @@ function renderEditEventForm({
             </label>
             <select class="form-select" id="event-calendar" required ${selectedCombinedCalendarIds.length > 1 ? 'disabled' : ''}>
               ${visibleCalendarOptions.map((entityId) => `
-                <option value="${entityId}" ${entityId === event.entityId ? 'selected' : ''}>
+                <option value="${escapeHtmlAttribute(entityId)}" ${entityId === event.entityId ? 'selected' : ''}>
                   ${escapeHtml(getCalendarName(entityId))}
                 </option>
               `).join('')}
@@ -12561,7 +12561,7 @@ function renderHeaderTitle({
       <div class="header-title-wrap">
         ${hasTitle ? `<h2 class="header-title">${helpers.escapeHtml(title)}</h2>` : ''}
         ${headerTime ? `<span class="header-time">${helpers.escapeHtml(headerTime)}</span>` : ''}
-        ${headerWeather ? `<span class="header-weather"><ha-icon icon="${helpers.escapeHtml(headerWeather.conditionIcon)}"></ha-icon>${helpers.escapeHtml(headerWeather.temperature)}</span>` : ''}
+        ${headerWeather ? `<span class="header-weather"><ha-icon icon="${escapeHtmlAttribute(headerWeather.conditionIcon)}"></ha-icon>${helpers.escapeHtml(headerWeather.temperature)}</span>` : ''}
         ${headerItems.map((item) => `<span class="header-item">${item.icon ? `<ha-icon icon="${helpers.escapeHtmlAttribute(item.icon)}"></ha-icon>` : ''}<span class="header-item-value">${helpers.escapeHtml(item.value)}</span></span>`).join('')}
       </div>
     `;
@@ -12569,14 +12569,14 @@ function renderHeaderTitle({
 
 function renderDashboardNavButton({ shouldShow, colorStyle = '', helpers }) {
   if (!shouldShow) return '';
-  return `<button class="dashboard-nav-button" id="header-dashboard-btn" aria-label="${helpers.t('openDashboard')}" title="${helpers.t('openDashboard')}" style="${colorStyle}">⌂</button>`;
+  return `<button class="dashboard-nav-button" id="header-dashboard-btn" aria-label="${helpers.t('openDashboard')}" title="${helpers.t('openDashboard')}" style="${escapeHtmlAttribute(colorStyle)}">⌂</button>`;
 }
 
 function renderHeaderNavButtons({ buttons = [], helpers }) {
   if (!buttons.length) return '';
   return `<div class="header-nav-buttons">${buttons.map((button, index) => {
     const accessibleLabel = button.label || button.icon || helpers.t('openDashboard');
-    return `<button class="header-nav-button" data-header-nav-button-index="${index}" data-icon-only="${button.icon ? 'true' : 'false'}" aria-label="${helpers.escapeHtmlAttribute(accessibleLabel)}" title="${helpers.escapeHtmlAttribute(accessibleLabel)}" style="${button.colorStyle || ''}">${
+    return `<button class="header-nav-button" data-header-nav-button-index="${index}" data-icon-only="${button.icon ? 'true' : 'false'}" aria-label="${helpers.escapeHtmlAttribute(accessibleLabel)}" title="${helpers.escapeHtmlAttribute(accessibleLabel)}" style="${escapeHtmlAttribute(button.colorStyle || '')}">${
       button.icon
         ? `<ha-icon icon="${helpers.escapeHtmlAttribute(button.icon)}"></ha-icon>`
         : `<span class="header-nav-button-label">${helpers.escapeHtml(button.label)}</span>`
@@ -12694,8 +12694,8 @@ function renderDayCell({
   let classes = 'day-cell';
   if (isOtherMonth) classes += ' other-month';
   if (isToday) classes += ' today';
-  classes += dayStyle.className ? ` ${dayStyle.className}` : '';
-  const dayStyleAttr = dayStyle.style ? ` style="${dayStyle.style}"` : '';
+  classes += dayStyle.className ? ` ${escapeHtmlAttribute(dayStyle.className)}` : '';
+  const dayStyleAttr = dayStyle.style ? ` style="${escapeHtmlAttribute(dayStyle.style)}"` : '';
 
   return `
       <div class="${classes}" data-date="${date.toISOString()}"${dayStyleAttr}>${renderDayCellHeader({
@@ -12731,16 +12731,16 @@ function renderWeekCompactView({
 
   return `
       ${!config.compact_header && !config.hide_calendars ? helpers.renderCalendarBadges() : ''}
-      <div class="week-compact-container${config.compact_height ? ' compact-height' : ''} day-badge-layout-${config.day_badge_layout_week}" style="${containerStyle}">
+      <div class="week-compact-container${config.compact_height ? ' compact-height' : ''} day-badge-layout-${config.day_badge_layout_week}" style="${escapeHtmlAttribute(containerStyle)}">
         ${weekDays.map(date => {
           const isToday = date.toDateString() === today.toDateString();
           const dayEventsForMatching = helpers.getEventsForDay(date, { includeHiddenStyledEvents: true });
           const events = helpers.sortEventsForDate(dayEventsForMatching.filter((event) => !helpers.isEventHiddenByStyle(event)), date);
           const dayStyle = helpers.getDayStyleAttributes(date, dayEventsForMatching, isToday);
-          const dayStyleAttr = dayStyle.style ? ` style="${dayStyle.style}"` : '';
+          const dayStyleAttr = dayStyle.style ? ` style="${escapeHtmlAttribute(dayStyle.style)}"` : '';
 
           return `
-            <div class="week-day-column ${isToday ? 'today' : ''} ${dayStyle.className}" data-date="${date.toISOString()}" data-click-target="day-header"${dayStyleAttr}>
+            <div class="week-day-column ${isToday ? 'today' : ''} ${escapeHtmlAttribute(dayStyle.className)}" data-date="${date.toISOString()}" data-click-target="day-header"${dayStyleAttr}>
               <div class="week-day-header">
                 <div class="week-day-header-main">
                   <div class="week-day-name">${dayNames[date.getDay()]}</div>
@@ -12783,7 +12783,7 @@ function renderWeekStandardView({
 }) {
   return `
       ${!config.compact_header && !config.hide_calendars ? helpers.renderCalendarBadges() : ''}
-      <div class="week-standard-container ${config.compact_width ? 'compact-width' : ''} day-badge-layout-${config.day_badge_layout_week}" style="${containerStyle}">
+      <div class="week-standard-container ${config.compact_width ? 'compact-width' : ''} day-badge-layout-${config.day_badge_layout_week}" style="${escapeHtmlAttribute(containerStyle)}">
         <!-- Time column -->
         <div class="time-column">
           <div class="time-column-header-spacer"></div>
@@ -12804,10 +12804,10 @@ function renderWeekStandardView({
           const dateKey = helpers.getDateKey(date);
           const allDayLanes = allDayLayout.dayLanesByDateKey.get(dateKey) || [];
           const dayStyle = helpers.getDayStyleAttributes(date, dayEventsForMatching, isToday);
-          const dayStyleAttr = dayStyle.style ? ` style="${dayStyle.style}"` : '';
+          const dayStyleAttr = dayStyle.style ? ` style="${escapeHtmlAttribute(dayStyle.style)}"` : '';
 
           return `
-            <div class="week-standard-day-column ${isToday ? 'today' : ''} ${dayStyle.className}" data-date="${date.toISOString()}"${dayStyleAttr}>
+            <div class="week-standard-day-column ${isToday ? 'today' : ''} ${escapeHtmlAttribute(dayStyle.className)}" data-date="${date.toISOString()}"${dayStyleAttr}>
               <div class="week-standard-day-header" data-click-target="day-header">
                 <div class="week-day-header-main">
                   <div class="week-standard-day-name">${dayNames[date.getDay()]}</div>
@@ -12819,7 +12819,7 @@ function renderWeekStandardView({
                 </div>
               </div>
               ${hasAllDayEvents ? helpers.renderAllDayEventsForDay(allDayLanes, allDayHeight) : ''}
-              <div class="day-time-slots" style="${dayTimeSlotsStyle}">
+              <div class="day-time-slots" style="${escapeHtmlAttribute(dayTimeSlotsStyle)}">
                 ${hours.map(hour => `
                   <div class="day-time-slot" style="height: ${hourHeight}px;" data-hour="${hour}"></div>
                 `).join('')}
@@ -12932,7 +12932,7 @@ function renderMonthView({
 
   return `
         ${shouldShowHeaderBadges ? helpers.renderCalendarBadges() : ''}
-        <div class="${monthClass}" style="${monthStyle}">
+        <div class="${monthClass}" style="${escapeHtmlAttribute(monthStyle)}">
           ${renderMonthDayHeaders({
             weekdayNames,
             firstDayOfWeek: config.firstDayOfWeek,
@@ -16888,11 +16888,11 @@ class FamilyCalendarCard extends HTMLElement {
 
       ${this._config.uix?.style ? `
         <style class="uix-style">
-          ${this._config.uix.style}
+          ${String(this._config.uix.style).replace(/</g, '\\3c ')}
         </style>
       ` : ''}
 
-      <div class="calendar-container ${agendaContentHeight ? 'agenda-content-height' : ''} ${this._isDarkMode ? 'dark-mode' : ''} ${hasCustomBackground ? 'custom-background' : ''} ${this._config.hide_year ? 'hide-year' : ''} ${this._config.agenda_compact_events ? 'agenda-compact-events' : ''}" style="${containerStyle}">
+      <div class="calendar-container ${agendaContentHeight ? 'agenda-content-height' : ''} ${this._isDarkMode ? 'dark-mode' : ''} ${hasCustomBackground ? 'custom-background' : ''} ${this._config.hide_year ? 'hide-year' : ''} ${this._config.agenda_compact_events ? 'agenda-compact-events' : ''}" style="${this.escapeHtmlAttribute(containerStyle)}">
         ${this._config.hide_header ? '' : (this._config.compact_header ? this.renderCompactHeader() : this.renderStandardHeader())}
         ${this.renderEventRefreshWarning()}
         <div class="calendar-body">
@@ -17488,7 +17488,7 @@ class FamilyCalendarCard extends HTMLElement {
           const spanDataAttribute = visibleDaySpan > 1 ? ` data-all-day-span-days="${visibleDaySpan}"` : '';
           return `
             <div class="all-day-event ${extendsBeforeVisibleRange ? 'continues-prev' : ''} ${extendsAfterVisibleRange ? 'continues-next' : ''} ${showTitle && visibleDaySpan > 1 ? 'leading-span-title' : ''}"
-                 style="${eventStyle} --event-bubble-font-size: ${this.getEventBubbleFontSize(event)}; --event-time-font-size: ${this.getEventTimeFontSize(event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(event)};${spanStyle}"${spanDataAttribute}
+                 style="${this.escapeHtmlAttribute(eventStyle)} --event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(event))}; --event-time-font-size: ${this.escapeHtmlAttribute(this.getEventTimeFontSize(event))}; --event-bubble-text-color: ${this.escapeHtmlAttribute(this.getEventBubbleFontColor(event))};${spanStyle}"${spanDataAttribute}
                  data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
               <div class="all-day-event-title ${showTitle && visibleDaySpan > 1 ? 'spans-multiple-days' : ''}">${showTitle ? this.renderEventTitleWithPrefix(event, displayTitle || this.getEventDisplayTitle(event)) : ''}</div>
               ${this.renderEventStyleCornerIcon(event)}
@@ -17610,7 +17610,7 @@ class FamilyCalendarCard extends HTMLElement {
 
       return `
         <div class="week-standard-event"
-             style="top: ${top}px; height: ${height}px; width: ${width}; left: ${left}; ${eventStyle} --event-bubble-font-size: ${this.getEventBubbleFontSize(event)}; --event-time-font-size: ${this.getEventTimeFontSize(event)}; --event-location-font-size: ${this.getEventLocationFontSize(event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(event)};"
+             style="top: ${top}px; height: ${height}px; width: ${width}; left: ${left}; ${this.escapeHtmlAttribute(eventStyle)} --event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(event))}; --event-time-font-size: ${this.escapeHtmlAttribute(this.getEventTimeFontSize(event))}; --event-location-font-size: ${this.escapeHtmlAttribute(this.getEventLocationFontSize(event))}; --event-bubble-text-color: ${this.escapeHtmlAttribute(this.getEventBubbleFontColor(event))};"
              data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
           <div class="week-standard-event-title">${this.renderEventTitleWithPrefix(event, displayTitle || this.getEventDisplayTitle(event))}</div>
           ${this.shouldShowEventTime(event) ? `<div class="week-standard-event-time">${this.formatEventTimeRange(eventStart, eventEnd, { schedule: true })}</div>` : ''}
@@ -18210,7 +18210,7 @@ class FamilyCalendarCard extends HTMLElement {
     }
 
     if (!lane.isFirstVisibleSegment) {
-      return `<div class="event month-span-event-spacer month-span-event-placeholder" style="--event-bubble-font-size: ${this.getEventBubbleFontSize(lane.event)}; --event-time-font-size: ${this.getEventTimeFontSize(lane.event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(lane.event)};"></div>`;
+      return `<div class="event month-span-event-spacer month-span-event-placeholder" style="--event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(lane.event))}; --event-time-font-size: ${this.getEventTimeFontSize(lane.event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(lane.event)};"></div>`;
     }
 
     const { event, extendsBeforeVisibleRange, extendsAfterVisibleRange, displayTitle, visibleDaySpan } = lane;
@@ -18221,7 +18221,7 @@ class FamilyCalendarCard extends HTMLElement {
     const spanDataAttribute = visibleDaySpan > 1 ? ` data-month-span-days="${visibleDaySpan}"` : '';
 
     return `
-      <div class="event month-span-event ${extendsBeforeVisibleRange ? 'continues-prev' : ''} ${extendsAfterVisibleRange ? 'continues-next' : ''}" style="${eventStyle}; --event-bubble-font-size: ${this.getEventBubbleFontSize(event)}; --event-time-font-size: ${this.getEventTimeFontSize(event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(event)};${spanStyle}"${spanDataAttribute} data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
+      <div class="event month-span-event ${extendsBeforeVisibleRange ? 'continues-prev' : ''} ${extendsAfterVisibleRange ? 'continues-next' : ''}" style="${this.escapeHtmlAttribute(eventStyle)}; --event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(event))}; --event-time-font-size: ${this.escapeHtmlAttribute(this.getEventTimeFontSize(event))}; --event-bubble-text-color: ${this.escapeHtmlAttribute(this.getEventBubbleFontColor(event))};${spanStyle}"${spanDataAttribute} data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
         ${this.renderEventTitleWithPrefix(event, displayTitle || this.getEventDisplayTitle(event))}
         ${this.renderEventStyleCornerIcon(event)}
         ${this.renderCombinedCornerBubbles(event)}
@@ -18247,7 +18247,7 @@ class FamilyCalendarCard extends HTMLElement {
     const eventStyle = this.getEventStyle(event);
 
     return `
-      <div class="week-compact-event" style="${eventStyle} --event-bubble-font-size: ${this.getEventBubbleFontSize(event)}; --event-time-font-size: ${this.getEventTimeFontSize(event)}; --event-location-font-size: ${this.getEventLocationFontSize(event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(event)};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
+      <div class="week-compact-event" style="${this.escapeHtmlAttribute(eventStyle)} --event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(event))}; --event-time-font-size: ${this.escapeHtmlAttribute(this.getEventTimeFontSize(event))}; --event-location-font-size: ${this.escapeHtmlAttribute(this.getEventLocationFontSize(event))}; --event-bubble-text-color: ${this.escapeHtmlAttribute(this.getEventBubbleFontColor(event))};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
         ${this.shouldShowEventTime(event) ? `<div class="week-compact-event-time">${timeLabel}</div>` : ''}
         <div class="week-compact-event-title">${this.renderEventTitleWithPrefix(event, this.getEventDisplayTitle(event))}</div>
         ${this.shouldShowEventLocation(event) ? `<div class="week-compact-event-location">📍 ${this.escapeHtml(this.getDisplayLocation(event.location, event))}</div>` : ''}
@@ -18264,7 +18264,7 @@ class FamilyCalendarCard extends HTMLElement {
     const eventStyle = this.getEventStyle(event);
 
     return `
-      <div class="event" style="${eventStyle}; --event-bubble-font-size: ${this.getEventBubbleFontSize(event)}; --event-time-font-size: ${this.getEventTimeFontSize(event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(event)};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
+      <div class="event" style="${this.escapeHtmlAttribute(eventStyle)}; --event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(event))}; --event-time-font-size: ${this.escapeHtmlAttribute(this.getEventTimeFontSize(event))}; --event-bubble-text-color: ${this.escapeHtmlAttribute(this.getEventBubbleFontColor(event))};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
         ${!isAllDaySegment && this.shouldShowEventTime(event) ? `<span class="event-time">${this.formatEventTime(segmentStart)}</span>` : ''}
         ${this.renderEventTitleWithPrefix(event, this.getEventDisplayTitle(event))}
         ${this.renderEventStyleCornerIcon(event)}
@@ -20384,7 +20384,7 @@ class FamilyCalendarCard extends HTMLElement {
             const alreadyExists = existingCalendarIds.has(entityId);
             return `
               <label class="recurring-option ${alreadyExists ? 'disabled-option' : ''}">
-                <input type="checkbox" class="forward-calendar-option" value="${entityId}" ${alreadyExists ? 'checked disabled' : ''} />
+                <input type="checkbox" class="forward-calendar-option" value="${this.escapeHtmlAttribute(entityId)}" ${alreadyExists ? 'checked disabled' : ''} />
                 <div class="recurring-option-label">
                   <div class="recurring-option-title">${this.escapeHtml(this.getCalendarName(entityId))}</div>
                   <div class="recurring-option-description">${alreadyExists ? this.t('forwardEventAlreadyExists') : this.escapeHtml(entityId)}</div>
@@ -21122,7 +21122,7 @@ class FamilyCalendarCard extends HTMLElement {
     content.innerHTML = `
       <div class="modal-header"><h3 class="modal-title">${this.t('customColorTitle')}</h3><button class="modal-close" id="close-custom-color-modal">×</button></div>
       <div class="modal-body custom-color-modal">
-        <family-color-picker id="custom-color-wheel" value="${currentColor}" title="${this.t('customColorTitle')}" show-actions="false"></family-color-picker>
+        <family-color-picker id="custom-color-wheel" value="${this.escapeHtmlAttribute(currentColor)}" title="${this.t('customColorTitle')}" show-actions="false"></family-color-picker>
         ${scopeHtml}
         <div class="modal-actions"><div class="modal-actions-left"><button class="btn btn-secondary" id="custom-color-default-btn">${this.t('useDefault')}</button></div><div class="modal-actions-right"><button class="btn btn-secondary" id="cancel-custom-color-btn">${this.t('cancel')}</button><button class="btn btn-primary" id="apply-custom-color-btn">${this.t('applyColor')}</button></div></div>
       </div>`;
@@ -21176,7 +21176,7 @@ class FamilyCalendarCard extends HTMLElement {
               const timeLabel = isAllDaySegment ? this.t('allDay') : this.formatEventTime(segmentStart);
               const eventStyle = this.getEventStyle(event);
               return `
-                <div class="week-compact-event" style="${eventStyle} --event-bubble-font-size: ${this.getEventBubbleFontSize(event)}; --event-time-font-size: ${this.getEventTimeFontSize(event)}; --event-location-font-size: ${this.getEventLocationFontSize(event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(event)};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
+                <div class="week-compact-event" style="${this.escapeHtmlAttribute(eventStyle)} --event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(event))}; --event-time-font-size: ${this.escapeHtmlAttribute(this.getEventTimeFontSize(event))}; --event-location-font-size: ${this.escapeHtmlAttribute(this.getEventLocationFontSize(event))}; --event-bubble-text-color: ${this.escapeHtmlAttribute(this.getEventBubbleFontColor(event))};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
                   ${this.shouldShowEventTime(event) ? `${this.shouldShowEventTime(event) ? `<div class="week-compact-event-time">${timeLabel}</div>` : ''}` : ''}
                   <div class="week-compact-event-title">${this.renderEventTitleWithPrefix(event, this.getEventDisplayTitle(event))}</div>
                   ${this.shouldShowEventLocation(event) ? `<div class="week-compact-event-location">📍 ${this.escapeHtml(this.getDisplayLocation(event.location, event))}</div>` : ''}
@@ -21228,7 +21228,7 @@ class FamilyCalendarCard extends HTMLElement {
           const eventStyle = this.getEventStyle(event, { withBorderAccent: true });
 
           return `
-            <div class="day-event day-modal-event" style="${eventStyle} --event-bubble-font-size: ${this.getEventBubbleFontSize(event)}; --event-time-font-size: ${this.getEventTimeFontSize(event)}; --event-location-font-size: ${this.getEventLocationFontSize(event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(event)};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
+            <div class="day-event day-modal-event" style="${this.escapeHtmlAttribute(eventStyle)} --event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(event))}; --event-time-font-size: ${this.escapeHtmlAttribute(this.getEventTimeFontSize(event))}; --event-location-font-size: ${this.escapeHtmlAttribute(this.getEventLocationFontSize(event))}; --event-bubble-text-color: ${this.escapeHtmlAttribute(this.getEventBubbleFontColor(event))};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
               <div class="day-modal-event-title">${this.renderEventTitleWithPrefix(event, this.getEventDisplayTitle(event))}</div>
               ${this.shouldShowEventTime(event) ? `<div class="day-modal-event-meta">${isAllDaySegment ? this.t('allDay') : this.formatEventTimeRange(segmentStart, segmentEnd)}</div>` : ''}
               ${this.shouldShowEventLocation(event) ? `<div class="day-modal-event-location">📍 ${this.escapeHtml(this.getDisplayLocation(event.location, event))}</div>` : ''}
@@ -21606,17 +21606,25 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   renderMarkdownInline(text) {
-    const codeSpans = [];
-    let html = this.escapeHtml(text).replace(/`([^`]+)`/g, (_match, code) => {
-      const token = `§CODESPAN${codeSpans.length}§`;
-      codeSpans.push(`<code>${code}</code>`);
+    const value = String(text ?? '');
+    const fragments = [];
+    let tokenPrefix = '§FCINLINE';
+    while (value.includes(tokenPrefix)) tokenPrefix += '_';
+    const protect = (markup) => {
+      const token = `${tokenPrefix}${fragments.length}§`;
+      fragments.push(markup);
       return token;
-    });
+    };
+    let html = this.escapeHtml(value).replace(/`([^`]+)`/g, (_match, code) => protect(`<code>${code}</code>`));
+
+    html = html.replace(/&lt;a\s+[\s\S]*?&gt;[\s\S]*?&lt;\/a&gt;/gi, (anchor) => protect(this.restoreAllowedDescriptionTags(anchor)));
 
     html = html.replace(/\[([^\]]+)]\(([^)\s]+)\)/g, (_match, label, url) => {
       const safeUrl = this.getSafeDescriptionUrl(this.decodeHtmlEntities(url));
       if (!safeUrl) return label;
-      return `<a href="${this.escapeHtmlAttribute(safeUrl)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+      // Keep emphasis and HTML restoration out of the generated href attribute.
+      const labelHtml = this.renderMarkdownInline(this.decodeHtmlEntities(label));
+      return protect(`<a href="${this.escapeHtmlAttribute(safeUrl)}" target="_blank" rel="noopener noreferrer">${labelHtml}</a>`);
     });
 
     html = html
@@ -21627,10 +21635,10 @@ class FamilyCalendarCard extends HTMLElement {
       .replace(/_([^_]+)_/g, '<em>$1</em>');
 
     html = this.restoreAllowedDescriptionTags(html);
-    codeSpans.forEach((codeHtml, index) => {
-      html = html.replace(`§CODESPAN${index}§`, codeHtml);
-    });
-
+    // Later fragments can contain earlier protected code spans in link labels.
+    for (let index = fragments.length - 1; index >= 0; index -= 1) {
+      html = html.replaceAll(`${tokenPrefix}${index}§`, () => fragments[index]);
+    }
     return html;
   }
 
@@ -21644,7 +21652,7 @@ class FamilyCalendarCard extends HTMLElement {
     const allowedSimpleTags = 'b|strong|i|em|u|s|br|p|div|ul|ol|li|blockquote|code|pre|h[1-6]|table|thead|tbody|tfoot|tr|td|th';
 
     const renderAnchor = (attrs, content = '') => {
-      const hrefMatch = attrs.match(/href\s*=\s*(?:&quot;([^&]*)&quot;|&#39;([^&]*)&(?:#39|apos);|"([^"]*)"|'([^']*)'|([^\s&"']+))/i);
+      const hrefMatch = attrs.match(/(?:^|\s)href\s*=\s*(?:&quot;([\s\S]*?)&quot;|&#39;([\s\S]*?)&#39;|"([^"]*)"|'([^']*)'|([^\s&"']+))/i);
       const href = hrefMatch ? this.decodeHtmlEntities(hrefMatch[1] || hrefMatch[2] || hrefMatch[3] || hrefMatch[4] || hrefMatch[5] || '') : '';
       const safeUrl = this.getSafeDescriptionUrl(href);
       if (!safeUrl) return content;
@@ -21683,9 +21691,8 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    // Legacy renderers use this helper for both text and quoted attributes.
+    return escapeHtmlAttribute(text);
   }
 
   escapeHtmlAttribute(text) {

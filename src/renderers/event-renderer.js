@@ -1,3 +1,5 @@
+import { escapeHtmlAttribute } from '../utils/string-utils.js';
+
 export function renderEventIcon(event, {
   getEventStyleOverrides,
   eventCalendarFriendlyName = false,
@@ -34,7 +36,7 @@ export function renderEventIcon(event, {
   const badgesHtml = visibleBadges.map(calendar => {
     const name = getCalendarName(calendar.entityId);
     const initial = name.charAt(0).toUpperCase();
-    return `<div class="week-standard-event-icon" style="background: ${calendar.color}; color: white;">${initial}</div>`;
+    return `<div class="week-standard-event-icon" style="background: ${escapeHtmlAttribute(calendar.color)}; color: white;">${escapeHtml(initial)}</div>`;
   }).join('');
 
   return `<div class="week-standard-event-icons">${badgesHtml}</div>`;
@@ -54,7 +56,7 @@ export function renderCombinedCornerBubbles(event, {
   const bubblesHtml = visibleBadges.map((calendar) => {
     const name = getCalendarName(calendar.entityId);
     const initial = name.charAt(0).toUpperCase();
-    return `<span class="combined-corner-bubble" style="background: ${calendar.color}; color: white;" title="${escapeHtml(name)}">${escapeHtml(initial)}</span>`;
+    return `<span class="combined-corner-bubble" style="background: ${escapeHtmlAttribute(calendar.color)}; color: white;" title="${escapeHtmlAttribute(name)}">${escapeHtml(initial)}</span>`;
   }).join('');
 
   return `<div class="combined-corner-bubbles">${bubblesHtml}</div>`;
@@ -66,9 +68,9 @@ export function renderEventStyleIcon(iconConfig, { position = 'before_title', es
   const styleParts = [];
   if (iconConfig.color) styleParts.push(`color: ${iconConfig.color};`);
   if (iconConfig.size) styleParts.push(`--event-style-icon-size: ${iconConfig.size};`);
-  const styleAttr = styleParts.length ? ` style="${styleParts.join(' ')}"` : '';
+  const styleAttr = styleParts.length ? ` style="${escapeHtmlAttribute(styleParts.join(' '))}"` : '';
   const className = position === 'corner' ? 'event-style-icon event-style-icon-corner' : 'event-style-icon event-style-icon-before-title';
-  return `<ha-icon class="${className}" icon="${escapeHtml(iconConfig.icon)}"${styleAttr}></ha-icon>`;
+  return `<ha-icon class="${className}" icon="${escapeHtmlAttribute(iconConfig.icon)}"${styleAttr}></ha-icon>`;
 }
 
 export function renderEventStyleCornerIcon(event, { getEventStyleIconConfig, escapeHtml }) {
@@ -112,15 +114,15 @@ export function renderEventTitleWithPrefix(event, title, {
     const configuredBadgeIcon = getCalendarBadgeIcon(calendar.entityId);
     let badgeIconHtml = '';
     if (configuredBadgeIcon && configuredBadgeIcon.startsWith('mdi:')) {
-      badgeIconHtml = `<ha-icon icon="${escapeHtml(configuredBadgeIcon)}"></ha-icon>`;
+      badgeIconHtml = `<ha-icon icon="${escapeHtmlAttribute(configuredBadgeIcon)}"></ha-icon>`;
     } else if (configuredBadgeIcon) {
       const normalizedUrl = normalizeBackgroundImageUrl(configuredBadgeIcon) || configuredBadgeIcon;
-      badgeIconHtml = `<img src="${escapeHtml(normalizedUrl)}" alt="" loading="lazy">`;
+      badgeIconHtml = `<img src="${escapeHtmlAttribute(normalizedUrl)}" alt="" loading="lazy">`;
     } else {
       const initial = escapeHtml(getCalendarName(calendar.entityId).charAt(0).toUpperCase());
       badgeIconHtml = `<span>${initial}</span>`;
     }
-    return `<span class="event-title-prefix-badge" style="background: ${iconColor}; color: white;">${badgeIconHtml}</span>`;
+    return `<span class="event-title-prefix-badge" style="background: ${escapeHtmlAttribute(iconColor)}; color: white;">${badgeIconHtml}</span>`;
   }).join('');
 
   return `<span class="event-title-with-prefix"><span class="event-title-prefix-badges">${badgesHtml}</span>${titleHtml}</span>`;

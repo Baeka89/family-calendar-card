@@ -1,3 +1,4 @@
+import { escapeHtmlAttribute } from '../utils/string-utils.js';
 import {
   getMonthGridDates,
   getRollingMonthGridDates
@@ -102,7 +103,7 @@ export function renderMonthView({
 
   return `
         ${shouldShowHeaderBadges ? helpers.renderCalendarBadges() : ''}
-        <div class="${monthClass}" style="${monthStyle}">
+        <div class="${monthClass}" style="${escapeHtmlAttribute(monthStyle)}">
           ${renderMonthDayHeaders({
             weekdayNames,
             firstDayOfWeek: config.firstDayOfWeek,

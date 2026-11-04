@@ -1,3 +1,5 @@
+import { escapeHtmlAttribute } from '../utils/string-utils.js';
+
 export function renderStandardHeader({
   canAddEvents,
   shouldShowControls,
@@ -87,7 +89,7 @@ export function renderHeaderTitle({
       <div class="header-title-wrap">
         ${hasTitle ? `<h2 class="header-title">${helpers.escapeHtml(title)}</h2>` : ''}
         ${headerTime ? `<span class="header-time">${helpers.escapeHtml(headerTime)}</span>` : ''}
-        ${headerWeather ? `<span class="header-weather"><ha-icon icon="${helpers.escapeHtml(headerWeather.conditionIcon)}"></ha-icon>${helpers.escapeHtml(headerWeather.temperature)}</span>` : ''}
+        ${headerWeather ? `<span class="header-weather"><ha-icon icon="${escapeHtmlAttribute(headerWeather.conditionIcon)}"></ha-icon>${helpers.escapeHtml(headerWeather.temperature)}</span>` : ''}
         ${headerItems.map((item) => `<span class="header-item">${item.icon ? `<ha-icon icon="${helpers.escapeHtmlAttribute(item.icon)}"></ha-icon>` : ''}<span class="header-item-value">${helpers.escapeHtml(item.value)}</span></span>`).join('')}
       </div>
     `;
@@ -95,14 +97,14 @@ export function renderHeaderTitle({
 
 export function renderDashboardNavButton({ shouldShow, colorStyle = '', helpers }) {
   if (!shouldShow) return '';
-  return `<button class="dashboard-nav-button" id="header-dashboard-btn" aria-label="${helpers.t('openDashboard')}" title="${helpers.t('openDashboard')}" style="${colorStyle}">⌂</button>`;
+  return `<button class="dashboard-nav-button" id="header-dashboard-btn" aria-label="${helpers.t('openDashboard')}" title="${helpers.t('openDashboard')}" style="${escapeHtmlAttribute(colorStyle)}">⌂</button>`;
 }
 
 export function renderHeaderNavButtons({ buttons = [], helpers }) {
   if (!buttons.length) return '';
   return `<div class="header-nav-buttons">${buttons.map((button, index) => {
     const accessibleLabel = button.label || button.icon || helpers.t('openDashboard');
-    return `<button class="header-nav-button" data-header-nav-button-index="${index}" data-icon-only="${button.icon ? 'true' : 'false'}" aria-label="${helpers.escapeHtmlAttribute(accessibleLabel)}" title="${helpers.escapeHtmlAttribute(accessibleLabel)}" style="${button.colorStyle || ''}">${
+    return `<button class="header-nav-button" data-header-nav-button-index="${index}" data-icon-only="${button.icon ? 'true' : 'false'}" aria-label="${helpers.escapeHtmlAttribute(accessibleLabel)}" title="${helpers.escapeHtmlAttribute(accessibleLabel)}" style="${escapeHtmlAttribute(button.colorStyle || '')}">${
       button.icon
         ? `<ha-icon icon="${helpers.escapeHtmlAttribute(button.icon)}"></ha-icon>`
         : `<span class="header-nav-button-label">${helpers.escapeHtml(button.label)}</span>`

@@ -1,3 +1,5 @@
+import { escapeHtmlAttribute } from '../utils/string-utils.js';
+
 export function renderWeekStandardView({
   allDayHeight,
   allDayLayout,
@@ -17,7 +19,7 @@ export function renderWeekStandardView({
 }) {
   return `
       ${!config.compact_header && !config.hide_calendars ? helpers.renderCalendarBadges() : ''}
-      <div class="week-standard-container ${config.compact_width ? 'compact-width' : ''} day-badge-layout-${config.day_badge_layout_week}" style="${containerStyle}">
+      <div class="week-standard-container ${config.compact_width ? 'compact-width' : ''} day-badge-layout-${config.day_badge_layout_week}" style="${escapeHtmlAttribute(containerStyle)}">
         <!-- Time column -->
         <div class="time-column">
           <div class="time-column-header-spacer"></div>
@@ -38,10 +40,10 @@ export function renderWeekStandardView({
           const dateKey = helpers.getDateKey(date);
           const allDayLanes = allDayLayout.dayLanesByDateKey.get(dateKey) || [];
           const dayStyle = helpers.getDayStyleAttributes(date, dayEventsForMatching, isToday);
-          const dayStyleAttr = dayStyle.style ? ` style="${dayStyle.style}"` : '';
+          const dayStyleAttr = dayStyle.style ? ` style="${escapeHtmlAttribute(dayStyle.style)}"` : '';
 
           return `
-            <div class="week-standard-day-column ${isToday ? 'today' : ''} ${dayStyle.className}" data-date="${date.toISOString()}"${dayStyleAttr}>
+            <div class="week-standard-day-column ${isToday ? 'today' : ''} ${escapeHtmlAttribute(dayStyle.className)}" data-date="${date.toISOString()}"${dayStyleAttr}>
               <div class="week-standard-day-header" data-click-target="day-header">
                 <div class="week-day-header-main">
                   <div class="week-standard-day-name">${dayNames[date.getDay()]}</div>
@@ -53,7 +55,7 @@ export function renderWeekStandardView({
                 </div>
               </div>
               ${hasAllDayEvents ? helpers.renderAllDayEventsForDay(allDayLanes, allDayHeight) : ''}
-              <div class="day-time-slots" style="${dayTimeSlotsStyle}">
+              <div class="day-time-slots" style="${escapeHtmlAttribute(dayTimeSlotsStyle)}">
                 ${hours.map(hour => `
                   <div class="day-time-slot" style="height: ${hourHeight}px;" data-hour="${hour}"></div>
                 `).join('')}

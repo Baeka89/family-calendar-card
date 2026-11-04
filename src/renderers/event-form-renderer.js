@@ -207,7 +207,7 @@ export function renderCreateEventForm({
   recurrenceWeekdayOptions,
   helpers
 }) {
-  const { escapeHtml, getCalendarName, t } = helpers;
+  const { escapeHtml, escapeHtmlAttribute, getCalendarName, t } = helpers;
 
   return `
       <div class="modal-header">
@@ -227,7 +227,7 @@ export function renderCreateEventForm({
                     <input
                       type="checkbox"
                       class="form-checkbox create-event-calendar"
-                      value="${entityId}"
+                      value="${escapeHtmlAttribute(entityId)}"
                       ${(selectedCalendarIds.length > 0 ? selectedCalendarIds.includes(entityId) : index === 0) ? 'checked' : ''}
                     />
                     <span class="form-checkbox-label">${escapeHtml(getCalendarName(entityId))}</span>
@@ -275,7 +275,7 @@ export function renderEditEventForm({
   recurrenceWeekdayOptions,
   helpers
 }) {
-  const { escapeHtml, getCalendarName, t } = helpers;
+  const { escapeHtml, escapeHtmlAttribute, getCalendarName, t } = helpers;
 
   return `
       <div class="modal-header">
@@ -290,7 +290,7 @@ export function renderEditEventForm({
             </label>
             <select class="form-select" id="event-calendar" required ${selectedCombinedCalendarIds.length > 1 ? 'disabled' : ''}>
               ${visibleCalendarOptions.map((entityId) => `
-                <option value="${entityId}" ${entityId === event.entityId ? 'selected' : ''}>
+                <option value="${escapeHtmlAttribute(entityId)}" ${entityId === event.entityId ? 'selected' : ''}>
                   ${escapeHtml(getCalendarName(entityId))}
                 </option>
               `).join('')}

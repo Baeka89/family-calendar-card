@@ -1,12 +1,74 @@
 # Changelog
 
-All notable changes to this project are documented in this file.
-Alle wesentlichen Änderungen an diesem Projekt werden hier dokumentiert.
+Veröffentlichte Änderungen werden hier dokumentiert. Noch nicht veröffentlichte Änderungen stehen getrennt davor. / Published changes are documented here, preceded by a separate section for unreleased changes.
 
-## [Unreleased]
+## Noch nicht veröffentlicht / Unreleased
 
-- EN: Embed the nine README screenshots as Markdown images and clarify that additional calendar assignments use central Home Assistant storage through the optional companion. Exclude obsolete assignment screenshots from active gallery previews while keeping labeled historical files available.
-- DE: Die neun README-Screenshots als Markdown-Bilder einbinden und die zentrale Speicherung zusätzlicher Kalenderzuordnungen über die optionale Begleitintegration klarstellen. Überholte Zuordnungsbilder aus den aktiven Galerievorschauen entfernen und als gekennzeichnete historische Dateien verfügbar halten.
+### Deutsch 🇩🇪
+
+#### Hinzugefügt
+
+- Regressionstests für HTML-Attribute, Kalendernamen, Editorfelder, Beschreibungslinks und interne Formatierungstokens.
+
+#### Geändert
+
+- Browser- und Baseline-Workflows auf Ubuntu 24.04 festgelegt, passend zur vorhandenen Playwright-Version.
+- README mit zwölf gleich aufgebauten Abschnitten je Sprache; Deutsch vor Englisch. Vorhandene Bilder und Link zur vollständigen Galerie bleiben enthalten.
+
+#### Behoben
+
+- Anführungszeichen und Sonderzeichen in Texten, Symbol-, Bild-, Farb- und Formularattributen absichern. Kalendernamen im Editor werden als Text ausgegeben.
+- Markdown-Formatierung verändert keine erzeugten Linkziele; HTML-Links behalten Abfrageparameter. Code-Inhalte kollidieren nicht mit internen Tokens.
+
+#### Entfernt
+
+Keine.
+
+#### Updatehinweise
+
+- Noch kein Release und keine neue Versionsnummer. Nach einem späteren Kartenupdate Dashboard neu laden.
+
+#### Bekannte Einschränkungen
+
+- Browserprüfungen sind in der aktuellen Arbeitsumgebung durch den verweigerten Chromium-Start blockiert. Eine Prüfung in einer echten Home-Assistant-Installation steht aus.
+
+#### Prüfungen
+
+- Rollup-Build, Quellsyntaxprüfung für 53 Dateien und 578 Node-Tests erfolgreich. Browserprüfungen konnten wegen der blockierten Chromium-Ausführung nicht durchgeführt werden; keine Liveprüfung in Home Assistant.
+
+### English 🇺🇸
+
+#### Added
+
+- Regression tests for HTML attributes, calendar names, editor fields, description links and internal formatting tokens.
+
+#### Changed
+
+- Pin browser and baseline workflows to Ubuntu 24.04 to match the existing Playwright version.
+- README with twelve matching sections per language, German before English. Existing images and the full gallery link are retained.
+
+#### Fixed
+
+- Escape quotes and special characters in text, icon, image, color and form attributes. Calendar names in the editor are displayed as text.
+- Markdown formatting no longer modifies generated link targets; HTML links retain query parameters. Code contents do not collide with internal tokens.
+
+#### Removed
+
+None.
+
+#### Update notes
+
+- No release or new version number yet. Reload the dashboard after a future card update.
+
+#### Known limitations
+
+- Browser checks are blocked in the current work environment because Chromium cannot start. Testing in a real Home Assistant installation is outstanding.
+
+#### Checks
+
+- Rollup build, source syntax checks for 53 files and 578 Node tests passed. Browser checks could not run because Chromium execution is blocked; no live Home Assistant test.
+
+---
 
 ## [v0.1.6]
 

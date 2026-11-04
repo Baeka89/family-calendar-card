@@ -588,7 +588,7 @@ export class FamilyCalendarCardEditor extends HTMLElement {
         if (inputType === 'color') {
           return `
             <div class="map-row">
-              <label class="map-label" for="${mapKey}-${entityId}">${displayName}</label>
+              <label class="map-label" for="${mapKey}-${this.escapeHtml(entityId)}">${displayName}</label>
               ${this.renderColorInputControl({ id: `${mapKey}-${entityId}`, field: mapKey, mapKey: entityId, value })}
             </div>
           `;
@@ -596,8 +596,8 @@ export class FamilyCalendarCardEditor extends HTMLElement {
 
         return `
           <div class="map-row">
-            <label class="map-label" for="${mapKey}-${entityId}">${displayName}</label>
-            <input id="${mapKey}-${entityId}" type="text" data-map-field="${mapKey}" data-map-key="${entityId}" value="${this.escapeHtml(value)}" placeholder="${placeholder}">
+            <label class="map-label" for="${mapKey}-${this.escapeHtml(entityId)}">${displayName}</label>
+            <input id="${mapKey}-${this.escapeHtml(entityId)}" type="text" data-map-field="${mapKey}" data-map-key="${this.escapeHtml(entityId)}" value="${this.escapeHtml(value)}" placeholder="${this.escapeHtml(placeholder)}">
           </div>
         `;
       })
@@ -619,7 +619,7 @@ export class FamilyCalendarCardEditor extends HTMLElement {
         return `
           <label class="list-checkbox-row">
             <span>${displayName}</span>
-            <input type="checkbox" data-list-field="${field}" value="${entityId}" ${checked}>
+            <input type="checkbox" data-list-field="${field}" value="${this.escapeHtml(entityId)}" ${checked}>
           </label>
         `;
       })
@@ -1749,18 +1749,18 @@ export class FamilyCalendarCardEditor extends HTMLElement {
       <div class="field-row">
         <div class="field field-inline">
           <label for="background_image_size">Image size</label>
-          <input id="background_image_size" data-field="background_image_size" type="text" value="${this._config.background_image_size || 'cover'}" placeholder="cover">
+          <input id="background_image_size" data-field="background_image_size" type="text" value="${this.escapeHtml(this._config.background_image_size || 'cover')}" placeholder="cover">
         </div>
       </div>
       <div class="field-row">
         <div class="field field-inline">
           <label for="background_image_position">Image position</label>
-          <input id="background_image_position" data-field="background_image_position" type="text" value="${this._config.background_image_position || 'center'}" placeholder="center">
+          <input id="background_image_position" data-field="background_image_position" type="text" value="${this.escapeHtml(this._config.background_image_position || 'center')}" placeholder="center">
         </div>
       </div>
       <div class="field field-inline">
         <label for="background_image_repeat">Image repeat</label>
-        <input id="background_image_repeat" data-field="background_image_repeat" type="text" value="${this._config.background_image_repeat || 'no-repeat'}" placeholder="no-repeat">
+        <input id="background_image_repeat" data-field="background_image_repeat" type="text" value="${this.escapeHtml(this._config.background_image_repeat || 'no-repeat')}" placeholder="no-repeat">
       </div>
     `);
 
@@ -1916,25 +1916,25 @@ export class FamilyCalendarCardEditor extends HTMLElement {
       <div class="field-row">
         <div class="field field-inline">
           <label for="language">Language code</label>
-          <input id="language" data-field="language" type="text" value="${this._config.language || ''}" placeholder="en, fr, de...">
+          <input id="language" data-field="language" type="text" value="${this.escapeHtml(this._config.language || '')}" placeholder="en, fr, de...">
         </div>
       </div>
       <div class="field-row">
         <div class="field field-inline">
           <label for="locale">Locale override</label>
-          <input id="locale" data-field="locale" type="text" value="${this._config.locale || ''}" placeholder="en-US">
+          <input id="locale" data-field="locale" type="text" value="${this.escapeHtml(this._config.locale || '')}" placeholder="en-US">
         </div>
       </div>
       <div class="field-row">
         <div class="field field-inline">
           <label for="header_time_sensor">Header time sensor</label>
-          <input id="header_time_sensor" data-field="header_time_sensor" type="text" value="${this._config.header_time_sensor || ''}" placeholder="sensor.current_time">
+          <input id="header_time_sensor" data-field="header_time_sensor" type="text" value="${this.escapeHtml(this._config.header_time_sensor || '')}" placeholder="sensor.current_time">
         </div>
       </div>
       <div class="field-row">
         <div class="field field-inline">
           <label for="header_weather_sensor">Header weather sensor</label>
-          <input id="header_weather_sensor" data-field="header_weather_sensor" type="text" value="${this._config.header_weather_sensor || ''}" placeholder="weather.home">
+          <input id="header_weather_sensor" data-field="header_weather_sensor" type="text" value="${this.escapeHtml(this._config.header_weather_sensor || '')}" placeholder="weather.home">
         </div>
       </div>
       <label class="checkbox-row">
@@ -1943,7 +1943,7 @@ export class FamilyCalendarCardEditor extends HTMLElement {
       </label>
       <div class="field field-inline">
         <label for="preference_storage_key">Preference storage key</label>
-        <input id="preference_storage_key" data-field="preference_storage_key" type="text" value="${this._config.preference_storage_key || ''}" placeholder="Optional custom key">
+        <input id="preference_storage_key" data-field="preference_storage_key" type="text" value="${this.escapeHtml(this._config.preference_storage_key || '')}" placeholder="Optional custom key">
       </div>
     `);
 
@@ -2411,7 +2411,7 @@ export class FamilyCalendarCardEditor extends HTMLElement {
       <div class="card-config">
         <div class="field field-inline">
           <label for="title">Title</label>
-          <input id="title" data-field="title" type="text" value="${this._config.title || ''}" placeholder="Family Calendar">
+          <input id="title" data-field="title" type="text" value="${this.escapeHtml(this._config.title || '')}" placeholder="Family Calendar">
         </div>
 
         <div class="field">
@@ -2618,7 +2618,7 @@ export class FamilyCalendarCardEditor extends HTMLElement {
       .map((entityId) => {
         const friendlyName = this._hass?.states?.[entityId]?.attributes?.friendly_name || entityId;
         const checked = selectedEntities.has(entityId) ? 'checked' : '';
-        return `<label><input type="checkbox" data-field="entity" value="${entityId}" ${checked}> ${friendlyName}</label>`;
+        return `<label><input type="checkbox" data-field="entity" value="${this.escapeHtml(entityId)}" ${checked}> ${this.escapeHtml(friendlyName)}</label>`;
       })
       .join('');
 

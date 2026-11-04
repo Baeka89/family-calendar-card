@@ -1,10 +1,11 @@
+import { escapeHtmlAttribute } from '../utils/string-utils.js';
 import { EDITOR_WEEKDAY_OPTIONS } from '../editor/editor-schema.js';
 
 export function renderEditorSection({ title, content, disclosureKey, open = false }) {
   const openAttr = open ? 'open' : '';
   return `
-      <details class="config-section" data-disclosure-key="${disclosureKey}" ${openAttr}>
-        <summary>${title}</summary>
+      <details class="config-section" data-disclosure-key="${escapeHtmlAttribute(disclosureKey)}" ${openAttr}>
+        <summary>${escapeHtmlAttribute(title)}</summary>
         <div class="section-content">${content}</div>
       </details>
     `;
@@ -13,8 +14,8 @@ export function renderEditorSection({ title, content, disclosureKey, open = fals
 export function renderEditorSubSection({ title, content, disclosureKey, open = false }) {
   const openAttr = open ? 'open' : '';
   return `
-      <details class="config-subsection" data-disclosure-key="${disclosureKey}" ${openAttr}>
-        <summary>${title}</summary>
+      <details class="config-subsection" data-disclosure-key="${escapeHtmlAttribute(disclosureKey)}" ${openAttr}>
+        <summary>${escapeHtmlAttribute(title)}</summary>
         <div class="subsection-content">${content}</div>
       </details>
     `;
@@ -23,12 +24,12 @@ export function renderEditorSubSection({ title, content, disclosureKey, open = f
 export function renderEditorColorInputControl({ id, field, mapKey = null, value, toColorInputValue }) {
   const colorValue = toColorInputValue(value);
   const triggerAttributes = mapKey
-    ? `data-color-trigger="true" data-color-field="${field}" data-color-map-key="${mapKey}"`
-    : `data-color-trigger="true" data-color-field="${field}"`;
+    ? `data-color-trigger="true" data-color-field="${escapeHtmlAttribute(field)}" data-color-map-key="${escapeHtmlAttribute(mapKey)}"`
+    : `data-color-trigger="true" data-color-field="${escapeHtmlAttribute(field)}"`;
 
   return `
       <div class="color-picker-wrap">
-        <button id="${id}" class="selected-color-swatch" data-color-field="${field}" ${mapKey ? `data-color-map-key="${mapKey}"` : ''} ${triggerAttributes} style="--selected-color: ${colorValue};" title="Choose color" type="button"></button>
+        <button id="${escapeHtmlAttribute(id)}" class="selected-color-swatch" data-color-field="${escapeHtmlAttribute(field)}" ${mapKey ? `data-color-map-key="${escapeHtmlAttribute(mapKey)}"` : ''} ${triggerAttributes} style="--selected-color: ${escapeHtmlAttribute(colorValue)};" title="Choose color" type="button"></button>
       </div>
     `;
 }

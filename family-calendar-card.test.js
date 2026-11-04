@@ -30,7 +30,7 @@ global.document = {
     set textContent(value) { this._textContent = String(value ?? ''); },
     get textContent() { return this._textContent; },
     get innerHTML() {
-      return this._textContent.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+      return this._textContent.replace(/[&<>]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[char]));
     },
     appendChild: () => {},
     remove: () => {}
@@ -12158,4 +12158,91 @@ test('event details do not restore a hidden single-calendar badge as a fallback'
     assert.match(html,/Waste collection/);
   }
   assert.match(renderEventDetailsModal({...options,visibleBadges:[{entityId:'calendar.waste',name:'Waste',color:'#ff0000'}]}),/modal-calendar-badge/);
+});
+
+
+test('HTML escaping protects both quote delimiters without relying on DOM serialization', () => {
+  const card = makeCard({ entities: ['calendar.family'] });
+  assert.equal(card.escapeHtml(`Team "A" & <B> 'C'`), 'Team &quot;A&quot; &amp; &lt;B&gt; &#39;C&#39;');
+  assert.equal(card.escapeHtml(null), '');
+  assert.equal(card.escapeHtml(0), '0');
+});
+
+test('description links retain query parameters, emphasis markers and safe attributes', () => {
+  const card = makeCard({ entities: ['calendar.family'] });
+  const url = 'https://example.com/a_b_c?one=1&two=2';
+  const markdown = card.renderEventDescription(`[**Menu**](${url}) and **[link](${url})**`);
+  assert.match(markdown, /href="https:\/\/example.com\/a_b_c\?one=1&amp;two=2"/);
+  assert.match(markdown, /<strong>Menu<\/strong>/);
+  assert.match(markdown, /<strong><a /);
+  const html = card.renderEventDescription(`<p><a href="${url}" onclick="alert(1)">Menu</a></p>`);
+  assert.match(html, /href="https:\/\/example.com\/a_b_c\?one=1&amp;two=2"/);
+  assert.doesNotMatch(html, /onclick=/);
+  assert.doesNotMatch(card.renderEventDescription('[bad](javascript:alert)'), /href=/);
+  assert.doesNotMatch(card.renderEventDescription('<p><a href="javascript:alert(1)">bad</a></p>'), /href=/);
+});
+
+test('description code cannot collide with internal tokens or become active HTML', () => {
+  const card = makeCard({ entities: ['calendar.family'] });
+  const html = card.renderEventDescription('§CODESPAN0§ §FCINLINE0§ `<b>$&</b>` and **bold**');
+  assert.match(html, /§CODESPAN0§ §FCINLINE0§/);
+  assert.match(html, /<code>&lt;b&gt;\$&amp;&lt;\/b&gt;<\/code>/);
+  assert.match(html, /<strong>bold<\/strong>/);
+});
+
+
+test('inline HTML description links keep underscores and query strings unchanged', () => {
+  const card = makeCard({ entities: ['calendar.family'] });
+  const html = card.renderEventDescription('<a href="https://example.com/a_b_c?a=1&b=2">Menu</a> **bold**');
+  assert.match(html, /href="https:\/\/example.com\/a_b_c\?a=1&amp;b=2"/);
+  assert.match(html, /<strong>bold<\/strong>/);
+});
+
+test('event renderers encode malicious calendar colors and icon attributes in every event layout', () => {
+  const injection = `red" onmouseover="alert(1)`;
+  const card = makeCard({ entities: ['calendar.family'], colors: { 'calendar.family': injection }, calendar_names: { 'calendar.family': `Family " onmouseover="alert(1)` }, calendar_badge_icons: { 'calendar.family': `mdi:calendar" onmouseover="alert(1)` }, event_title_prefix: 'badge_icon' });
+  const date = new Date('2026-05-14T00:00:00Z');
+  const event = { entityId: 'calendar.family', color: injection, summary: '<img src=x onerror=alert(1)>', start: { dateTime: '2026-05-14T08:00:00Z' }, end: { dateTime: '2026-05-14T09:00:00Z' } };
+  const outputs = [card.renderEvent(event, date), card.renderWeekCompactEvent(event, date), card.renderTimedEventsForDay([event], date, 0, 23, 40), card.renderCalendarBadges(), card.renderCalendarBadgeIcon('calendar.family', 'Family', injection, false)];
+  for (const html of outputs) {
+    assert.doesNotMatch(html, /" onmouseover="/);
+    assert.doesNotMatch(html, /<img src=x onerror=/);
+    assert.match(html, /&quot;/);
+  }
+});
+
+test('editor field values and discovered calendar names are escaped at their markup boundary', () => {
+  const Editor = customElements.get('family-calendar-card-editor');
+  const editor = new Editor();
+  const payload = `Family " autofocus onfocus="alert(1)"><img src=x onerror=alert(1)>`;
+  editor.setConfig({ entities: ['calendar.family'], title: payload, background_image_size: payload, preference_storage_key: payload });
+  assert.match(editor.innerHTML, /value="Family &quot; autofocus onfocus=&quot;/);
+  assert.doesNotMatch(editor.innerHTML, /<img src=x/);
+  let html = '';
+  const container = { childElementCount: 0, set innerHTML(value) { html = value; }, querySelectorAll: () => [] };
+  editor.querySelector = () => container;
+  editor.getCalendarEntities = () => ['calendar.family'];
+  editor._hass = { states: { 'calendar.family': { attributes: { friendly_name: payload } } } };
+  editor.refreshCalendarEntities();
+  assert.doesNotMatch(html, /<img src=x/);
+  assert.match(html, /&lt;img src=x/);
+});
+
+
+test('day badge and weather renderer attributes do not depend on a text-only escape callback', async () => {
+  const { renderDayBadge, renderWeatherIcon } = await import('./src/renderers/day-weather-renderer.js');
+  const textOnlyEscape = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const icon = `mdi:calendar" onmouseover="alert(1)`;
+  const badge = renderDayBadge({ icon, text: '<Badge>', background_color: `red" onmouseover="alert(1)`, tap_action: {} }, { escapeHtml: textOnlyEscape, registerDayBadgeAction: () => `badge" onmouseover="alert(1)` });
+  assert.doesNotMatch(badge, /" onmouseover="/);
+  assert.match(badge, /&lt;Badge&gt;/);
+  const weather = renderWeatherIcon(icon, { escapeHtml: textOnlyEscape });
+  assert.doesNotMatch(weather, /" onmouseover="/);
+});
+
+test('custom CSS cannot close its style element and insert active markup', () => {
+  const card = makeCard({ entities: ['calendar.family'], uix: { style: '</style><img src=x onerror=alert(1)><style>' } });
+  originalCardRender.call(card);
+  assert.doesNotMatch(card._root.innerHTML, /<img src=x onerror=/);
+  assert.match(card._root.innerHTML, /\\3c \/style>/);
 });

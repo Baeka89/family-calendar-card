@@ -1,3 +1,5 @@
+import { escapeHtmlAttribute } from '../utils/string-utils.js';
+
 export function renderDayCellHeader({
   date,
   dayEventsForMatching,
@@ -65,8 +67,8 @@ export function renderDayCell({
   let classes = 'day-cell';
   if (isOtherMonth) classes += ' other-month';
   if (isToday) classes += ' today';
-  classes += dayStyle.className ? ` ${dayStyle.className}` : '';
-  const dayStyleAttr = dayStyle.style ? ` style="${dayStyle.style}"` : '';
+  classes += dayStyle.className ? ` ${escapeHtmlAttribute(dayStyle.className)}` : '';
+  const dayStyleAttr = dayStyle.style ? ` style="${escapeHtmlAttribute(dayStyle.style)}"` : '';
 
   return `
       <div class="${classes}" data-date="${date.toISOString()}"${dayStyleAttr}>${renderDayCellHeader({

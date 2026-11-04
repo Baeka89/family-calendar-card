@@ -1,3 +1,5 @@
+import { escapeHtmlAttribute } from '../utils/string-utils.js';
+
 export function renderDayBadge(badge, { escapeHtml, registerDayBadgeAction } = {}) {
   const style = [
     badge.background_color ? `--dcc-day-badge-background: ${badge.background_color};` : '',
@@ -8,7 +10,7 @@ export function renderDayBadge(badge, { escapeHtml, registerDayBadgeAction } = {
   const hasIcon = Boolean(badge.icon);
   const hasText = Boolean(badge.text);
   const content = [
-    hasIcon ? `<ha-icon icon="${escapeHtml(badge.icon)}"></ha-icon>` : '',
+    hasIcon ? `<ha-icon icon="${escapeHtmlAttribute(badge.icon)}"></ha-icon>` : '',
     hasText ? `<span class="day-badge-text">${escapeHtml(badge.text)}</span>` : ''
   ].join('');
   const actionId = badge.tap_action && typeof registerDayBadgeAction === 'function'
@@ -16,9 +18,9 @@ export function renderDayBadge(badge, { escapeHtml, registerDayBadgeAction } = {
     : null;
   const classes = ['day-badge', actionId ? 'day-badge-action' : '', hasIcon ? 'has-icon' : '', hasText ? 'has-text' : ''].filter(Boolean).join(' ');
   if (actionId) {
-    return `<button type="button" class="${classes}" style="${style}" data-day-badge-action-id="${escapeHtml(actionId)}">${content}</button>`;
+    return `<button type="button" class="${classes}" style="${escapeHtmlAttribute(style)}" data-day-badge-action-id="${escapeHtmlAttribute(actionId)}">${content}</button>`;
   }
-  return `<span class="${classes}" style="${style}">${content}</span>`;
+  return `<span class="${classes}" style="${escapeHtmlAttribute(style)}">${content}</span>`;
 }
 
 export function renderDayBadges(date, dayEvents, { escapeHtml, getDayBadges, registerDayBadgeAction }) {
@@ -41,7 +43,7 @@ export function getDayForecastClass(viewMode = 'week-compact') {
 }
 
 export function renderWeatherIcon(icon, { escapeHtml }) {
-  return `<span class="forecast-condition"><ha-icon icon="${escapeHtml(icon)}"></ha-icon></span>`;
+  return `<span class="forecast-condition"><ha-icon icon="${escapeHtmlAttribute(icon)}"></ha-icon></span>`;
 }
 
 export function renderForecastTemperatures(forecast, { escapeHtml }) {

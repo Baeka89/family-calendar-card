@@ -4034,11 +4034,11 @@ class FamilyCalendarCard extends HTMLElement {
 
       ${this._config.uix?.style ? `
         <style class="uix-style">
-          ${this._config.uix.style}
+          ${String(this._config.uix.style).replace(/</g, '\\3c ')}
         </style>
       ` : ''}
 
-      <div class="calendar-container ${agendaContentHeight ? 'agenda-content-height' : ''} ${this._isDarkMode ? 'dark-mode' : ''} ${hasCustomBackground ? 'custom-background' : ''} ${this._config.hide_year ? 'hide-year' : ''} ${this._config.agenda_compact_events ? 'agenda-compact-events' : ''}" style="${containerStyle}">
+      <div class="calendar-container ${agendaContentHeight ? 'agenda-content-height' : ''} ${this._isDarkMode ? 'dark-mode' : ''} ${hasCustomBackground ? 'custom-background' : ''} ${this._config.hide_year ? 'hide-year' : ''} ${this._config.agenda_compact_events ? 'agenda-compact-events' : ''}" style="${this.escapeHtmlAttribute(containerStyle)}">
         ${this._config.hide_header ? '' : (this._config.compact_header ? this.renderCompactHeader() : this.renderStandardHeader())}
         ${this.renderEventRefreshWarning()}
         <div class="calendar-body">
@@ -4634,7 +4634,7 @@ class FamilyCalendarCard extends HTMLElement {
           const spanDataAttribute = visibleDaySpan > 1 ? ` data-all-day-span-days="${visibleDaySpan}"` : '';
           return `
             <div class="all-day-event ${extendsBeforeVisibleRange ? 'continues-prev' : ''} ${extendsAfterVisibleRange ? 'continues-next' : ''} ${showTitle && visibleDaySpan > 1 ? 'leading-span-title' : ''}"
-                 style="${eventStyle} --event-bubble-font-size: ${this.getEventBubbleFontSize(event)}; --event-time-font-size: ${this.getEventTimeFontSize(event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(event)};${spanStyle}"${spanDataAttribute}
+                 style="${this.escapeHtmlAttribute(eventStyle)} --event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(event))}; --event-time-font-size: ${this.escapeHtmlAttribute(this.getEventTimeFontSize(event))}; --event-bubble-text-color: ${this.escapeHtmlAttribute(this.getEventBubbleFontColor(event))};${spanStyle}"${spanDataAttribute}
                  data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
               <div class="all-day-event-title ${showTitle && visibleDaySpan > 1 ? 'spans-multiple-days' : ''}">${showTitle ? this.renderEventTitleWithPrefix(event, displayTitle || this.getEventDisplayTitle(event)) : ''}</div>
               ${this.renderEventStyleCornerIcon(event)}
@@ -4756,7 +4756,7 @@ class FamilyCalendarCard extends HTMLElement {
 
       return `
         <div class="week-standard-event"
-             style="top: ${top}px; height: ${height}px; width: ${width}; left: ${left}; ${eventStyle} --event-bubble-font-size: ${this.getEventBubbleFontSize(event)}; --event-time-font-size: ${this.getEventTimeFontSize(event)}; --event-location-font-size: ${this.getEventLocationFontSize(event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(event)};"
+             style="top: ${top}px; height: ${height}px; width: ${width}; left: ${left}; ${this.escapeHtmlAttribute(eventStyle)} --event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(event))}; --event-time-font-size: ${this.escapeHtmlAttribute(this.getEventTimeFontSize(event))}; --event-location-font-size: ${this.escapeHtmlAttribute(this.getEventLocationFontSize(event))}; --event-bubble-text-color: ${this.escapeHtmlAttribute(this.getEventBubbleFontColor(event))};"
              data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
           <div class="week-standard-event-title">${this.renderEventTitleWithPrefix(event, displayTitle || this.getEventDisplayTitle(event))}</div>
           ${this.shouldShowEventTime(event) ? `<div class="week-standard-event-time">${this.formatEventTimeRange(eventStart, eventEnd, { schedule: true })}</div>` : ''}
@@ -5356,7 +5356,7 @@ class FamilyCalendarCard extends HTMLElement {
     }
 
     if (!lane.isFirstVisibleSegment) {
-      return `<div class="event month-span-event-spacer month-span-event-placeholder" style="--event-bubble-font-size: ${this.getEventBubbleFontSize(lane.event)}; --event-time-font-size: ${this.getEventTimeFontSize(lane.event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(lane.event)};"></div>`;
+      return `<div class="event month-span-event-spacer month-span-event-placeholder" style="--event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(lane.event))}; --event-time-font-size: ${this.getEventTimeFontSize(lane.event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(lane.event)};"></div>`;
     }
 
     const { event, extendsBeforeVisibleRange, extendsAfterVisibleRange, displayTitle, visibleDaySpan } = lane;
@@ -5367,7 +5367,7 @@ class FamilyCalendarCard extends HTMLElement {
     const spanDataAttribute = visibleDaySpan > 1 ? ` data-month-span-days="${visibleDaySpan}"` : '';
 
     return `
-      <div class="event month-span-event ${extendsBeforeVisibleRange ? 'continues-prev' : ''} ${extendsAfterVisibleRange ? 'continues-next' : ''}" style="${eventStyle}; --event-bubble-font-size: ${this.getEventBubbleFontSize(event)}; --event-time-font-size: ${this.getEventTimeFontSize(event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(event)};${spanStyle}"${spanDataAttribute} data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
+      <div class="event month-span-event ${extendsBeforeVisibleRange ? 'continues-prev' : ''} ${extendsAfterVisibleRange ? 'continues-next' : ''}" style="${this.escapeHtmlAttribute(eventStyle)}; --event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(event))}; --event-time-font-size: ${this.escapeHtmlAttribute(this.getEventTimeFontSize(event))}; --event-bubble-text-color: ${this.escapeHtmlAttribute(this.getEventBubbleFontColor(event))};${spanStyle}"${spanDataAttribute} data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
         ${this.renderEventTitleWithPrefix(event, displayTitle || this.getEventDisplayTitle(event))}
         ${this.renderEventStyleCornerIcon(event)}
         ${this.renderCombinedCornerBubbles(event)}
@@ -5393,7 +5393,7 @@ class FamilyCalendarCard extends HTMLElement {
     const eventStyle = this.getEventStyle(event);
 
     return `
-      <div class="week-compact-event" style="${eventStyle} --event-bubble-font-size: ${this.getEventBubbleFontSize(event)}; --event-time-font-size: ${this.getEventTimeFontSize(event)}; --event-location-font-size: ${this.getEventLocationFontSize(event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(event)};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
+      <div class="week-compact-event" style="${this.escapeHtmlAttribute(eventStyle)} --event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(event))}; --event-time-font-size: ${this.escapeHtmlAttribute(this.getEventTimeFontSize(event))}; --event-location-font-size: ${this.escapeHtmlAttribute(this.getEventLocationFontSize(event))}; --event-bubble-text-color: ${this.escapeHtmlAttribute(this.getEventBubbleFontColor(event))};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
         ${this.shouldShowEventTime(event) ? `<div class="week-compact-event-time">${timeLabel}</div>` : ''}
         <div class="week-compact-event-title">${this.renderEventTitleWithPrefix(event, this.getEventDisplayTitle(event))}</div>
         ${this.shouldShowEventLocation(event) ? `<div class="week-compact-event-location">📍 ${this.escapeHtml(this.getDisplayLocation(event.location, event))}</div>` : ''}
@@ -5410,7 +5410,7 @@ class FamilyCalendarCard extends HTMLElement {
     const eventStyle = this.getEventStyle(event);
 
     return `
-      <div class="event" style="${eventStyle}; --event-bubble-font-size: ${this.getEventBubbleFontSize(event)}; --event-time-font-size: ${this.getEventTimeFontSize(event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(event)};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
+      <div class="event" style="${this.escapeHtmlAttribute(eventStyle)}; --event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(event))}; --event-time-font-size: ${this.escapeHtmlAttribute(this.getEventTimeFontSize(event))}; --event-bubble-text-color: ${this.escapeHtmlAttribute(this.getEventBubbleFontColor(event))};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
         ${!isAllDaySegment && this.shouldShowEventTime(event) ? `<span class="event-time">${this.formatEventTime(segmentStart)}</span>` : ''}
         ${this.renderEventTitleWithPrefix(event, this.getEventDisplayTitle(event))}
         ${this.renderEventStyleCornerIcon(event)}
@@ -7530,7 +7530,7 @@ class FamilyCalendarCard extends HTMLElement {
             const alreadyExists = existingCalendarIds.has(entityId);
             return `
               <label class="recurring-option ${alreadyExists ? 'disabled-option' : ''}">
-                <input type="checkbox" class="forward-calendar-option" value="${entityId}" ${alreadyExists ? 'checked disabled' : ''} />
+                <input type="checkbox" class="forward-calendar-option" value="${this.escapeHtmlAttribute(entityId)}" ${alreadyExists ? 'checked disabled' : ''} />
                 <div class="recurring-option-label">
                   <div class="recurring-option-title">${this.escapeHtml(this.getCalendarName(entityId))}</div>
                   <div class="recurring-option-description">${alreadyExists ? this.t('forwardEventAlreadyExists') : this.escapeHtml(entityId)}</div>
@@ -8268,7 +8268,7 @@ class FamilyCalendarCard extends HTMLElement {
     content.innerHTML = `
       <div class="modal-header"><h3 class="modal-title">${this.t('customColorTitle')}</h3><button class="modal-close" id="close-custom-color-modal">×</button></div>
       <div class="modal-body custom-color-modal">
-        <family-color-picker id="custom-color-wheel" value="${currentColor}" title="${this.t('customColorTitle')}" show-actions="false"></family-color-picker>
+        <family-color-picker id="custom-color-wheel" value="${this.escapeHtmlAttribute(currentColor)}" title="${this.t('customColorTitle')}" show-actions="false"></family-color-picker>
         ${scopeHtml}
         <div class="modal-actions"><div class="modal-actions-left"><button class="btn btn-secondary" id="custom-color-default-btn">${this.t('useDefault')}</button></div><div class="modal-actions-right"><button class="btn btn-secondary" id="cancel-custom-color-btn">${this.t('cancel')}</button><button class="btn btn-primary" id="apply-custom-color-btn">${this.t('applyColor')}</button></div></div>
       </div>`;
@@ -8322,7 +8322,7 @@ class FamilyCalendarCard extends HTMLElement {
               const timeLabel = isAllDaySegment ? this.t('allDay') : this.formatEventTime(segmentStart);
               const eventStyle = this.getEventStyle(event);
               return `
-                <div class="week-compact-event" style="${eventStyle} --event-bubble-font-size: ${this.getEventBubbleFontSize(event)}; --event-time-font-size: ${this.getEventTimeFontSize(event)}; --event-location-font-size: ${this.getEventLocationFontSize(event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(event)};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
+                <div class="week-compact-event" style="${this.escapeHtmlAttribute(eventStyle)} --event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(event))}; --event-time-font-size: ${this.escapeHtmlAttribute(this.getEventTimeFontSize(event))}; --event-location-font-size: ${this.escapeHtmlAttribute(this.getEventLocationFontSize(event))}; --event-bubble-text-color: ${this.escapeHtmlAttribute(this.getEventBubbleFontColor(event))};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
                   ${this.shouldShowEventTime(event) ? `${this.shouldShowEventTime(event) ? `<div class="week-compact-event-time">${timeLabel}</div>` : ''}` : ''}
                   <div class="week-compact-event-title">${this.renderEventTitleWithPrefix(event, this.getEventDisplayTitle(event))}</div>
                   ${this.shouldShowEventLocation(event) ? `<div class="week-compact-event-location">📍 ${this.escapeHtml(this.getDisplayLocation(event.location, event))}</div>` : ''}
@@ -8374,7 +8374,7 @@ class FamilyCalendarCard extends HTMLElement {
           const eventStyle = this.getEventStyle(event, { withBorderAccent: true });
 
           return `
-            <div class="day-event day-modal-event" style="${eventStyle} --event-bubble-font-size: ${this.getEventBubbleFontSize(event)}; --event-time-font-size: ${this.getEventTimeFontSize(event)}; --event-location-font-size: ${this.getEventLocationFontSize(event)}; --event-bubble-text-color: ${this.getEventBubbleFontColor(event)};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
+            <div class="day-event day-modal-event" style="${this.escapeHtmlAttribute(eventStyle)} --event-bubble-font-size: ${this.escapeHtmlAttribute(this.getEventBubbleFontSize(event))}; --event-time-font-size: ${this.escapeHtmlAttribute(this.getEventTimeFontSize(event))}; --event-location-font-size: ${this.escapeHtmlAttribute(this.getEventLocationFontSize(event))}; --event-bubble-text-color: ${this.escapeHtmlAttribute(this.getEventBubbleFontColor(event))};" data-event='${this.escapeHtmlAttribute(JSON.stringify(event))}'>
               <div class="day-modal-event-title">${this.renderEventTitleWithPrefix(event, this.getEventDisplayTitle(event))}</div>
               ${this.shouldShowEventTime(event) ? `<div class="day-modal-event-meta">${isAllDaySegment ? this.t('allDay') : this.formatEventTimeRange(segmentStart, segmentEnd)}</div>` : ''}
               ${this.shouldShowEventLocation(event) ? `<div class="day-modal-event-location">📍 ${this.escapeHtml(this.getDisplayLocation(event.location, event))}</div>` : ''}
@@ -8752,17 +8752,25 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   renderMarkdownInline(text) {
-    const codeSpans = [];
-    let html = this.escapeHtml(text).replace(/`([^`]+)`/g, (_match, code) => {
-      const token = `§CODESPAN${codeSpans.length}§`;
-      codeSpans.push(`<code>${code}</code>`);
+    const value = String(text ?? '');
+    const fragments = [];
+    let tokenPrefix = '§FCINLINE';
+    while (value.includes(tokenPrefix)) tokenPrefix += '_';
+    const protect = (markup) => {
+      const token = `${tokenPrefix}${fragments.length}§`;
+      fragments.push(markup);
       return token;
-    });
+    };
+    let html = this.escapeHtml(value).replace(/`([^`]+)`/g, (_match, code) => protect(`<code>${code}</code>`));
+
+    html = html.replace(/&lt;a\s+[\s\S]*?&gt;[\s\S]*?&lt;\/a&gt;/gi, (anchor) => protect(this.restoreAllowedDescriptionTags(anchor)));
 
     html = html.replace(/\[([^\]]+)]\(([^)\s]+)\)/g, (_match, label, url) => {
       const safeUrl = this.getSafeDescriptionUrl(this.decodeHtmlEntities(url));
       if (!safeUrl) return label;
-      return `<a href="${this.escapeHtmlAttribute(safeUrl)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+      // Keep emphasis and HTML restoration out of the generated href attribute.
+      const labelHtml = this.renderMarkdownInline(this.decodeHtmlEntities(label));
+      return protect(`<a href="${this.escapeHtmlAttribute(safeUrl)}" target="_blank" rel="noopener noreferrer">${labelHtml}</a>`);
     });
 
     html = html
@@ -8773,10 +8781,10 @@ class FamilyCalendarCard extends HTMLElement {
       .replace(/_([^_]+)_/g, '<em>$1</em>');
 
     html = this.restoreAllowedDescriptionTags(html);
-    codeSpans.forEach((codeHtml, index) => {
-      html = html.replace(`§CODESPAN${index}§`, codeHtml);
-    });
-
+    // Later fragments can contain earlier protected code spans in link labels.
+    for (let index = fragments.length - 1; index >= 0; index -= 1) {
+      html = html.replaceAll(`${tokenPrefix}${index}§`, () => fragments[index]);
+    }
     return html;
   }
 
@@ -8790,7 +8798,7 @@ class FamilyCalendarCard extends HTMLElement {
     const allowedSimpleTags = 'b|strong|i|em|u|s|br|p|div|ul|ol|li|blockquote|code|pre|h[1-6]|table|thead|tbody|tfoot|tr|td|th';
 
     const renderAnchor = (attrs, content = '') => {
-      const hrefMatch = attrs.match(/href\s*=\s*(?:&quot;([^&]*)&quot;|&#39;([^&]*)&(?:#39|apos);|"([^"]*)"|'([^']*)'|([^\s&"']+))/i);
+      const hrefMatch = attrs.match(/(?:^|\s)href\s*=\s*(?:&quot;([\s\S]*?)&quot;|&#39;([\s\S]*?)&#39;|"([^"]*)"|'([^']*)'|([^\s&"']+))/i);
       const href = hrefMatch ? this.decodeHtmlEntities(hrefMatch[1] || hrefMatch[2] || hrefMatch[3] || hrefMatch[4] || hrefMatch[5] || '') : '';
       const safeUrl = this.getSafeDescriptionUrl(href);
       if (!safeUrl) return content;
@@ -8829,9 +8837,8 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    // Legacy renderers use this helper for both text and quoted attributes.
+    return escapeHtmlAttribute(text);
   }
 
   escapeHtmlAttribute(text) {

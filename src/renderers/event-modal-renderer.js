@@ -1,3 +1,5 @@
+import { escapeHtmlAttribute } from '../utils/string-utils.js';
+
 export function renderEventDetailsModal({
   event,
   startDate,
@@ -40,7 +42,7 @@ export function renderEventDetailsModal({
           </div>
           ${locationActionsExpanded ? `
             <div class="modal-location-actions" id="event-location-actions">
-              <button type="button" class="btn btn-secondary modal-location-action" id="open-location-map-btn" data-map-url="${escapeHtml(locationMapUrl)}">${t('openInGoogleMaps')}</button>
+              <button type="button" class="btn btn-secondary modal-location-action" id="open-location-map-btn" data-map-url="${escapeHtmlAttribute(locationMapUrl)}">${t('openInGoogleMaps')}</button>
               <button type="button" class="btn btn-secondary modal-location-action" id="copy-location-address-btn">${t('copyAddress')}</button>
             </div>
           ` : ''}
@@ -53,8 +55,8 @@ export function renderEventDetailsModal({
         ` : '');
 
   const combinedBadgeHtml = visibleBadges.length === 0 ? '' : event.isCombinedCalendarEvent
-    ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">${visibleBadges.map(calendar => `<span class="modal-calendar-badge" style="background: ${calendar.color}; color: ${calendar.textColor || 'white'}; display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px;">${escapeHtml(calendar.name)}</span>`).join('')}</div>`
-    : `<div class="modal-calendar-badge" style="background: ${modalBadgeColor}; color: ${modalBadgeTextColor}; display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-top: 8px;">${escapeHtml(calendarName)}</div>`;
+    ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">${visibleBadges.map(calendar => `<span class="modal-calendar-badge" style="background: ${escapeHtmlAttribute(calendar.color)}; color: ${escapeHtmlAttribute(calendar.textColor || 'white')}; display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px;">${escapeHtml(calendar.name)}</span>`).join('')}</div>`
+    : `<div class="modal-calendar-badge" style="background: ${escapeHtmlAttribute(modalBadgeColor)}; color: ${escapeHtmlAttribute(modalBadgeTextColor)}; display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-top: 8px;">${escapeHtml(calendarName)}</div>`;
 
   return `
       <div class="modal-header">
@@ -123,7 +125,7 @@ export function renderEventDetailsModal({
               ${canDelete ? `<button class="btn btn-danger" id="delete-event-btn">${t('delete')}</button>` : ''}
             </div>
             <div class="modal-actions-right">
-              <button class="btn btn-secondary" id="custom-color-btn">${t('customColor')}${customColor ? ` <span style="display:inline-block;width:0.8em;height:0.8em;border-radius:50%;background:${customColor};vertical-align:-0.1em;"></span>` : ''}</button>
+              <button class="btn btn-secondary" id="custom-color-btn">${t('customColor')}${customColor ? ` <span style="display:inline-block;width:0.8em;height:0.8em;border-radius:50%;background:${escapeHtmlAttribute(customColor)};vertical-align:-0.1em;"></span>` : ''}</button>
               ${canForward ? `<button class="btn btn-secondary" id="forward-event-btn">${t('forwardEvent')}</button>` : ''}
               ${canEdit ? `<button class="btn btn-primary" id="edit-event-btn">${t('editEvent')}</button>` : ''}
             </div>

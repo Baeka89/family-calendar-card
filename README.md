@@ -7,291 +7,256 @@
 
 [Deutsch](#deutsch) | [English](#english) · [Changelog](CHANGELOG.md)
 
----
-
 <a id="deutsch"></a>
 
 ## Deutsch 🇩🇪
 
-### Über dieses Projekt
+### 1. Projekt und Kurzbeschreibung
 
-**Family Calendar Card** bringt mehrere Home-Assistant-Kalender in einer gemeinsamen Dashboard-Karte zusammen. Termine, Familienmitglieder und Wetter lassen sich übersichtlich darstellen und individuell gestalten.
+Family Calendar Card ist eine Dashboard-Karte für Home Assistant. Sie stellt mehrere Kalender gemeinsam dar und wird von Baeka89 gepflegt.
 
-Das Projekt wird von **Baeka89** entwickelt und gepflegt. Die Karte lässt sich über den visuellen Editor oder YAML konfigurieren.
+### 2. Projektzweck und Funktionsumfang
 
-**Versionen:** Veröffentlichte Versionen findest du unter [Releases](https://github.com/Baeka89/family-calendar-card/releases). Änderungen sind im [Changelog](CHANGELOG.md) dokumentiert.
+Vier Ansichten: Monat, Woche, Schedule und Agenda. Kalenderfarben, Familienmitglieder, Wetter, virtuelle Kalender, Tages-Badges, individuelle Terminstile und zusätzliche Header-Schaltflächen lassen sich konfigurieren. Termine können abhängig von den Fähigkeiten und Schreibrechten der Kalenderintegration erstellt, bearbeitet, weitergeleitet und gelöscht werden. Beschreibungen unterstützen Markdown und eine eingeschränkte Auswahl von HTML-Tags.
 
-### Speicherung der zusätzlichen Kalenderzuordnung
+### 3. Systeme und Voraussetzungen
 
-**„Betrifft auch diese Kalender“ wird mit der optionalen [Family Calendar Card Companion Integration](https://github.com/Baeka89/family-calendar-card-companion) zentral in Home Assistant gespeichert.** Die Zuordnung gilt für alle Geräte und Benutzer derselben Home-Assistant-Instanz. Sie verändert den Originaltermin nicht und funktioniert auch bei schreibgeschützten Einladungen. Ohne Integration bleibt die Karte nutzbar; diese Zusatzfunktion zeigt dann einen Einrichtungshinweis und bietet keine lokale Ersatzspeicherung an.
+Home Assistant mit mindestens einer `calendar`-Entität und einem Browser mit Unterstützung für benutzerdefinierte Web-Komponenten. Optional: `weather`- und `person`-Entitäten. Terminänderungen erfordern eine schreibfähige Kalenderintegration. Eine verbindliche Home-Assistant-Mindestversion ist in den Projektmetadaten bisher nicht angegeben; eine pauschale Kompatibilitätszusage für alle Versionen wird nicht gemacht.
 
-Die individuelle **Terminfarbe** ist eine andere Einstellung und wird weiterhin lokal im Browser gespeichert.
+Karte, Editor und Begleitintegration unterstützen Deutsch, Englisch, Französisch, Niederländisch, Spanisch, Estnisch, Katalanisch, Dänisch und Schwedisch. Nicht unterstützte Sprachen verwenden Englisch.
 
-### Features
+### 4. Installation
 
-- **Vier Ansichten:** Monat, Woche, Schedule und Agenda.
-- **Mehrere Kalender:** gemeinsame Darstellung, Kalenderfarben und zusammengeführte Termine.
-- **Optionale Zusatzfunktion mit Begleitintegration – zusätzliche Zuordnung:** In den Termindetails unter „Betrifft auch diese Kalender“ weitere konfigurierte Kalender auswählen. Auch bei schreibgeschützten Einladungen werden deren Namen und Farben angezeigt. Die Zuordnung wird mit der Begleitintegration für alle Geräte und Benutzer dieser Home-Assistant-Instanz gespeichert und ändert den Originaltermin nicht; bei Serien gilt sie nur für das ausgewählte Vorkommen.
-- **Terminverwaltung:** Termine erstellen und bearbeiten, einschließlich Wiederholungen; verfügbare Aktionen hängen von der Kalenderintegration und ihren Schreibrechten ab.
-- **Wetter:** Vorhersagen aus einer Home-Assistant-Wetterentität.
-- **Individuelle Darstellung:** Termin- und Tagesstile, Tages-Badges und virtuelle Kalender.
-- **Familienmitglieder:** Einbindung von `person`-Entitäten.
-- **Beschreibungen:** Markdown- und HTML-Darstellung für Termindetails.
-- **Bedienung:** visueller Konfigurationseditor und responsive Ansichten für Tablets und andere Bildschirmgrößen.
+1. In HACS nach **Family Calendar Card** suchen. Falls die Karte noch nicht im Standardkatalog erscheint, `https://github.com/Baeka89/family-calendar-card` als benutzerdefiniertes Repository vom Typ **Dashboard** hinzufügen.
+2. Karte herunterladen. HACS verwaltet die Frontend-Datei; die Begleitintegration wird dabei nicht installiert.
+3. Dashboard neu laden und die von HACS angelegte JavaScript-Modulressource prüfen.
+4. Eine manuelle Karte mit `type: custom:family-calendar-card` hinzufügen.
 
-### Voraussetzungen
+Manuell: `family-calendar-card.js` aus dem gewünschten Release nach `/config/www/family-calendar-card.js` kopieren. Unter Dashboard-Ressourcen `/local/family-calendar-card.js` als **JavaScript-Modul** eintragen und das Dashboard neu laden. Die Kompatibilitätsbezeichnung `custom:family-calendar-card-legacy` bleibt unterstützt.
 
-- Home Assistant mit mindestens einer `calendar`-Entität.
-- Optional eine `weather`-Entität für Vorhersagen und `person`-Entitäten für Familienmitglieder.
-- Eine schreibfähige Kalenderintegration, wenn Termine über die Karte verwaltet werden sollen.
+### 5. Einrichtung und Authentifizierung
 
-### Unterstützung
+Die Karte nutzt die vorhandene Home-Assistant-Anmeldung; separate Zugangsdaten sind nicht erforderlich. Kalender im visuellen Editor oder unter `entities` auswählen.
 
-Fehler und Vorschläge kannst du über die [GitHub Issues](https://github.com/Baeka89/family-calendar-card/issues) melden. Bitte ergänze Kartenversion, Home-Assistant-Version, verwendete Kalenderintegration und Schritte zum Nachstellen; entferne persönliche Termindaten aus Beispielen.
+**Optionale Begleitintegration:** [Family Calendar Card Companion](https://github.com/Baeka89/family-calendar-card-companion) separat über HACS installieren, Home Assistant neu starten und unter **Einstellungen → Geräte & Dienste → Integration hinzufügen** einrichten. Nur die gemeinsame zusätzliche Anzeigezuordnung benötigt sie. Die Karte bleibt ohne Integration nutzbar.
 
-Wenn du die Weiterentwicklung unterstützen möchtest: **[Spende via PayPal](https://paypal.me/misomazo)**.
+### 6. Konfiguration und Optionen
 
----
+Einfacher Einstieg:
+
+```yaml
+type: custom:family-calendar-card
+title: Familienkalender
+entities:
+  - calendar.family
+  - calendar.work
+  - calendar.birthdays
+default_view: agenda
+compact_height: false
+rolling_days_agenda: 2
+hide_empty_days: true
+agenda_text_alignment: left
+hide_badge_calendars:
+  - calendar.birthdays
+```
+
+Die Entitäts-IDs sind Beispiele und durch eigene vorhandene Kalender zu ersetzen. `rolling_days_agenda: 2` zeigt heute plus zwei weitere Tage. `compact_height: false` richtet die Höhe nach dem Inhalt; `hide_empty_days: true` entfernt leere Tage. `agenda_text_alignment: left` richtet den Agenda-Text links aus. `hide_badge_calendars` blendet Kalender-Badges in allen Ansichten und Termindetails aus, ohne die Termine zu entfernen. Ein Eintrag wirkt nur für den entsprechenden tatsächlich verwendeten Kalender. Weitere Optionen: [Konfigurationsdokumentation](docs/configuration).
+
+### 7. Verwendung
+
+Termin anklicken, um Details und verfügbare Aktionen zu öffnen. Bei installierter und verbundener Begleitintegration unter **Betrifft auch diese Kalender** zusätzliche in der Karte konfigurierte Kalender auswählen und speichern. Das verändert den Originaltermin nicht und funktioniert auch für schreibgeschützte Einladungen. Bei Serien gilt die Zuordnung für das ausgewählte Vorkommen.
+
+Die Zuordnungen liegen zentral in Home Assistant und gelten für alle Geräte und Benutzer derselben Instanz. Individuelle Terminfarben und Sichtbarkeitspräferenzen bleiben lokale Kartenfunktionen. Das Schließen eines Popups oder ein Klick auf dessen Hintergrund verwirft ungespeicherte Eingaben.
+
+[Alle 48 Beispielbilder und Konfigurationen](docs/images/gallery/README.md). Die Bilder stammen aus einem früheren Projektstand; einzelne Beschriftungen und Details können abweichen. Überholte Bilder zur früheren Browser-Zuordnung sind in der Galerie als historisch gekennzeichnet.
+
+![Monatsübersicht: Kalender gemeinsam mit ihren Farben anzeigen.](docs/images/readme/month-light.png)
+
+Monatsübersicht: Kalender gemeinsam mit ihren Farben anzeigen.
+
+![Dunkle Wochenansicht: Tagesspalten und Termine.](docs/images/readme/week-dark.png)
+
+Dunkle Wochenansicht: Tagesspalten und Termine.
+
+![Schedule: Termine im Stundenraster.](docs/images/readme/schedule-light.png)
+
+Schedule: Termine im Stundenraster.
+
+![Dunkle Agenda: Termine als Liste.](docs/images/readme/agenda-dark.png)
+
+Dunkle Agenda: Termine als Liste.
+
+![Kalenderfarben: unterschiedliche Farbpaletten verwenden.](docs/images/readme/calendar-palette.png)
+
+Kalenderfarben: unterschiedliche Farbpaletten verwenden.
+
+![Termin erstellen: Kalender, Zeiten und Wiederholung auswählen.](docs/images/readme/create-event.png)
+
+Termin erstellen: Kalender, Zeiten und Wiederholung auswählen.
+
+![Terminfarbe: eine individuelle Farbe auswählen.](docs/images/readme/custom-event-color.png)
+
+Terminfarbe: eine individuelle Farbe auswählen.
+
+![Visueller Editor: Farboptionen konfigurieren.](docs/images/readme/editor-colors.png)
+
+Visueller Editor: Farboptionen konfigurieren.
+
+![Mobile Agenda: Darstellung auf schmalen Bildschirmen.](docs/images/readme/agenda-mobile.png)
+
+Mobile Agenda: Darstellung auf schmalen Bildschirmen.
+
+### 8. Aktualisierung und Migration
+
+Karte und Begleitintegration separat über HACS aktualisieren. Nach einem Kartenupdate das Dashboard neu laden; bei veralteter Anzeige den Browsercache prüfen. Bei manueller Installation die Moduldatei ersetzen. Nach einem Update der Begleitintegration Home Assistant neu starten.
+
+Bestehende Browser-Zuordnungen werden nicht automatisch in die Integration übertragen: gewünschte Kalender erneut auswählen und speichern. Die Begleitintegration übernimmt bestehendes `family_calendar_card:`-YAML in einen UI-Eintrag; den YAML-Eintrag nach erfolgreicher Übernahme entfernen. Die bisherigen Elementnamen und Speicherschlüssel bleiben erhalten.
+
+### 9. Einschränkungen und Fehlerbehebung
+
+Ohne verbundene Begleitintegration zeigt die zusätzliche Zuordnung einen Einrichtungshinweis und bietet keine lokale Ersatzspeicherung an. Alle authentifizierten Home-Assistant-Benutzer dürfen gemeinsame Zuordnungen bearbeiten. Schreibrechte, stabile Ereigniskennungen und Serienbearbeitung hängen von der Kalenderintegration ab; nach einer Änderung von Titel oder Datum kann ohne stabile Kennung eine erneute Zuordnung nötig sein.
+
+Reserviert das Dashboard trotz Inhaltshöhe Leerraum, feste Höhenvorgaben des umgebenden Layouts prüfen. Bei fehlenden Aktionen Kalenderrechte prüfen; bei fehlender Zuordnung die Begleitintegration und deren Verbindung prüfen. HTML-Beschreibungen sind eingeschränkt: Skripte, Ereignisattribute und nicht erlaubte Linkprotokolle sind nicht vorgesehen.
+
+### 10. Entwicklung und Tests
+
+Quellcode unter `src/` bearbeiten und das ausgelieferte Bundle mit `npm run build` erzeugen. Node-Tests: `npm test`; Syntaxprüfung: `node test/check-sources.cjs`; Browser- und Bildvergleichstests: `npm run test:visual`. Die Sicherheitsregressionen liegen in `playwright/security.spec.js`. Voraussetzungen und vollständiger Ablauf: [DEVELOPMENT.md](DEVELOPMENT.md).
+
+Ein lokaler Test ersetzt keine Prüfung in einer echten Home-Assistant-Installation. Den tatsächlich ausgeführten Prüfungsumfang zum jeweiligen Änderungsstand dokumentieren.
+
+### 11. Versionshistorie
+
+[CHANGELOG.md](CHANGELOG.md) und [GitHub-Releases](https://github.com/Baeka89/family-calendar-card/releases). Ein Push allein erzeugt keine neue Version. Die aktuelle Korrektur ist noch nicht veröffentlicht.
+
+### 12. Unterstützung, Mitwirkung und Lizenz
+
+Fehler und Vorschläge: [GitHub Issues](https://github.com/Baeka89/family-calendar-card/issues). Kartenversion, Home-Assistant-Version, Kalenderintegration und Schritte zum Nachstellen nennen; persönliche Termindaten entfernen. Beiträge sind über Pull Requests möglich. Danke an die Home-Assistant- und HACS-Community sowie an die Beitragenden und Prüfenden.
+
+Maintainer: [Baeka89](https://github.com/Baeka89). Unterstützung: [PayPal](https://paypal.me/misomazo). Lizenz: [MIT](LICENSE).
 
 <a id="english"></a>
 
 ## English 🇺🇸
 
-### About this Project
+### 1. Project and summary
 
-**Family Calendar Card** brings multiple Home Assistant calendars together in one dashboard card. Customize how events, family members and weather forecasts appear.
+Family Calendar Card is a Home Assistant dashboard card. It displays multiple calendars together and is maintained by Baeka89.
 
-The project is developed and maintained by **Baeka89**. Configure the card using the visual editor or YAML.
+### 2. Purpose and features
 
-**Versions:** Published versions are available under [Releases](https://github.com/Baeka89/family-calendar-card/releases). Changes are documented in the [changelog](CHANGELOG.md).
+Four views: Month, Week, Schedule and Agenda. Configure calendar colors, family members, weather, virtual calendars, day badges, event styles and additional header buttons. Events can be created, edited, forwarded and deleted depending on the capabilities and write permissions of the calendar integration. Descriptions support Markdown and a restricted selection of HTML tags.
 
-### Storage of additional calendar assignments
+### 3. Systems and requirements
 
-**“Also concerns these calendars” is stored centrally in Home Assistant through the optional [Family Calendar Card Companion integration](https://github.com/Baeka89/family-calendar-card-companion).** Assignments apply across devices and users of the same Home Assistant instance. They leave the source event unchanged and work with read-only invitations. The card remains usable without the integration; this extra feature then shows setup information and provides no browser-only fallback storage.
+Home Assistant with at least one `calendar` entity and a browser supporting custom web components. Optional: `weather` and `person` entities. Editing events requires a writable calendar integration. Project metadata does not currently declare a binding minimum Home Assistant version; compatibility with every version is not claimed.
 
-The custom **event color** is a separate setting and remains stored locally in the browser.
+The card, editor and companion support German, English, French, Dutch, Spanish, Estonian, Catalan, Danish and Swedish. Unsupported languages fall back to English.
 
-### Features
+### 4. Installation
 
-- **Four views:** Month, Week, Schedule and Agenda.
-- **Multiple calendars:** shared views, calendar colors and combined events.
-- **Optional companion feature – additional assignments:** Open event details and select additional configured calendars under “Also concerns these calendars”. Their names and colors appear even for read-only invitations. Assignments are shared across this Home Assistant instance using the companion integration without changing the original event; recurring assignments apply only to the selected occurrence.
-- **Event management:** create and edit events, including recurring events; available actions depend on the calendar integration and its write permissions.
-- **Weather:** forecasts from a Home Assistant weather entity.
-- **Customization:** event styles, day styles, day badges and virtual calendars.
-- **Family members:** support for `person` entities.
-- **Descriptions:** Markdown and HTML rendering in event details.
-- **Controls:** visual configuration editor and responsive views for tablets and other screen sizes.
+1. Search HACS for **Family Calendar Card**. If it is not listed in the default catalog yet, add `https://github.com/Baeka89/family-calendar-card` as a custom repository of type **Dashboard**.
+2. Download the card. HACS manages the frontend file; this does not install the companion.
+3. Reload the dashboard and check the JavaScript module resource created by HACS.
+4. Add a manual card with `type: custom:family-calendar-card`.
 
-### Requirements
+Manual installation: copy `family-calendar-card.js` from the desired release to `/config/www/family-calendar-card.js`. Add `/local/family-calendar-card.js` as a **JavaScript module** under dashboard resources and reload the dashboard. The compatibility name `custom:family-calendar-card-legacy` remains supported.
 
-- Home Assistant with at least one `calendar` entity.
-- Optional `weather` and `person` entities for forecasts and family members.
-- A calendar integration with write support to manage events through the card.
+### 5. Setup and authentication
 
-### Support
+The card uses your existing Home Assistant login; no separate credentials are required. Select calendars in the visual editor or under `entities`.
 
-Report bugs and suggestions through [GitHub Issues](https://github.com/Baeka89/family-calendar-card/issues). Include the card version, Home Assistant version, calendar integration and reproduction steps. Remove personal event data from examples.
+**Optional companion:** install [Family Calendar Card Companion](https://github.com/Baeka89/family-calendar-card-companion) separately through HACS, restart Home Assistant and set it up under **Settings → Devices & services → Add integration**. Only shared additional display assignments require it. The card remains usable without the integration.
 
-To support development: **[Donate via PayPal](https://paypal.me/misomazo)**.
+### 6. Configuration and options
 
----
-
-## Gallery / Galerie
-
-**[Browse all 48 screenshots and example configurations / Alle 48 Screenshots und Beispielkonfigurationen ansehen](docs/images/gallery/README.md)**
-
-Nine selected screenshots are embedded directly below using Markdown. The complete collection is included in the repository. Download `docs/images/gallery` to use its interactive `index.html` locally. / Neun ausgewählte Screenshots sind unten direkt als Markdown-Bilder eingebunden. Die vollständige Sammlung liegt im Repository. Den Ordner `docs/images/gallery` herunterladen, um die interaktive `index.html` lokal zu verwenden.
-
-
-Die folgenden neun Bilder wurden aus der Design-Auswahl ausgewählt und zeigen Beispieltermine. Sie stammen aus einem früheren Projektstand; einzelne Beschriftungen und Details können von der aktuellen Version abweichen. Die beschriebenen Funktionen beziehen sich auf die aktuelle Karte.
-
-These nine images were selected from the design gallery and show example events. They were captured from an earlier project version; individual labels and details may differ from the current version. The descriptions refer to the current card.
-
-### Month overview / Monatsübersicht
-
-**Deutsch:** Die helle Monatsansicht zeigt Termine aus Familie, Arbeit und Kinderkalender gemeinsam. Kalenderfarben kennzeichnen die Herkunft; Navigation und Ansichtsauswahl befinden sich im Kopfbereich.
-
-**English:** The light month view brings family, work and children’s calendars together. Calendar colors identify the source; navigation and view selection sit in the header.
-
-![Month overview / Monatsübersicht](docs/images/readme/month-light.png)
-
-### Week view in dark mode / Wochenansicht im Dunkelmodus
-
-**Deutsch:** Eine Woche als Tagesspalten mit Uhrzeiten und Ganztagsterminen. Farbige Seitenleisten unterscheiden die Kalender bei neutralem Terminhintergrund; alternativ sind vollflächige oder getönte Terminfarben möglich.
-
-**English:** A week arranged in day columns with event times and all-day entries. Colored sidebars distinguish calendars against neutral backgrounds; solid and tinted event backgrounds are also available.
-
-![Week view in dark mode / Wochenansicht im Dunkelmodus](docs/images/readme/week-dark.png)
-
-### Schedule with time grid / Zeitplan mit Stundenraster
-
-**Deutsch:** Termine stehen entsprechend Beginn und Dauer im Stundenraster. Ganztagstermine erscheinen oberhalb des Rasters. Der angezeigte Stundenbereich lässt sich konfigurieren.
-
-**English:** Events occupy the time grid according to their start and duration. All-day events appear above the grid. The displayed hour range is configurable.
-
-![Schedule with time grid / Zeitplan mit Stundenraster](docs/images/readme/schedule-light.png)
-
-### Agenda in dark mode / Agenda im Dunkelmodus
-
-**Deutsch:** Die Agenda listet Termine nach Tagen mit Uhrzeit und Kalenderkürzel. Farben und Kalenderkennzeichen machen die Zuordnung sichtbar. Die Textausrichtung lässt sich im Editor auf automatisch, links, mittig oder rechts einstellen.
-
-**English:** The agenda groups events by day, showing their times and calendar initials. Colors and calendar markers identify the participants. Text alignment can be set to automatic, left, center or right in the editor.
-
-![Agenda in dark mode / Agenda im Dunkelmodus](docs/images/readme/agenda-dark.png)
-
-### Individual calendar palettes / Individuelle Kalenderfarben
-
-**Deutsch:** Eine alternative Farbpalette mit Violett, Blau und Orange. Die Farben werden pro Kalender eingestellt und erscheinen in den Kalender-Schaltflächen sowie an den Terminen.
-
-**English:** An alternative palette of purple, blue and orange. Colors are configured per calendar and appear in calendar buttons and events.
-
-![Individual calendar palettes / Individuelle Kalenderfarben](docs/images/readme/calendar-palette.png)
-
-### Create an event / Termin erstellen
-
-**Deutsch:** Der Erstellungsdialog bietet die Kalenderauswahl, Titel, Beginn, Ende, Ort und Beschreibung. Ganztags- und Wiederholungsoptionen stehen ebenfalls bereit. Das Speichern benötigt einen Kalender, dessen Home-Assistant-Integration die Erstellung unterstützt.
-
-**English:** The creation dialog offers calendar selection, title, start, end, location and description, plus all-day and recurrence options. Saving requires a calendar whose Home Assistant integration supports event creation.
-
-![Create an event / Termin erstellen](docs/images/readme/create-event.png)
-
-### Custom event color / Eigene Terminfarbe
-
-**Deutsch:** Für einen bestehenden Termin lässt sich eine eigene Farbe über Farbauswahl, Helligkeit, Hex-Wert oder Farbfelder wählen und auf den Standard zurücksetzen. Nur diese Farbänderung wird lokal im Browser gespeichert; sie ist unabhängig von der zentral gespeicherten Zuordnung „Betrifft auch diese Kalender“. Der Originaltermin bleibt unverändert.
-
-**English:** For an existing event, choose a custom color using the color picker, brightness, hex value or swatches, or restore the default. Only this color preference is stored locally in the browser; it is separate from the centrally stored “Also concerns these calendars” assignment. The source event remains unchanged.
-
-![Custom event color / Eigene Terminfarbe](docs/images/readme/custom-event-color.png)
-
-### Visual color settings / Visuelle Farbeinstellungen
-
-**Deutsch:** Im Editor lassen sich Kopfbereich, Kopftext, Raster- und Trennlinien sowie Kalender- und Terminschriftfarben einstellen. Weitere Bereiche bieten Kalendernamen, Badge-Symbole und Personenzuordnungen. Transparenz und Farbschema sind ebenfalls auswählbar.
-
-**English:** The editor exposes header, header text, grid and separator colors, plus calendar and event text colors. Additional sections offer calendar names, badge icons and person mappings. Transparency and color scheme can also be selected.
-
-![Visual color settings / Visuelle Farbeinstellungen](docs/images/readme/editor-colors.png)
-
-### Mobile agenda / Mobile Agenda
-
-**Deutsch:** Die Agenda auf einem schmalen Bildschirm: Kopfbereich und Bedienelemente passen sich an die verfügbare Breite an. Termine bleiben nach Tagen geordnet; Kalenderfarben und Kürzel kennzeichnen die beteiligten Kalender.
-
-**English:** The agenda on a narrow screen: the header and controls adapt to the available width. Events remain grouped by day, with calendar colors and initials identifying the calendars involved.
-
-![Mobile agenda / Mobile Agenda](docs/images/readme/agenda-mobile.png)
-
----
-
-## How to Install / Installation
-
-### HACS
-
-**Deutsch:**
-
-1. HACS öffnen und nach **Family Calendar Card** suchen.
-2. Falls die Karte nicht gefunden wird: im Menü **benutzerdefinierte Repositories** die Adresse `https://github.com/Baeka89/family-calendar-card` hinzufügen; als Typ **Dashboard** wählen (in älteren HACS-Versionen „Frontend“).
-3. **Family Calendar Card** herunterladen.
-4. Unter den Dashboard-Ressourcen prüfen, ob `/hacsfiles/family-calendar-card/family-calendar-card.js` als **JavaScript-Modul** eingetragen ist; bei Bedarf ergänzen.
-5. Browser neu laden und die Karte zum Dashboard hinzufügen.
-
-**English:**
-
-1. Open HACS and search for **Family Calendar Card**.
-2. If the card is not listed, add `https://github.com/Baeka89/family-calendar-card` under **Custom repositories**, with type **Dashboard** (called “Frontend” in older HACS versions).
-3. Download **Family Calendar Card**.
-4. Check dashboard resources for `/hacsfiles/family-calendar-card/family-calendar-card.js`, configured as a **JavaScript module**; add it if needed.
-5. Reload your browser and add the card to your dashboard.
-
-### Manual / Manuell
-
-| Schritt / Step | Deutsch | English |
-| --- | --- | --- |
-| 1 | Die fertige [family-calendar-card.js](family-calendar-card.js) aus diesem Paket oder Repository verwenden. | Use the built [family-calendar-card.js](family-calendar-card.js) from this package or repository. |
-| 2 | Nach `<config>/www/family-calendar-card.js` kopieren. | Copy it to `<config>/www/family-calendar-card.js`. |
-| 3 | `/local/family-calendar-card.js?v=1` als Dashboard-Ressource vom Typ **JavaScript-Modul** hinzufügen. | Add `/local/family-calendar-card.js?v=1` as a dashboard resource of type **JavaScript module**. |
-| 4 | Browser neu laden. Nach Updates den Wert von `?v=` erhöhen, falls der Browser die alte Datei lädt. | Reload the browser. After updates, increase `?v=` if the browser loads the old file. |
-
----
-
-## Quick Start / Schnellstart
-
-Eine manuelle Dashboard-Karte hinzufügen und die Beispiel-Entitäten durch eigene ersetzen. / Add a manual dashboard card and replace the sample entities with your own.
+Getting started:
 
 ```yaml
 type: custom:family-calendar-card
-title: Family Calendar
+title: Family calendar
 entities:
   - calendar.family
   - calendar.work
-  - calendar.holidays
+  - calendar.birthdays
+default_view: agenda
+compact_height: false
+rolling_days_agenda: 2
+hide_empty_days: true
+agenda_text_alignment: left
+hide_badge_calendars:
+  - calendar.birthdays
 ```
 
-Weitere Einstellungen sind im visuellen Editor verfügbar. / More settings are available in the visual editor.
+Entity IDs are examples; replace them with your existing calendars. `rolling_days_agenda: 2` shows today plus two more days. `compact_height: false` sizes the card to its content; `hide_empty_days: true` omits empty days. `agenda_text_alignment: left` aligns Agenda text to the left. `hide_badge_calendars` hides calendar badges in every view and event details without removing events. An entry only affects the corresponding calendar actually in use. More options: [configuration documentation](docs/configuration).
 
----
+### 7. Usage
 
-## Documentation / Dokumentation
+Click an event to open its details and available actions. With an installed and connected companion, select additional calendars configured in the card under **Also concerns these calendars** and save. This leaves the source event unchanged and also works for read-only invitations. Recurring assignments apply to the selected occurrence.
 
-Die ausführliche Dokumentation liegt im Repository unter [`docs/`](docs). Die Seiten sind als englische MDX-Quelldateien verfügbar; eine separate Dokumentationswebsite ist nicht eingerichtet. / Detailed documentation is available as English MDX source files in [`docs/`](docs); there is no separately hosted documentation site.
+Assignments are stored centrally in Home Assistant and apply across devices and users of the same instance. Custom event colors and visibility preferences remain local card features. Closing a popup or clicking its backdrop discards unsaved input.
 
-- [Basic configuration / Grundkonfiguration](docs/configuration/basic.mdx)
-- [Display options / Anzeigeoptionen](docs/configuration/display.mdx)
-- [Appearance / Gestaltung](docs/configuration/appearance.mdx)
-- [Weather / Wetter](docs/configuration/weather.mdx)
-- [Event management / Terminverwaltung](docs/configuration/event-management.mdx)
-- [Event styles / Terminstile](docs/advanced/event-styles.mdx)
-- [Day styles / Tagesstile](docs/advanced/day-styles.mdx)
-- [Day badges / Tages-Badges](docs/advanced/day-badges.mdx)
-- [Virtual calendars / Virtuelle Kalender](docs/advanced/virtual-calendars.mdx)
-- [Troubleshooting / Fehlerbehebung](docs/troubleshooting.mdx)
+[All 48 example screenshots and configurations](docs/images/gallery/README.md). Images were captured from an earlier project version; individual labels and details may differ. Obsolete browser-assignment examples are marked as historical in the gallery.
 
----
+![Month overview: display calendars together using their colors.](docs/images/readme/month-light.png)
 
-## Technical Components / Technische Komponenten
+Month overview: display calendars together using their colors.
 
-| Datei / File | Aufgabe / Purpose |
-| --- | --- |
-| `src/family-calendar-card.js` | Hauptkomponente und Build-Einstieg / Main component and build entry point. |
-| `src/events/` | Termindaten, Formulare und Kalender-Aufrufe / Event data, forms and calendar requests. |
-| `src/renderers/`, `src/views/` | Darstellung und Ansichtsmodelle / Rendering and view models. |
-| `src/editor/` | Visueller Konfigurationseditor / Visual configuration editor. |
-| `src/weather/` | Wetterdaten und Aktualisierung / Weather data and refresh logic. |
-| `src/translations.js` | Übersetzungen der Karte / Card translations. |
-| `family-calendar-card.js` | Generierte Datei für HACS und manuelle Installation / Built file for HACS and manual installation. |
-| `hacs.json` | HACS-Metadaten / HACS metadata. |
+![Dark week view: day columns and events.](docs/images/readme/week-dark.png)
 
-Entwicklung und Prüfung: [DEVELOPMENT.md](DEVELOPMENT.md). Änderungen: [CHANGELOG.md](CHANGELOG.md). / Development and validation: [DEVELOPMENT.md](DEVELOPMENT.md). Release notes: [CHANGELOG.md](CHANGELOG.md).
+Dark week view: day columns and events.
 
-### Thanks / Danke
+![Schedule: events in an hourly grid.](docs/images/readme/schedule-light.png)
 
-Danke an die Home-Assistant-Community für Feedback, Ideen und Tests. / Thanks to the Home Assistant community for feedback, ideas and testing.
+Schedule: events in an hourly grid.
 
-Family Calendar Card wird von **[Baeka89](https://github.com/Baeka89)** gepflegt. Lizenz: [MIT](LICENSE). / Family Calendar Card is maintained by **[Baeka89](https://github.com/Baeka89)**. License: [MIT](LICENSE).
+![Dark Agenda: events in a list.](docs/images/readme/agenda-dark.png)
 
-### Gemeinsame Kalenderzuordnung / Shared calendar assignments
+Dark Agenda: events in a list.
 
-**Die Karte funktioniert eigenständig. Die Begleitintegration ist optional** und wird nur für geräteübergreifende zusätzliche Kalenderzuordnungen benötigt. Kalenderanzeige, Ansichten, Farben und die vom Quellkalender unterstützte Terminbearbeitung benötigen sie nicht.
+![Calendar colors: use different palettes.](docs/images/readme/calendar-palette.png)
 
-Für gemeinsame Zuordnungen die separate Integration [**Family Calendar Card Companion**](https://github.com/Baeka89/family-calendar-card-companion) installieren. Solange sie nicht im HACS-Standardkatalog aufgenommen ist, dieses Repository in HACS als benutzerdefiniertes Repository vom Typ **Integration** hinzufügen. Danach herunterladen, Home Assistant neu starten und unter **Einstellungen → Geräte & Dienste → Integration hinzufügen → Family Calendar Card Companion** einrichten. Für neue Installationen ist kein YAML-Eintrag nötig.
+Calendar colors: use different palettes.
 
-Bestehende manuelle Installationen können den aktualisierten Ordner `custom_components/family_calendar_card` weiterhin verwenden. Ein vorhandener `family_calendar_card:`-YAML-Eintrag wird automatisch in einen UI-Eintrag übernommen; nach erfolgreicher Übernahme kann er entfernt werden. Der Speicherpfad bleibt gleich und gemeinsame Zuordnungen bleiben erhalten.
+![Create an event: select calendars, times and recurrence.](docs/images/readme/create-event.png)
 
-Ohne aktive Integration zeigt die zusätzliche Zuordnung im Termin einen Hinweis. Mit Integration können alle authentifizierten Home-Assistant-Benutzer diese gemeinsamen Zuordnungen bearbeiten. Originaltermine bleiben unverändert. Speichern verändert nur Zuordnungen zu den in dieser Karte konfigurierten Kalendern. Kalenderfarben und ausgeblendete Kalender bleiben lokale Einstellungen. Alte rein lokale Zuordnungen werden nicht automatisch hochgeladen.
+Create an event: select calendars, times and recurrence.
 
-**The card works independently. The companion is optional**, needed only for shared additional calendar assignments. Install the separate [Family Calendar Card Companion integration](https://github.com/Baeka89/family-calendar-card-companion) through HACS (custom integration repository until accepted into the default catalog), restart Home Assistant and add it under **Settings → Devices & services → Add integration**. No YAML is needed for new installations. Existing YAML installations are imported automatically and retain their shared storage. The dashboard-card download does not install the companion. Source events stay unchanged; authenticated users can change shared assignments. Colors and visibility preferences remain local.
+![Event color: select a custom color.](docs/images/readme/custom-event-color.png)
 
-Agenda-Textausrichtung / Agenda text alignment: `agenda_text_alignment: left` (auch `center` und `right`). Im Karteneditor unter **Anzeige und Layout** einstellen.
+Event color: select a custom color.
 
-### Languages / Sprachen
+![Visual editor: configure color options.](docs/images/readme/editor-colors.png)
 
-Card, visual editor and companion setup support English, German, French, Dutch, Spanish, Estonian, Catalan, Danish and Swedish. README and changelog are maintained in English and German. Home Assistant’s selected language is used where supported; other languages fall back to English.
+Visual editor: configure color options.
 
-Karte, visueller Editor und Einrichtung der Begleitintegration unterstützen Englisch, Deutsch, Französisch, Niederländisch, Spanisch, Estnisch, Katalanisch, Dänisch und Schwedisch. README und Changelog werden auf Englisch und Deutsch gepflegt. Die gewählte Home-Assistant-Sprache wird verwendet, sofern unterstützt; andere Sprachen verwenden Englisch.
+![Mobile Agenda: layout on narrow screens.](docs/images/readme/agenda-mobile.png)
 
-### Agenda content height / Agenda-Inhaltshöhe
+Mobile Agenda: layout on narrow screens.
 
-**English:** Set `compact_height: false` to size Agenda to its visible content. Use `hide_empty_days: true` to omit dates without visible events. `rolling_days_agenda: 2` means today plus two additional days (three dates in total). Remove any explicit height allocation in the dashboard layout if space is still reserved outside the card. `compact_height: true` intentionally fills a fixed-height layout or the available viewport.
+### 8. Updates and migration
 
-**Deutsch:** Mit `compact_height: false` richtet sich die Agenda-Höhe nach dem sichtbaren Inhalt. `hide_empty_days: true` lässt Tage ohne sichtbare Termine weg. `rolling_days_agenda: 2` bedeutet heute plus zwei weitere Tage (insgesamt drei Tage). Falls außerhalb der Karte weiterhin Platz reserviert ist, die feste Höhenvorgabe im Dashboard-Layout entfernen. `compact_height: true` füllt bewusst ein Layout mit fester Höhe oder die verfügbare Bildschirmhöhe.
+Update the card and companion separately through HACS. Reload the dashboard after a card update; check the browser cache if the old display remains. For manual installations, replace the module file. Restart Home Assistant after a companion update.
 
-**Hidden calendar badges / Ausgeblendete Kalender-Badges:** `hide_badge_calendars` hides the selected calendars’ badges in every view and event details, including calendar name prefixes. Events and colors remain visible. / `hide_badge_calendars` blendet die Badges der ausgewählten Kalender in allen Ansichten und Termindetails aus, einschließlich Kalendernamen vor dem Titel. Termine und Farben bleiben sichtbar.
+Existing browser-only assignments are not automatically transferred to the integration: select the desired calendars again and save. The companion imports existing `family_calendar_card:` YAML into a UI entry; remove the YAML entry after successful import. Existing element names and storage keys are preserved.
+
+### 9. Limitations and troubleshooting
+
+Without a connected companion, the additional-assignment section displays setup information and provides no browser-only fallback. All authenticated Home Assistant users can edit shared assignments. Write access, stable event identifiers and recurrence editing depend on the calendar integration; without a stable identifier, changing a title or date may require assigning the event again.
+
+If the dashboard reserves empty space despite content height, check fixed height settings in its surrounding layout. For missing actions, check calendar permissions; for unavailable assignments, check the companion and its connection. HTML descriptions are restricted: scripts, event-handler attributes and unsupported link protocols are not intended.
+
+### 10. Development and tests
+
+Edit source files under `src/` and generate the shipped bundle with `npm run build`. Node tests: `npm test`; syntax checks: `node test/check-sources.cjs`; browser and screenshot tests: `npm run test:visual`. Security regressions are in `playwright/security.spec.js`. Requirements and full instructions: [DEVELOPMENT.md](DEVELOPMENT.md).
+
+Local tests do not replace testing in a real Home Assistant installation. Document the checks actually performed for each change.
+
+### 11. Version history
+
+[CHANGELOG.md](CHANGELOG.md) and [GitHub releases](https://github.com/Baeka89/family-calendar-card/releases). A push alone does not create a new version. The current correction has not been released.
+
+### 12. Support, contributing and license
+
+Bugs and suggestions: [GitHub Issues](https://github.com/Baeka89/family-calendar-card/issues). Include the card version, Home Assistant version, calendar integration and reproduction steps; remove personal event data. Contributions through pull requests are welcome. Thanks to the Home Assistant and HACS communities, contributors and reviewers.
+
+Maintainer: [Baeka89](https://github.com/Baeka89). Support: [PayPal](https://paypal.me/misomazo). License: [MIT](LICENSE).

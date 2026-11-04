@@ -1,3 +1,5 @@
+import { escapeHtmlAttribute } from '../utils/string-utils.js';
+
 export function renderCalendarBadges({ badgeItems, hideCalendarNames = false, helpers }) {
   if (badgeItems.length === 0) return '';
 
@@ -38,9 +40,9 @@ function renderCalendarBadge({ badgeItem, hideCalendarNames, inline, helpers }) 
 
   return `
             <div class="calendar-badge${inlineClass} ${badgeItem.isHidden ? 'calendar-badge-hidden' : ''} ${hideCalendarNames ? 'hide-calendar-name' : ''}"
-                 data-entity="${badgeItem.entityId}"
-                 style="background: ${badgeBackground};
-                        border-color: ${badgeItem.isHidden ? '#d1d5db' : badgeItem.color};${cursorStyle}">
+                 data-entity="${escapeHtmlAttribute(badgeItem.entityId)}"
+                 style="background: ${escapeHtmlAttribute(badgeBackground)};
+                        border-color: ${escapeHtmlAttribute(badgeItem.isHidden ? '#d1d5db' : badgeItem.color)};${cursorStyle}">
               ${renderCalendarBadgeIcon({
                 entityId: badgeItem.entityId,
                 name: badgeItem.name,
@@ -57,7 +59,7 @@ function renderCalendarBadge({ badgeItem, hideCalendarNames, inline, helpers }) 
 export function renderCalendarBadgeLabel({ badgeItem, badgeTextColor, helpers }) {
   const personStateLabel = helpers.formatPersonStateLabel(helpers.getCalendarBadgePersonState(badgeItem.entityId));
   return `
-      <span class="calendar-badge-label" style="color: ${badgeTextColor}">
+      <span class="calendar-badge-label" style="color: ${escapeHtmlAttribute(badgeTextColor)}">
         <span class="calendar-badge-name">${helpers.escapeHtml(badgeItem.name)}</span>
         ${personStateLabel ? `<span class="calendar-badge-person-state">${helpers.escapeHtml(personStateLabel)}</span>` : ''}
       </span>
@@ -72,15 +74,15 @@ export function renderCalendarBadgeIcon({ entityId, name, color, isHidden, iconO
   const personIconClass = hasPersonEntity ? ' calendar-badge-person-icon' : '';
 
   if (configuredBadgeIcon && configuredBadgeIcon.startsWith('mdi:')) {
-    return `<div class="calendar-badge-icon${personIconClass}" style="background: ${iconBackground}"><ha-icon icon="${helpers.escapeHtml(configuredBadgeIcon)}"></ha-icon></div>`;
+    return `<div class="calendar-badge-icon${personIconClass}" style="background: ${escapeHtmlAttribute(iconBackground)}"><ha-icon icon="${escapeHtmlAttribute(configuredBadgeIcon)}"></ha-icon></div>`;
   }
 
   if (configuredBadgeIcon || personPictureUrl) {
     const imageUrl = configuredBadgeIcon || personPictureUrl;
     const normalizedUrl = helpers.normalizeBackgroundImageUrl(imageUrl) || imageUrl;
-    return `<div class="calendar-badge-icon calendar-badge-photo${personIconClass}" style="background: ${iconBackground}"><img src="${helpers.escapeHtml(normalizedUrl)}" alt="${helpers.escapeHtml(name)}" loading="lazy"></div>`;
+    return `<div class="calendar-badge-icon calendar-badge-photo${personIconClass}" style="background: ${escapeHtmlAttribute(iconBackground)}"><img src="${escapeHtmlAttribute(normalizedUrl)}" alt="${escapeHtmlAttribute(name)}" loading="lazy"></div>`;
   }
 
   const initial = name.charAt(0).toUpperCase();
-  return `<div class="calendar-badge-icon${personIconClass}" style="background: ${iconBackground}">${helpers.escapeHtml(initial)}</div>`;
+  return `<div class="calendar-badge-icon${personIconClass}" style="background: ${escapeHtmlAttribute(iconBackground)}">${helpers.escapeHtml(initial)}</div>`;
 }

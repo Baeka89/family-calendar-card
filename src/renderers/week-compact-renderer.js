@@ -1,3 +1,5 @@
+import { escapeHtmlAttribute } from '../utils/string-utils.js';
+
 export function renderWeekCompactView({
   config,
   weekDays,
@@ -13,16 +15,16 @@ export function renderWeekCompactView({
 
   return `
       ${!config.compact_header && !config.hide_calendars ? helpers.renderCalendarBadges() : ''}
-      <div class="week-compact-container${config.compact_height ? ' compact-height' : ''} day-badge-layout-${config.day_badge_layout_week}" style="${containerStyle}">
+      <div class="week-compact-container${config.compact_height ? ' compact-height' : ''} day-badge-layout-${config.day_badge_layout_week}" style="${escapeHtmlAttribute(containerStyle)}">
         ${weekDays.map(date => {
           const isToday = date.toDateString() === today.toDateString();
           const dayEventsForMatching = helpers.getEventsForDay(date, { includeHiddenStyledEvents: true });
           const events = helpers.sortEventsForDate(dayEventsForMatching.filter((event) => !helpers.isEventHiddenByStyle(event)), date);
           const dayStyle = helpers.getDayStyleAttributes(date, dayEventsForMatching, isToday);
-          const dayStyleAttr = dayStyle.style ? ` style="${dayStyle.style}"` : '';
+          const dayStyleAttr = dayStyle.style ? ` style="${escapeHtmlAttribute(dayStyle.style)}"` : '';
 
           return `
-            <div class="week-day-column ${isToday ? 'today' : ''} ${dayStyle.className}" data-date="${date.toISOString()}" data-click-target="day-header"${dayStyleAttr}>
+            <div class="week-day-column ${isToday ? 'today' : ''} ${escapeHtmlAttribute(dayStyle.className)}" data-date="${date.toISOString()}" data-click-target="day-header"${dayStyleAttr}>
               <div class="week-day-header">
                 <div class="week-day-header-main">
                   <div class="week-day-name">${dayNames[date.getDay()]}</div>

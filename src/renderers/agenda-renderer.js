@@ -34,9 +34,9 @@ export function renderAgendaView({
 
     const isToday = date.toDateString() === today.toDateString();
     const dayStyle = helpers.getDayStyleAttributes(date, entry.matchingEvents, isToday);
-    const dayStyleAttr = dayStyle.style ? ` style="${dayStyle.style}"` : '';
+    const dayStyleAttr = dayStyle.style ? ` style="${escapeHtmlAttribute(dayStyle.style)}"` : '';
     agendaRows.push(`
-        <div class="agenda-day-row ${isToday ? 'today' : ''} ${dayStyle.className}" data-date="${date.toISOString()}"${dayStyleAttr}>
+        <div class="agenda-day-row ${isToday ? 'today' : ''} ${escapeHtmlAttribute(dayStyle.className)}" data-date="${date.toISOString()}"${dayStyleAttr}>
           <div class="agenda-day-label">
             <div class="agenda-day-weekday">${dayNames[date.getDay()]}</div>
             <div class="agenda-day-date">${date.getDate()}</div>
@@ -56,7 +56,7 @@ export function renderAgendaView({
                 : agendaEventMinHeight;
 
               return `
-                <div class="agenda-event${textAlignment ? ' agenda-text-aligned' : ''}" style="${eventStyle} ${textAlignment ? `text-align: ${textAlignment};` : ''} --agenda-event-min-height: ${eventAgendaMinHeight}; --event-bubble-font-size: ${helpers.getEventBubbleFontSize(event)}; --event-time-font-size: ${helpers.getEventTimeFontSize(event)}; --event-location-font-size: ${helpers.getEventLocationFontSize(event)}; --event-bubble-text-color: ${helpers.getEventBubbleFontColor(event)};" data-event='${escapeHtmlAttribute(JSON.stringify(event))}'>
+                <div class="agenda-event${textAlignment ? ' agenda-text-aligned' : ''}" style="${escapeHtmlAttribute(eventStyle)} ${textAlignment ? `text-align: ${textAlignment};` : ''} --agenda-event-min-height: ${eventAgendaMinHeight}; --event-bubble-font-size: ${escapeHtmlAttribute(helpers.getEventBubbleFontSize(event))}; --event-time-font-size: ${escapeHtmlAttribute(helpers.getEventTimeFontSize(event))}; --event-location-font-size: ${escapeHtmlAttribute(helpers.getEventLocationFontSize(event))}; --event-bubble-text-color: ${escapeHtmlAttribute(helpers.getEventBubbleFontColor(event))};" data-event='${escapeHtmlAttribute(JSON.stringify(event))}'>
                   <div class="agenda-event-title">${helpers.renderEventTitleWithPrefix(event, helpers.getEventDisplayTitle(event))}</div>
                   ${helpers.shouldShowEventTime(event) ? `<div class="agenda-event-time">${timeLabel}</div>` : ''}
                   ${helpers.shouldShowEventLocation(event) ? `<div class="agenda-event-location">📍 ${helpers.escapeHtml(helpers.getDisplayLocation(event.location, event))}</div>` : ''}
@@ -74,7 +74,7 @@ export function renderAgendaView({
 
   return `
       ${!config.compact_header && !config.hide_calendars ? helpers.renderCalendarBadges() : ''}
-      <div class="agenda-container" id="agenda-container" style="${containerStyle}">
+      <div class="agenda-container" id="agenda-container" style="${escapeHtmlAttribute(containerStyle)}">
         ${agendaRows.join('')}
       </div>
     `;
