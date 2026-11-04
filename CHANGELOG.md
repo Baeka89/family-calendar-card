@@ -2,7 +2,9 @@
 
 Veröffentlichte Änderungen werden hier dokumentiert. Noch nicht veröffentlichte Änderungen stehen getrennt davor. / Published changes are documented here, preceded by a separate section for unreleased changes.
 
-## Noch nicht veröffentlicht / Unreleased
+<a id="release-0-1-7"></a>
+
+## [0.1.7] – 2026-11-04
 
 ### Deutsch 🇩🇪
 
@@ -26,16 +28,15 @@ Keine.
 
 #### Updatehinweise
 
-- Noch kein Release und keine neue Versionsnummer. Nach einem späteren Kartenupdate Dashboard neu laden.
+- Nach dem Kartenupdate das Dashboard neu laden. Die Begleitintegration bleibt optional. Download: `family-calendar-card.js` für HACS oder `/config/www/`; das optionale ZIP enthält Integration v0.1.2 unter `custom_components/family_calendar_card/` für `/config/`.
 
 #### Bekannte Einschränkungen
 
-- Browserprüfungen sind in der aktuellen Arbeitsumgebung durch den verweigerten Chromium-Start blockiert. Eine Prüfung in einer echten Home-Assistant-Installation steht aus.
+- Keine neue Liveprüfung in einer echten Home-Assistant-Installation. Die Karte benötigt die optionale Integration nur für gemeinsame zusätzliche Anzeigezuordnungen.
 
 #### Prüfungen
 
-- Rollup-Build, Quellsyntaxprüfung für 53 Dateien und 578 Node-Tests erfolgreich. Browserprüfungen konnten wegen der blockierten Chromium-Ausführung nicht durchgeführt werden; keine Liveprüfung in Home Assistant.
-
+- Lokaler Build, Syntax- und Node-Prüfungen erfolgreich. GitHub-Prüfungen des Korrekturstands einschließlich Browser-/Bildvergleichstests erfolgreich. Veröffentlichung nur nach erfolgreicher erneuter Prüfung des exakten Release-Commits.
 ### English 🇺🇸
 
 #### Added
@@ -58,15 +59,15 @@ None.
 
 #### Update notes
 
-- No release or new version number yet. Reload the dashboard after a future card update.
+- Reload the dashboard after updating the card. The companion remains optional. Download: `family-calendar-card.js` for HACS or `/config/www/`; the optional ZIP contains integration v0.1.2 under `custom_components/family_calendar_card/` for `/config/`.
 
 #### Known limitations
 
-- Browser checks are blocked in the current work environment because Chromium cannot start. Testing in a real Home Assistant installation is outstanding.
+- No new live test in a real Home Assistant installation. Only shared additional display assignments require the optional integration.
 
 #### Checks
 
-- Rollup build, source syntax checks for 53 files and 578 Node tests passed. Browser checks could not run because Chromium execution is blocked; no live Home Assistant test.
+- Local build, syntax and Node checks passed. GitHub checks for the correction commit, including browser/screenshot tests, passed. Publication requires successful repeated checks on the exact release commit.
 
 ---
 

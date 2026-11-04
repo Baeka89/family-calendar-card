@@ -126,7 +126,7 @@ Ein lokaler Test ersetzt keine Prüfung in einer echten Home-Assistant-Installat
 
 ### 11. Versionshistorie
 
-[CHANGELOG.md](CHANGELOG.md) und [GitHub-Releases](https://github.com/Baeka89/family-calendar-card/releases). Ein Push allein erzeugt keine neue Version. Die aktuelle Korrektur ist noch nicht veröffentlicht.
+[CHANGELOG.md](CHANGELOG.md) und [GitHub-Releases](https://github.com/Baeka89/family-calendar-card/releases). Ein Push allein erzeugt keine neue Version. Diese Version enthält die Korrekturen der HTML-Ausgabe.
 
 ### 12. Unterstützung, Mitwirkung und Lizenz
 
@@ -253,7 +253,7 @@ Local tests do not replace testing in a real Home Assistant installation. Docume
 
 ### 11. Version history
 
-[CHANGELOG.md](CHANGELOG.md) and [GitHub releases](https://github.com/Baeka89/family-calendar-card/releases). A push alone does not create a new version. The current correction has not been released.
+[CHANGELOG.md](CHANGELOG.md) and [GitHub releases](https://github.com/Baeka89/family-calendar-card/releases). A push alone does not create a new version. This version includes the HTML output corrections.
 
 ### 12. Support, contributing and license
 
