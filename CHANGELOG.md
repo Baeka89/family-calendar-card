@@ -2,7 +2,9 @@
 
 Veröffentlichte Änderungen werden hier dokumentiert. Noch nicht veröffentlichte Änderungen stehen getrennt davor. / Published changes are documented here, preceded by a separate section for unreleased changes.
 
-## Noch nicht veröffentlicht / Unreleased
+<a id="release-0-1-8"></a>
+
+## [0.1.8] – 2026-11-05
 
 ### Deutsch 🇩🇪
 
@@ -25,16 +27,15 @@ Keine.
 
 #### Updatehinweise
 
-- Sicherheitsupdate der Karte installieren und das Dashboard neu laden. Die optionale Integration bleibt auf v0.1.2; kein Home-Assistant-Neustart für das Kartenupdate erforderlich.
+- Nach dem Kartenupdate das Dashboard neu laden. Die Begleitintegration bleibt optional. Download: `family-calendar-card.js` für HACS oder `/config/www/`; das optionale ZIP enthält Integration v0.1.2 unter `custom_components/family_calendar_card/` für `/config/`.
 
 #### Bekannte Einschränkungen
 
-- Historische fehlgeschlagene Workflow-Läufe bleiben im GitHub-Verlauf sichtbar.
+- Keine neue Liveprüfung in einer echten Home-Assistant-Installation. Die Karte benötigt die optionale Integration nur für gemeinsame zusätzliche Anzeigezuordnungen.
 
 #### Prüfungen
 
-- Build, Syntaxprüfung von 53 Quelldateien und 579 Node-Tests erfolgreich. Alle 140 Browser- und Bildvergleichstests einschließlich acht gezielter Sicherheitstests erfolgreich; vorhandene Referenzbilder unverändert. Keine Liveprüfung in einer echten Home-Assistant-Installation.
-
+- Lokaler Build, Syntax- und Node-Prüfungen erfolgreich. GitHub-Prüfungen des Korrekturstands einschließlich Browser-/Bildvergleichstests erfolgreich. Veröffentlichung nur nach erfolgreicher erneuter Prüfung des exakten Release-Commits.
 ### English 🇺🇸
 
 #### Added
@@ -56,15 +57,15 @@ None.
 
 #### Update notes
 
-- Install the card security update and reload the dashboard. The optional integration remains at v0.1.2; the card update requires no Home Assistant restart.
+- Reload the dashboard after updating the card. The companion remains optional. Download: `family-calendar-card.js` for HACS or `/config/www/`; the optional ZIP contains integration v0.1.2 under `custom_components/family_calendar_card/` for `/config/`.
 
 #### Known limitations
 
-- Historical failed workflow runs remain visible in GitHub history.
+- No new live test in a real Home Assistant installation. Only shared additional display assignments require the optional integration.
 
 #### Checks
 
-- Build, syntax checks across 53 source files and 579 Node tests passed. All 140 browser and screenshot tests passed, including eight targeted security tests; existing reference images are unchanged. No live test in a real Home Assistant installation.
+- Local build, syntax and Node checks passed. GitHub checks for the correction commit, including browser/screenshot tests, passed. Publication requires successful repeated checks on the exact release commit.
 
 ---
 

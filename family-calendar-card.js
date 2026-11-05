@@ -1517,7 +1517,7 @@ function resolveHeaderButtonGradientColors(rawColor, context = {}) {
   return config.calendars.map(target => resolveHeaderButtonColor(`calendar:${target}`, context)).filter(Boolean);
 }
 
-const FAMILY_CALENDAR_CARD_VERSION = 'v0.1.7';
+const FAMILY_CALENDAR_CARD_VERSION = 'v0.1.8';
 
 function getFamilyCalendarCardVersion() {
   return FAMILY_CALENDAR_CARD_VERSION.includes('__')
