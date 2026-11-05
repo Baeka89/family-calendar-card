@@ -116,7 +116,7 @@ Bestehende Browser-Zuordnungen werden nicht automatisch in die Integration über
 
 Ohne verbundene Begleitintegration zeigt die zusätzliche Zuordnung einen Einrichtungshinweis und bietet keine lokale Ersatzspeicherung an. Alle authentifizierten Home-Assistant-Benutzer dürfen gemeinsame Zuordnungen bearbeiten. Schreibrechte, stabile Ereigniskennungen und Serienbearbeitung hängen von der Kalenderintegration ab; nach einer Änderung von Titel oder Datum kann ohne stabile Kennung eine erneute Zuordnung nötig sein.
 
-Reserviert das Dashboard trotz Inhaltshöhe Leerraum, feste Höhenvorgaben des umgebenden Layouts prüfen. Bei fehlenden Aktionen Kalenderrechte prüfen; bei fehlender Zuordnung die Begleitintegration und deren Verbindung prüfen. HTML-Beschreibungen sind eingeschränkt: Skripte, Ereignisattribute und nicht erlaubte Linkprotokolle sind nicht vorgesehen.
+Reserviert das Dashboard trotz Inhaltshöhe Leerraum, feste Höhenvorgaben des umgebenden Layouts prüfen. Bei fehlenden Aktionen Kalenderrechte prüfen; bei fehlender Zuordnung die Begleitintegration und deren Verbindung prüfen. HTML-Beschreibungen werden mit einem HTML-Parser auf erlaubte Formatierungselemente reduziert. Skripte, fremde HTML-Attribute und aktive eingebettete Inhalte werden entfernt. Links mit Leerzeichen, Steuerzeichen, Anführungszeichen, spitzen Klammern oder Rückwärtsschrägstrichen werden ohne anklickbares Linkziel angezeigt; normale Web-, E-Mail-, Telefon-, lokale und Ankerlinks bleiben verfügbar.
 
 ### 10. Entwicklung und Tests
 
@@ -243,7 +243,7 @@ Existing browser-only assignments are not automatically transferred to the integ
 
 Without a connected companion, the additional-assignment section displays setup information and provides no browser-only fallback. All authenticated Home Assistant users can edit shared assignments. Write access, stable event identifiers and recurrence editing depend on the calendar integration; without a stable identifier, changing a title or date may require assigning the event again.
 
-If the dashboard reserves empty space despite content height, check fixed height settings in its surrounding layout. For missing actions, check calendar permissions; for unavailable assignments, check the companion and its connection. HTML descriptions are restricted: scripts, event-handler attributes and unsupported link protocols are not intended.
+If the dashboard reserves empty space despite content height, check fixed height settings in its surrounding layout. For missing actions, check calendar permissions; for unavailable assignments, check the companion and its connection. HTML descriptions are reduced to allowed formatting elements using an HTML parser. Scripts, unapproved HTML attributes and active embedded content are removed. Links containing whitespace, control characters, quotes, angle brackets or backslashes are displayed without a clickable target; normal web, email, telephone, local and anchor links remain available.
 
 ### 10. Development and tests
 

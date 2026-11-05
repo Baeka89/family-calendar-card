@@ -1,5 +1,6 @@
 const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
+const descriptionDocument = new (require('jsdom').JSDOM)('').window.document;
 
 class HTMLElementMock {
   attachShadow() {
@@ -24,7 +25,7 @@ global.customElements = {
 };
 global.window = { localStorage: { getItem: () => null, setItem: () => {} }, getComputedStyle: () => ({ color: 'rgb(0, 0, 0)' }) };
 global.document = {
-  createElement: () => ({
+  createElement: (tag) => ['template', 'textarea'].includes(tag) ? descriptionDocument.createElement(tag) : ({
     style: {},
     _textContent: '',
     set textContent(value) { this._textContent = String(value ?? ''); },
@@ -2998,7 +2999,7 @@ test('renderEventDescription keeps common HTML wrappers from rendering as raw te
   const html = card.renderEventDescription('<div>Line 1</div><div>Line 2</div><table><tr><th>When</th><td>Noon</td></tr></table>');
 
   assert.match(html, /<div>Line 1<\/div><div>Line 2<\/div>/);
-  assert.match(html, /<table><tr><th>When<\/th><td>Noon<\/td><\/tr><\/table>/);
+  assert.match(html, /<table><tbody><tr><th>When<\/th><td>Noon<\/td><\/tr><\/tbody><\/table>/);
   assert.doesNotMatch(html, /&lt;\/?(?:div|table|tr|th|td)\b/i);
 });
 
@@ -12245,4 +12246,10 @@ test('custom CSS cannot close its style element and insert active markup', () =>
   originalCardRender.call(card);
   assert.doesNotMatch(card._root.innerHTML, /<img src=x onerror=/);
   assert.match(card._root.innerHTML, /\\3c \/style>/);
+});
+
+test('description URLs reject whitespace, control characters and HTML boundaries', () => {
+  const card = makeCard();
+  for (const value of ['https://x/ a', ' https://x/', 'https://x/\n', 'https://x/\t', 'https://x/\u0000', 'https://x/\u007f', 'https://x/\u00a0', 'https://x/<b>', 'https://x/"', "https://x/'", 'https://x/\\', 'javascript:alert(1)', 'data:text/html,hi', 'vbscript:hi']) assert.equal(card.getSafeDescriptionUrl(value), '', value);
+  for (const value of ['https://example.com/a_b?x=1&y=2', 'http://example.com/', 'mailto:family@example.com', 'tel:+491234', '/local/info', '#details', 'https://example.com/a%20b']) assert.equal(card.getSafeDescriptionUrl(value), value);
 });

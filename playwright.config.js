@@ -11,6 +11,8 @@ module.exports = defineConfig({
   
   use: {
     viewport: { width: 1400, height: 1000 },
-    colorScheme: 'light'
+    colorScheme: 'light',
+    // Match the UTC dates used by fixtures and CI on every developer machine.
+    timezoneId: 'UTC'
   }
 });

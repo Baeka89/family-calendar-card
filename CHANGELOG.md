@@ -8,7 +8,7 @@ Veröffentlichte Änderungen werden hier dokumentiert. Noch nicht veröffentlich
 
 #### Hinzugefügt
 
-Keine.
+- Browser-Regressionstest für den konkret gemeldeten Angriff sowie Prüfungen für fehlerhaftes HTML, Linkgrenzen, fremde Namensräume und erneutes Einlesen der Ausgabe.
 
 #### Geändert
 
@@ -16,7 +16,8 @@ Keine.
 
 #### Behoben
 
-Keine.
+- Sicherheitslücke in Terminbeschreibungen geschlossen: Links werden nicht mehr durch nachfolgende HTML-Textersetzungen verändert. Ein inertes HTML-Fragment wird eingelesen und ausschließlich mit erlaubten Elementen und geprüften Linkzielen neu aufgebaut.
+- Linkziele mit Leerzeichen, Steuerzeichen, Anführungszeichen, spitzen Klammern oder Rückwärtsschrägstrichen werden verworfen.
 
 #### Entfernt
 
@@ -24,7 +25,7 @@ Keine.
 
 #### Updatehinweise
 
-- Keine Aktualisierung der Karte oder Integration erforderlich. Versionsnummern und bestehende Releases bleiben unverändert.
+- Sicherheitsupdate der Karte installieren und das Dashboard neu laden. Die optionale Integration bleibt auf v0.1.2; kein Home-Assistant-Neustart für das Kartenupdate erforderlich.
 
 #### Bekannte Einschränkungen
 
@@ -32,13 +33,13 @@ Keine.
 
 #### Prüfungen
 
-- Verbleibende Workflow-Dateien und Referenzen geprüft. Karten-Quellcode und Installationsdatei bleiben unverändert.
+- Build, Syntaxprüfung von 53 Quelldateien und 579 Node-Tests erfolgreich. Alle 140 Browser- und Bildvergleichstests einschließlich acht gezielter Sicherheitstests erfolgreich; vorhandene Referenzbilder unverändert. Keine Liveprüfung in einer echten Home-Assistant-Installation.
 
 ### English 🇺🇸
 
 #### Added
 
-None.
+- Browser regression coverage for the reported exploit, malformed HTML, URL boundaries, foreign namespaces and reparsing the output.
 
 #### Changed
 
@@ -46,7 +47,8 @@ None.
 
 #### Fixed
 
-None.
+- Closed an event-description security issue: subsequent HTML text replacements no longer modify generated links. An inert HTML fragment is parsed and rebuilt using only allowed elements and validated link targets.
+- Discarded URL targets containing whitespace, control characters, quotes, angle brackets or backslashes.
 
 #### Removed
 
@@ -54,7 +56,7 @@ None.
 
 #### Update notes
 
-- No card or integration update is required. Version numbers and existing releases are unchanged.
+- Install the card security update and reload the dashboard. The optional integration remains at v0.1.2; the card update requires no Home Assistant restart.
 
 #### Known limitations
 
@@ -62,7 +64,7 @@ None.
 
 #### Checks
 
-- Checked remaining workflow files and references. Card source code and the installation file are unchanged.
+- Build, syntax checks across 53 source files and 579 Node tests passed. All 140 browser and screenshot tests passed, including eight targeted security tests; existing reference images are unchanged. No live test in a real Home Assistant installation.
 
 ---
 

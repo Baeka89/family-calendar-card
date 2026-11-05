@@ -21643,41 +21643,53 @@ class FamilyCalendarCard extends HTMLElement {
   }
 
   sanitizeBasicDescriptionHtml(text) {
-    const cleanText = String(text ?? '').replace(/<script\b[\s\S]*?<\/script>/gi, '').replace(/<style\b[\s\S]*?<\/style>/gi, '');
-    const escaped = this.escapeHtml(cleanText).replace(/\r\n?|\n/g, '<br>');
-    return this.restoreAllowedDescriptionTags(escaped);
+    return this.sanitizeDescriptionFragment(String(text ?? '').replace(/\r\n?|\n/g, '<br>'));
   }
 
   restoreAllowedDescriptionTags(html) {
-    const allowedSimpleTags = 'b|strong|i|em|u|s|br|p|div|ul|ol|li|blockquote|code|pre|h[1-6]|table|thead|tbody|tfoot|tr|td|th';
+    // Decode the escaped source once, then parse it. Never run tag replacements
+    // over generated anchors: attribute boundaries belong to the HTML parser.
+    const decoder = document.createElement('textarea');
+    decoder.innerHTML = String(html ?? '');
+    return this.sanitizeDescriptionFragment(decoder.value);
+  }
 
-    const renderAnchor = (attrs, content = '') => {
-      const hrefMatch = attrs.match(/(?:^|\s)href\s*=\s*(?:&quot;([\s\S]*?)&quot;|&#39;([\s\S]*?)&#39;|"([^"]*)"|'([^']*)'|([^\s&"']+))/i);
-      const href = hrefMatch ? this.decodeHtmlEntities(hrefMatch[1] || hrefMatch[2] || hrefMatch[3] || hrefMatch[4] || hrefMatch[5] || '') : '';
-      const safeUrl = this.getSafeDescriptionUrl(href);
-      if (!safeUrl) return content;
-      return `<a href="${this.escapeHtmlAttribute(safeUrl)}" target="_blank" rel="noopener noreferrer">${content}</a>`;
+  sanitizeDescriptionFragment(html) {
+    // Template contents remain inert, including unsupported resource elements.
+    const template = document.createElement('template');
+    template.innerHTML = String(html ?? '');
+    const owner = template.ownerDocument;
+    const output = owner.createElement('div');
+    const allowed = new Set('a b strong i em u s br p div ul ol li blockquote code pre h1 h2 h3 h4 h5 h6 table thead tbody tfoot tr td th'.split(' '));
+    const discard = new Set('script style template iframe object embed noscript'.split(' '));
+    const copy = (node, parent) => {
+      if (node.nodeType === 3) {
+        parent.appendChild(owner.createTextNode(node.data));
+        return;
+      }
+      if (node.nodeType !== 1 || node.namespaceURI !== 'http://www.w3.org/1999/xhtml' || discard.has(node.localName)) return;
+      const tag = node.localName;
+      const href = tag === 'a' ? this.getSafeDescriptionUrl(node.getAttribute('href')) : '';
+      const element = allowed.has(tag) && (tag !== 'a' || href) ? owner.createElement(tag) : parent;
+      if (element !== parent) {
+        if (tag === 'a') {
+          element.setAttribute('href', href);
+          element.setAttribute('target', '_blank');
+          element.setAttribute('rel', 'noopener noreferrer');
+        }
+        parent.appendChild(element);
+      }
+      for (const child of node.childNodes) copy(child, element);
     };
-
-    return String(html ?? '')
-      .replace(/&lt;a\s+([\s\S]*?)&gt;([\s\S]*?)&lt;\/a&gt;/gi, (_match, attrs, content) => renderAnchor(attrs, content))
-      .replace(/&lt;a\s+([\s\S]*?)&gt;/gi, (_match, attrs) => renderAnchor(attrs).replace('</a>', ''))
-      .replace(/&lt;\/a&gt;/gi, '</a>')
-      .replace(new RegExp(`&lt;(/?)(${allowedSimpleTags})(?:\\s+[\\s\\S]*?)?\\s*(/?)&gt;`, 'gi'), (_match, closing, tag, selfClosing) => {
-        const normalizedTag = tag.toLowerCase();
-        if (normalizedTag === 'br') return '<br>';
-        return closing ? `</${normalizedTag}>` : `<${normalizedTag}${selfClosing ? ' /' : ''}>`;
-      });
+    for (const child of template.content.childNodes) copy(child, output);
+    return output.innerHTML;
   }
 
   getSafeDescriptionUrl(url) {
-    const value = String(url ?? '').trim();
-    if (!value) return '';
-
-    if (/^(https?:|mailto:|tel:)/i.test(value) || value.startsWith('/') || value.startsWith('#')) {
-      return value;
-    }
-
+    const value = String(url ?? '');
+    // Reject characters that can disguise schemes or break URL/HTML boundaries.
+    if (!value || /[\s\u0000-\u001f\u007f-\u009f<>"'\\]/u.test(value)) return '';
+    if (/^(https?:|mailto:|tel:)/i.test(value) || value.startsWith('/') || value.startsWith('#')) return value;
     return '';
   }
 
